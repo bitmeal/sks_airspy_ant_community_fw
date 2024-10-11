@@ -1,0 +1,5 @@
+board:
+  name: sks_devel_nrf52840_mdk
+  vendor: sks_devel
+  socs:
+  - name: nrf52840
