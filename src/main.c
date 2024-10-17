@@ -13,10 +13,10 @@
 #include <zephyr/fs/fs.h>
 #include <zephyr/fs/littlefs.h>
 
-// LOG_LEVEL_SET(LOG_LEVEL_DBG);
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
-#include "common.h"
+#include "bluetooth.h"
+#include "ant.h"
 
 #define STORAGE_PARTITION_LABEL storage_partition
 #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION_LABEL)
@@ -60,8 +60,19 @@ int main(void)
 	}
 	LOG_INF("OK mounted littlefs");
 
-	start_smp_bluetooth_adverts();
-	LOG_INF("OK bluetooth DFU advertising");
+
+	///////////////////////////////////////////
+	LOG_INF("starting bluetooth advertising...");
+
+	start_bluetooth_adverts();
+	LOG_INF("OK bluetooth advertising");
+
+
+	///////////////////////////////////////////
+	LOG_INF("starting ANT+ device...");
+
+	start_ant_device();
+	LOG_INF("OK ANT+ device");
 
 
 	///////////////////////////////////////////

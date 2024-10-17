@@ -1,5 +1,10 @@
 {
     "nrf-connect.boardRoots": [
         "${workspaceFolder}/boards"
-    ]
+    ],
+    "files.associations": {
+        "log.h": "c",
+        "log_backend_ble.h": "c",
+        "gatt.h": "c"
+    }
 }
