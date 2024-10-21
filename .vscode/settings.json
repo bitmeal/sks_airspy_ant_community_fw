@@ -5,6 +5,7 @@
     "files.associations": {
         "log.h": "c",
         "log_backend_ble.h": "c",
-        "gatt.h": "c"
+        "gatt.h": "c",
+        "ant_common_page_80.h": "c"
     }
 }

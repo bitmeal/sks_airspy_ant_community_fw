@@ -1,0 +1,36 @@
+#
+# Copyright 2022 by Garmin Ltd. or its subsidiaries.
+# All rights reserved.
+#
+# Use of this Software is limited and subject to the License Agreement for ANT SoftDevice
+# and Associated Software. The Agreement accompanies the Software in the root directory of
+# the repository.
+#
+
+menuconfig ANT_TPMS
+    bool "ANT+ TPMS profile"
+    # select ANT_COMMON
+    # select ANT_PROFILES
+    depends on ANT
+    # select ANT
+    help
+      Support for ANT+ TPMS constants and pages
+
+if ANT_TPMS
+
+config ANT_TPMS_SIMULATOR
+    bool "Enable ANT+ TPMS Simulator"
+    select SENSORSIM
+
+rsource "lib/pages/Kconfig"
+
+if ANT_TPMS_SIMULATOR
+rsource "lib/simulator/Kconfig"
+endif # ANT_TPMS_SIMULATOR
+
+module=ANT_TPMS
+module-str=ANT+ TPMS
+source "${ZEPHYR_BASE}/subsys/logging/Kconfig.template.log_config"
+
+endif # ANT_TPMS
+

@@ -8,42 +8,36 @@
 
 #include <ant_parameters.h>
 #include <ant_key_manager.h>
-#include <ant_profiles/hrm/simulator/ant_hrm_simulator.h>
+
+#include <ant_profiles/tpms/ant_tpms.h>
+#include <ant_profiles/tpms/simulator/ant_tpms_simulator.h>
 
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ant, LOG_LEVEL_DBG);
 
-#define TIMER_TICK_MS (ANT_HRM_OPERATING_TIME_UNIT * 1000)
+static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event);
 
-static void ant_hrm_evt_handler(ant_hrm_profile_t * p_profile, ant_hrm_evt_t event);
+TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_evt_handler);
+TPMS_SENS_CHANNEL_CONFIG_DEF(tpms,
+  0,    // hardware ANT channel 0
+  5,    // transmission type: use common pages
+  1234, // device number id
+  0     // network number
+);
 
-HRM_SENS_PROFILE_CONFIG_DEF(hrm, true, ANT_HRM_PAGE_0, ant_hrm_evt_handler);
-HRM_SENS_CHANNEL_CONFIG_DEF(hrm,
-  HRM_TX_CHANNEL_NUM,
-  HRM_TX_CHAN_ID_TRANS_TYPE,
-  HRM_TX_CHAN_ID_DEV_NUM,
-  HRM_TX_NETWORK_NUM);
+// #define TIMER_TICK_MS (ANT_TPMS_OPERATING_TIME_UNIT * 1000)
+// static void timeout_handler(struct k_timer *timer_id);
+// static K_TIMER_DEFINE(timer, timeout_handler, NULL);
 
-static void timeout_handler(struct k_timer *timer_id);
-static K_TIMER_DEFINE(timer, timeout_handler, NULL);
+static ant_tpms_profile_t tpms;
+static ant_tpms_simulator_t tpms_simulator;
 
-static ant_hrm_profile_t hrm;
-static ant_hrm_simulator_t hrm_simulator;
-
-static void ant_hrm_evt_handler(ant_hrm_profile_t * p_profile, ant_hrm_evt_t event)
+static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event)
 {
   switch (event) {
-    case ANT_HRM_PAGE_0_UPDATED:
-      /* fall through */
-    case ANT_HRM_PAGE_1_UPDATED:
-      /* fall through */
-    case ANT_HRM_PAGE_2_UPDATED:
-      /* fall through */
-    case ANT_HRM_PAGE_3_UPDATED:
-      /* fall through */
-    case ANT_HRM_PAGE_4_UPDATED:
-      ant_hrm_simulator_one_iteration(&hrm_simulator);
+    case ANT_TPMS_PAGE_1_UPDATED:
+      ant_tpms_simulator_one_iteration(&tpms_simulator, event);
       break;
     default:
       break;
@@ -52,48 +46,47 @@ static void ant_hrm_evt_handler(ant_hrm_profile_t * p_profile, ant_hrm_evt_t eve
 
 static void simulator_setup(void)
 {
-  const ant_hrm_simulator_cfg_t simulator_cfg = DEFAULT_ANT_HRM_SIMULATOR_CFG(&hrm,
-    CONFIG_SIMULATOR_MIN,
-    CONFIG_SIMULATOR_MAX,
-    CONFIG_SIMULATOR_INCREMENT);
+  const ant_tpms_simulator_cfg_t simulator_cfg = {
+      .p_profile = &tpms,
+  };
 
-  ant_hrm_simulator_init(&hrm_simulator, &simulator_cfg, false);
+  ant_tpms_simulator_init(&tpms_simulator, &simulator_cfg, false);
 }
 
-static void timeout_handler(struct k_timer *timer_id)
-{
-  /** NOTE: Only the first 3 bytes of this value are taken into account. */
-  hrm.HRM_PROFILE_operating_time++;
-}
+// static void timeout_handler(struct k_timer *timer_id)
+// {
+//     /* noop */
+//     /* cyclic timer callback */
+// }
 
 static void ant_evt_handler(ant_evt_t *p_ant_evt)
 {
-  ant_hrm_sens_evt_handler(p_ant_evt, &hrm);
+  ant_tpms_sens_evt_handler(p_ant_evt, &tpms);
 }
 
 static int profile_setup(void)
 {
-  int err = ant_hrm_sens_init(&hrm,
-    HRM_SENS_CHANNEL_CONFIG(hrm),
-    HRM_SENS_PROFILE_CONFIG(hrm));
+  int err = ant_tpms_sens_init(&tpms,
+    TPMS_SENS_CHANNEL_CONFIG(tpms),
+    TPMS_SENS_PROFILE_CONFIG(tpms));
   if (err) {
-    LOG_ERR("ant_hrm_sens_init failed: %d", err);
+    LOG_ERR("ant_tpms_sens_init failed: %d", err);
     return err;
   }
 
-  hrm.HRM_PROFILE_manuf_id   = HRM_TX_MFG_ID;
-  hrm.HRM_PROFILE_serial_num = HRM_TX_SERIAL_NUM;
-  hrm.HRM_PROFILE_hw_version = HRM_TX_HW_VERSION;
-  hrm.HRM_PROFILE_sw_version = HRM_TX_SW_VERSION;
-  hrm.HRM_PROFILE_model_num  = HRM_TX_MODEL_NUM;
+//   tpms.TPMS_PROFILE_manuf_id   = TPMS_TX_MFG_ID;
+//   tpms.TPMS_PROFILE_serial_num = TPMS_TX_SERIAL_NUM;
+//   tpms.TPMS_PROFILE_hw_version = TPMS_TX_HW_VERSION;
+//   tpms.TPMS_PROFILE_sw_version = TPMS_TX_SW_VERSION;
+//   tpms.TPMS_PROFILE_model_num  = TPMS_TX_MODEL_NUM;
 
-  err = ant_hrm_sens_open(&hrm);
+  err = ant_tpms_sens_open(&tpms);
   if (err) {
-    LOG_ERR("ant_hrm_sens_open failed: %d", err);
+    LOG_ERR("ant_tpms_sens_open failed: %d", err);
     return err;
   }
 
-  LOG_INF("OK ant_hrm_sens_open");
+  LOG_INF("OK ant_tpms_sens_open");
   return err;
 }
 
@@ -113,7 +106,8 @@ int ant_stack_setup(void)
     return err;
   }
 
-  err = ant_plus_key_set(HRM_TX_NETWORK_NUM);
+//   err = ant_plus_key_set(TPMS_TX_NETWORK_NUM);
+  err = ant_plus_key_set(0); // default network number
   if (err) {
     LOG_ERR("ant_plus_key_set failed: %d", err);
   }
@@ -122,7 +116,7 @@ int ant_stack_setup(void)
 
 int start_ant_device(void)
 {
-  LOG_INF("ANT+ HRM TX sample starting...");
+  LOG_INF("ANT+ TPMS TX sample starting...");
 
   int err = ant_stack_setup();
   if (err) {
@@ -139,7 +133,7 @@ int start_ant_device(void)
     return err;
   }
 
-  k_timer_start(&timer, K_MSEC(TIMER_TICK_MS), K_MSEC(TIMER_TICK_MS));
+//   k_timer_start(&timer, K_MSEC(TIMER_TICK_MS), K_MSEC(TIMER_TICK_MS));
   return 0;
 
   /*
