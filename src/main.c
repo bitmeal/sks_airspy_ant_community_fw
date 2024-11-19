@@ -44,10 +44,10 @@ int main(void)
 {
 	int ret;
 
-	/* using __TIME__ ensure that a new binary will be built on every
-	 * compile which is convenient when testing firmware upgrade.
-	 */
-	LOG_INF("build time: " __DATE__ " " __TIME__);
+	// /* using __TIME__ ensure that a new binary will be built on every
+	//  * compile which is convenient when testing firmware upgrade.
+	//  */
+	// LOG_INF("build time: " __DATE__ " " __TIME__);
 
 
 	///////////////////////////////////////////
@@ -100,7 +100,7 @@ int main(void)
 		}
 
 		led_state = !led_state;
-		LOG_INF("LED: %s", led_state ? "ON" : "OFF");
+		// LOG_INF("LED: %s", led_state ? "ON" : "OFF");
 
 		k_msleep(SLEEP_TIME_MS);
 	}

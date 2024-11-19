@@ -1,6 +1,0 @@
-build:
-  depends:
-  - ant
-  cmake: .
-  kconfig: Kconfig
-  # sysbuild-kconfig: sysbuild/Kconfig.sysbuild

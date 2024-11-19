@@ -20,11 +20,12 @@ LOG_MODULE_REGISTER(bt, LOG_LEVEL_DBG);
 static struct k_work advertise_work;
 
 static const struct bt_data advertising_data_smp[] = {
+#if CONFIG_BT_DEVICE_APPEARANCE && CONFIG_BT_DIS
 	/* Appearance */
 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
-
+#endif
 	/* Flags */
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 
@@ -34,6 +35,7 @@ static const struct bt_data advertising_data_smp[] = {
 		      0xd3, 0x4c, 0xb7, 0x1d, 0x1d, 0xdc, 0x53, 0x8d),
 };
 
+#if CONFIG_LOG_BACKEND_BLE
 static const struct bt_data advertising_data_nus[] = {
 	/* Appearance */
 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
@@ -46,6 +48,7 @@ static const struct bt_data advertising_data_nus[] = {
 	/* SVC */
 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, LOGGER_BACKEND_BLE_ADV_UUID_DATA),
 };
+#endif
 
 static const struct bt_data scan_response_data[] = {
 	BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
@@ -82,6 +85,7 @@ static void advertise(struct k_work *work)
 		LOG_INF("Advertising %s successfully started", "advertising_data_smp");
 	}
 
+#if CONFIG_LOG_BACKEND_BLE
 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_nus, ARRAY_SIZE(advertising_data_nus), scan_response_data, ARRAY_SIZE(scan_response_data));
 	if (rc) {
 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_nus", rc);
@@ -91,6 +95,8 @@ static void advertise(struct k_work *work)
 	{
 		LOG_INF("Advertising %s successfully started", "advertising_data_nus");
 	}
+#endif
+
 }
 
 static void connected(struct bt_conn *conn, uint8_t err)
@@ -122,6 +128,7 @@ static void bt_ready(int err)
 	}
 }
 
+#if CONFIG_LOG_BACKEND_BLE
 void logging_backend_ble_hook(bool status, void *ctx)
 {
 	ARG_UNUSED(ctx);
@@ -132,12 +139,15 @@ void logging_backend_ble_hook(bool status, void *ctx)
 		LOG_INF("BLE Logger Backend disabled.");
 	}
 }
+#endif
 
 void start_bluetooth_adverts(void)
 {
 	int rc;
 
+#if CONFIG_LOG_BACKEND_BLE
 	logger_backend_ble_set_hook(logging_backend_ble_hook, NULL);
+#endif
 
 	k_work_init(&advertise_work, advertise);
 	rc = bt_enable(bt_ready);

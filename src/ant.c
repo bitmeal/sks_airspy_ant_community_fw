@@ -50,7 +50,7 @@ static void simulator_setup(void)
       .p_profile = &tpms,
   };
 
-  ant_tpms_simulator_init(&tpms_simulator, &simulator_cfg, false);
+  ant_tpms_simulator_init(&tpms_simulator, &simulator_cfg, true);
 }
 
 // static void timeout_handler(struct k_timer *timer_id)
