@@ -1,0 +1,128 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "BMP launch 52832",
+            "type": "cortex-debug",
+
+            "cwd": "${workspaceFolder}",
+            "loadFiles": [ "./build_52832/zephyr/merged.hex" ],
+            "symbolFiles": [ "./build_52832/mcuboot/zephyr/zephyr.elf", "./build_52832/zephyr/zephyr.elf" ],
+            // "rtos": "Zephyr",
+
+            "request": "launch",
+            "runToEntryPoint": "main",
+
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "\\\\.\\COM11",
+
+            "interface": "swd",
+            "targetId": 1,
+            "preLaunchCommands": [
+                "monitor erase_mass",
+                "monitor erase_uicr"
+            ],
+
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto"
+            },
+
+            "postAttachCommands": [
+                "monitor rtt enable"
+            ],
+            "postLaunchCommands": [
+                "compare-sections",
+                "monitor rtt enable"
+            ],
+            "postResetCommands": [
+                "monitor rtt enable"
+            ],
+
+            "gdbPath": "C:/Users/Arne/Documents/Projekte/SKS_Airspy/FW_reveng/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe"
+        },
+        {
+            "name": "BMP launch 52840",
+            "type": "cortex-debug",
+
+            "cwd": "${workspaceFolder}",
+            "loadFiles": [ "./build_52840/zephyr/merged.hex" ],
+            "symbolFiles": [ "./build_52840/mcuboot/zephyr/zephyr.elf", "./build_52840/zephyr/zephyr.elf" ],
+            // "rtos": "Zephyr",
+
+            "request": "launch",
+            "runToEntryPoint": "main",
+
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "\\\\.\\COM11",
+
+            "interface": "swd",
+            "targetId": 1,
+            "preLaunchCommands": [
+                "monitor erase_mass",
+                "monitor erase_uicr"
+            ],
+
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto"
+            },
+
+            "postAttachCommands": [
+                "monitor rtt enable"
+            ],
+            "postLaunchCommands": [
+                "compare-sections",
+                "monitor rtt enable"
+            ],
+            "postResetCommands": [
+                "monitor rtt enable"
+            ],
+
+            "gdbPath": "C:/Users/Arne/Documents/Projekte/SKS_Airspy/FW_reveng/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe"
+        },
+        {
+            "name": "BMP attach 52840",
+            "type": "cortex-debug",
+
+            "cwd": "${workspaceFolder}",
+            // "loadFiles": [ "./build_52840/zephyr/merged.hex" ],
+            "symbolFiles": [ "./build_52840/mcuboot/zephyr/zephyr.elf", "./build_52840/zephyr/zephyr.elf" ],
+            // "rtos": "Zephyr",
+
+            "request": "attach",
+            // "runToEntryPoint": "main",
+
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "\\\\.\\COM11",
+
+            "interface": "swd",
+            "targetId": 1,
+            // "preLaunchCommands": [
+            //     "monitor erase_mass",
+            //     "monitor erase_uicr"
+            // ],
+
+            "rttConfig": {
+                "enabled": true,
+                "address": "auto"
+            },
+
+            "postAttachCommands": [
+                "monitor rtt enable"
+            ],
+            // "postLaunchCommands": [
+            //     "compare-sections",
+            //     "monitor rtt enable"
+            // ],
+            "postResetCommands": [
+                "monitor rtt enable"
+            ],
+
+            "gdbPath": "C:/Users/Arne/Documents/Projekte/SKS_Airspy/FW_reveng/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gdb.exe"
+        }
+    ]
+}

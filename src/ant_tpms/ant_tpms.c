@@ -132,7 +132,7 @@ static void sens_message_encode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
 
     p_tpms_message_payload->page_number = next_page_number_get(p_profile);
 
-    LOG_INF("TPMS tx page:                              %u", p_tpms_message_payload->page_number);
+    LOG_INF("TPMS tx page: %u", p_tpms_message_payload->page_number);
 
     switch (p_tpms_message_payload->page_number)
     {
@@ -192,7 +192,7 @@ static void disp_message_decode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
     const ant_tpms_message_layout_t * p_tpms_message_payload =
         (ant_tpms_message_layout_t *)p_message_payload;
 
-    LOG_INF("TPMS rx page:                              %u", p_tpms_message_payload->page_number);
+    LOG_INF("TPMS rx page: %u", p_tpms_message_payload->page_number);
 
     switch (p_tpms_message_payload->page_number)
     {

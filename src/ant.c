@@ -10,11 +10,15 @@
 #include <ant_key_manager.h>
 
 #include <ant_profiles/tpms/ant_tpms.h>
-#include <ant_profiles/tpms/simulator/ant_tpms_simulator.h>
+// #include <ant_profiles/tpms/simulator/ant_tpms_simulator.h>
 
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ant, LOG_LEVEL_DBG);
+
+#include "com.h"
+#include "decoder.h"
+// typedef typeof(((struct sensor_readings_t){}).pressure_hpa) pressure_hpa_t;
 
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event);
 
@@ -31,27 +35,38 @@ TPMS_SENS_CHANNEL_CONFIG_DEF(tpms,
 // static K_TIMER_DEFINE(timer, timeout_handler, NULL);
 
 static ant_tpms_profile_t tpms;
-static ant_tpms_simulator_t tpms_simulator;
+// static ant_tpms_simulator_t tpms_simulator;
 
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event)
 {
   switch (event) {
     case ANT_TPMS_PAGE_1_UPDATED:
-      ant_tpms_simulator_one_iteration(&tpms_simulator, event);
+      // ant_tpms_simulator_one_iteration(&tpms_simulator, event);
+
+      // TODO: get type from struct
+      int16_t data;
+      
+      if (k_msgq_get(&spi_ant_queue, &data, K_NO_WAIT) != 0)
+      {
+        LOG_WRN("no new data in sensor queue");
+        break;
+      }
+
+      p_profile->TPMS_PROFILE_pressure = data;
       break;
     default:
       break;
   }
 }
 
-static void simulator_setup(void)
-{
-  const ant_tpms_simulator_cfg_t simulator_cfg = {
-      .p_profile = &tpms,
-  };
+// static void simulator_setup(void)
+// {
+//   const ant_tpms_simulator_cfg_t simulator_cfg = {
+//       .p_profile = &tpms,
+//   };
 
-  ant_tpms_simulator_init(&tpms_simulator, &simulator_cfg, true);
-}
+//   ant_tpms_simulator_init(&tpms_simulator, &simulator_cfg, true);
+// }
 
 // static void timeout_handler(struct k_timer *timer_id)
 // {
@@ -125,7 +140,7 @@ int start_ant_device(void)
   }
 
 
-  simulator_setup();
+  // simulator_setup();
 
   err = profile_setup();
   if (err) {
@@ -133,13 +148,5 @@ int start_ant_device(void)
     return err;
   }
 
-//   k_timer_start(&timer, K_MSEC(TIMER_TICK_MS), K_MSEC(TIMER_TICK_MS));
-  return 0;
-
-  /*
-  // ERR case
-  k_oops();
-  */
-  
   return 0;
 }

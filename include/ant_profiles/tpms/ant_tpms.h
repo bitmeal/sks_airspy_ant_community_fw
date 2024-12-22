@@ -11,8 +11,8 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
- #ifndef ANT_BICYCLE_POWER_H__
- #define ANT_BICYCLE_POWER_H__
+#ifndef ANT_BICYCLE_POWER_H__
+#define ANT_BICYCLE_POWER_H__
 
 #include <stdint.h>
 #include <stdbool.h>
