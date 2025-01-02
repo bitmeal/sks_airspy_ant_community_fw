@@ -77,8 +77,14 @@
 		};
 	};
 
+	wake_pin: wake_pin {
+		compatible = "wake-signal-pin";
+		gpios = <&gpio0 20 GPIO_ACTIVE_HIGH>;
+	};
+
 	/* These aliases are provided for compatibility with samples */
 	aliases {
+		wake-pin = &wake_pin;
 		led0 = &led0_red;
 		led1 = &led0_green;
 		led2 = &led0_blue;

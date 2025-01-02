@@ -73,7 +73,7 @@ static void spis_init(void)
 	// 	);
 }
 
-void spis_receive(void)
+static void spis_receive(void)
 {
 	int err;
 
@@ -130,8 +130,3 @@ extern void spis_thread(void *unused1, void *unused2, void *unused3)
 		spis_receive();
 	}
 }
-
-// void start_spi_slave()
-// {
-
-// }

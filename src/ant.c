@@ -105,7 +105,7 @@ static int profile_setup(void)
   return err;
 }
 
-int ant_stack_setup(void)
+static int ant_stack_setup(void)
 {
   int err = ant_init();
   if (err) {

@@ -23,5 +23,6 @@ struct __attribute__((__packed__)) sensor_readings_t {
 #define SENSOR_ERROR_CHK 1
 
 int decode_sensor_buffer(uint8_t* buffer, struct sensor_readings_t* sensor_readings);
+uint8_t battery_level_percent(const int16_t voltage_mv);
 
 #endif // INCLUDE_DECODER_H__

@@ -46,3 +46,44 @@ int decode_sensor_buffer(uint8_t* buffer, struct sensor_readings_t* sensor_readi
 
     return EXIT_SUCCESS;
 }
+
+/*  based on NRF5 SDK components/libraries/util/app_util.h
+ *
+ *  The calculation is based on a linearized version of the battery's discharge
+ *  curve. 3.0V returns 100% battery level. The limit for power failure is 2.1V and
+ *  is considered to be the lower boundary.
+ *
+ *  The discharge curve for CR2032 is non-linear. In this model it is split into
+ *  4 linear sections:
+ *  - Section 1: 3.0V - 2.9V = 100% - 42% (58% drop on 100 mV)
+ *  - Section 2: 2.9V - 2.74V = 42% - 18% (24% drop on 160 mV)
+ *  - Section 3: 2.74V - 2.44V = 18% - 6% (12% drop on 300 mV)
+ *  - Section 4: 2.44V - 2.1V = 6% - 0% (6% drop on 340 mV)
+ */
+uint8_t battery_level_percent(const int16_t voltage_mv)
+{
+    if (voltage_mv >= 3000)
+    {
+        return 100;
+    }
+    else if (voltage_mv > 2900)
+    {
+        return 100 - ((3000 - voltage_mv) * 58) / 100;
+    }
+    else if (voltage_mv > 2740)
+    {
+        return 42 - ((2900 - voltage_mv) * 24) / 160;
+    }
+    else if (voltage_mv > 2440)
+    {
+        return 18 - ((2740 - voltage_mv) * 12) / 300;
+    }
+    else if (voltage_mv > 2100)
+    {
+        return 6 - ((2440 - voltage_mv) * 6) / 340;
+    }
+    else
+    {
+        return 0;
+    }
+}

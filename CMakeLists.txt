@@ -3,11 +3,11 @@
 cmake_minimum_required(VERSION 3.20.0)
 
 ###
-# custom partition manager config
+# # custom partition manager config
 # set(PM_STATIC_YML_FILE ${CMAKE_CURRENT_LIST_DIR}/partitions.yml)
 
-# custom MCUBoot config
-set(mcuboot_OVERLAY_CONFIG ${CMAKE_CURRENT_LIST_DIR}/mcuboot.conf)
+# # custom MCUBoot config
+# set(mcuboot_OVERLAY_CONFIG ${CMAKE_CURRENT_LIST_DIR}/mcuboot.conf)
 
 # custom boards
 list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR})
@@ -21,6 +21,10 @@ project(zephyr_devel)
 
 zephyr_include_directories(include)
 # add_subdirectory("src/ant_tpms")
+
+# # TODO: use globs
+# FILE(GLOB app_sources src/*.c)
+# target_sources(app PRIVATE ${app_sources})
 
 # app target
 target_sources(app PRIVATE src/main.c)

@@ -17,7 +17,23 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt, LOG_LEVEL_DBG);
 
-static struct k_work advertise_work;
+#define BT_DISABLE_DELAY 30000
+#define BT_DISABLE_RESCHEDULE 500
+
+static int shutdown_bluetooth(void);
+
+static void advertise(struct k_work *work);
+K_WORK_DEFINE(advertise_work, advertise);
+
+static void disable_bt(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(disable_bt_work, disable_bt);
+
+static void connected(struct bt_conn *conn, uint8_t err);
+static void disconnected(struct bt_conn *conn, uint8_t reason);
+BT_CONN_CB_DEFINE(conn_callbacks) = {
+	.connected = connected,
+	.disconnected = disconnected,
+};
 
 static const struct bt_data advertising_data_smp[] = {
 #if CONFIG_BT_DEVICE_APPEARANCE && CONFIG_BT_DIS
@@ -102,22 +118,37 @@ static void advertise(struct k_work *work)
 static void connected(struct bt_conn *conn, uint8_t err)
 {
 	if (err) {
-		LOG_ERR("Connection failed (err 0x%02x)", err);
+		LOG_ERR("Bluetooth Connection failed (err 0x%02x)", err);
 	} else {
-		LOG_INF("Connected");
+		LOG_INF("Bluetooth Connected");
+		LOG_INF("Canceling Bluetooth disable task; staying alive");
+		k_work_cancel_delayable(&disable_bt_work);
 	}
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
-	LOG_INF("Disconnected (reason 0x%02x)", reason);
+	LOG_INF("Bluetooth Disconnected (reason 0x%02x)", reason);
 	k_work_submit(&advertise_work);
+
+	LOG_INF("Scheduling Bluetooth shutdown in %dms", BT_DISABLE_DELAY);
+	k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_DELAY));
 }
 
-BT_CONN_CB_DEFINE(conn_callbacks) = {
-	.connected = connected,
-	.disconnected = disconnected,
-};
+static void disable_bt(struct k_work *work)
+{
+	int rc;
+	rc = shutdown_bluetooth();
+	if(rc != 0)
+	{
+		LOG_ERR("Failed disabling Bluetooth after %dms. Rescheduling for %dms", BT_DISABLE_DELAY, BT_DISABLE_RESCHEDULE);
+		k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_RESCHEDULE));
+	}
+	else
+	{
+		LOG_INF("Bluetooth shutdown OK");
+	}
+}
 
 static void bt_ready(int err)
 {
@@ -126,6 +157,10 @@ static void bt_ready(int err)
 	} else {
 		k_work_submit(&advertise_work);
 	}
+
+	LOG_INF("Bluetooth enabled");
+	LOG_INF("Scheduling Bluetooth shutdown in %dms", BT_DISABLE_DELAY);
+	k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_DELAY));
 }
 
 #if CONFIG_LOG_BACKEND_BLE
@@ -141,7 +176,7 @@ void logging_backend_ble_hook(bool status, void *ctx)
 }
 #endif
 
-void start_bluetooth_adverts(void)
+void start_bluetooth_services(void)
 {
 	int rc;
 
@@ -149,10 +184,35 @@ void start_bluetooth_adverts(void)
 	logger_backend_ble_set_hook(logging_backend_ble_hook, NULL);
 #endif
 
-	k_work_init(&advertise_work, advertise);
 	rc = bt_enable(bt_ready);
 	
 	if (rc != 0) {
 		LOG_ERR("Bluetooth enable failed: %d", rc);
 	}
+}
+
+static int shutdown_bluetooth(void)
+{
+	// TODO: possibly check for updater connection?
+	int rc;
+	
+	rc = bt_le_adv_stop();
+	if (rc != 0) {
+		LOG_ERR("Failed to stop bluetooth advertising: %d", rc);
+		return rc;
+	}
+
+	rc = smp_bt_unregister();
+	if (rc != 0) {
+		LOG_ERR("Failed to unregister McuMgr SMP service: %d", rc);
+		return rc;
+	}
+
+	rc = bt_disable();
+	if (rc != 0) {
+		LOG_ERR("Failed to disable Bluetooth: %d", rc);
+		return rc;
+	}
+
+	return rc;
 }
