@@ -14,7 +14,7 @@
 
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(ant, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(ant, LOG_LEVEL_INF);
 
 #include "com.h"
 #include "decoder.h"
@@ -37,22 +37,29 @@ TPMS_SENS_CHANNEL_CONFIG_DEF(tpms,
 static ant_tpms_profile_t tpms;
 // static ant_tpms_simulator_t tpms_simulator;
 
+#define LOG_MSGQ_EMPTY_WRN_EVERY 4
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event)
 {
+  static size_t msgq_empty_counter = 0;
+
   switch (event) {
     case ANT_TPMS_PAGE_1_UPDATED:
-      // ant_tpms_simulator_one_iteration(&tpms_simulator, event);
-
       // TODO: get type from struct
       int16_t data;
       
       if (k_msgq_get(&spi_ant_queue, &data, K_NO_WAIT) != 0)
       {
-        LOG_WRN("no new data in sensor queue");
-        break;
+        if(msgq_empty_counter % LOG_MSGQ_EMPTY_WRN_EVERY == 0)
+        {
+          LOG_WRN("no new data in sensor queue");
+        }
+        msgq_empty_counter++;
       }
-
-      p_profile->TPMS_PROFILE_pressure = data;
+      else
+      {
+        msgq_empty_counter = 0;
+        p_profile->TPMS_PROFILE_pressure = data;
+      }
       break;
     default:
       break;
@@ -101,7 +108,7 @@ static int profile_setup(void)
     return err;
   }
 
-  LOG_INF("OK ant_tpms_sens_open");
+  LOG_DBG("OK ant_tpms_sens_open");
   return err;
 }
 
@@ -112,7 +119,7 @@ static int ant_stack_setup(void)
     LOG_ERR("ant_init failed: %d", err);
     return err;
   }
-  LOG_INF("OK ant_init");
+  LOG_DBG("OK ant_init");
   LOG_INF("ANT Version %s", ANT_VERSION_STRING);
 
   err = ant_cb_register(&ant_evt_handler);
@@ -131,7 +138,7 @@ static int ant_stack_setup(void)
 
 int start_ant_device(void)
 {
-  LOG_INF("ANT+ TPMS TX sample starting...");
+  LOG_INF("ANT+ TPMS device starting...");
 
   int err = ant_stack_setup();
   if (err) {

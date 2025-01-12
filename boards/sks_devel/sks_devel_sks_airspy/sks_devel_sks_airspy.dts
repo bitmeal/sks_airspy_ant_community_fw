@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2024 Arne Wendt (@bitmeal)
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/dts-v1/;
+#include <nordic/nrf52832_qfaa.dtsi>
+#include "sks_devel_sks_airspy-pinctrl.dtsi"
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	model = "SKS Devel SKS AirSpy";
+	compatible = "sks_devel_sks_airspy";
+
+	chosen {
+		zephyr,console = &rtt0;
+		zephyr,shell-uart = &rtt0;
+		zephyr,uart-mcumgr = &rtt0;
+		zephyr,bt-mon-uart = &rtt0;
+		zephyr,bt-c2h-uart = &rtt0;
+
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+	rtt0: rtt_chan0 {
+		compatible = "segger,rtt-uart";
+		status = "okay";
+	};
+
+	wake_pin: wake_pin {
+		compatible = "wake-signal-pin";
+		gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+	};
+
+	/* These aliases are provided for compatibility with samples */
+	aliases {
+		wake-pin = &wake_pin;
+		watchdog0 = &wdt0;
+	};
+
+	// leds {
+	// 	compatible = "gpio-leds";
+	// 	led0: led_0 {
+	// 		gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+	// 		label = "Red LED 0";
+	// 	};
+	// 	led1: led_1 {
+	// 		gpios = <&gpio0 19 GPIO_ACTIVE_LOW>;
+	// 		label = "Green LED 1";
+	// 	};
+	// };
+
+	// buttons {
+	// 	compatible = "gpio-keys";
+	// 	button0: button_0 {
+	// 		gpios = <&gpio0 13 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+	// 		label = "Push button switch 0";
+	// 		zephyr,code = <INPUT_KEY_0>;
+	// 	};
+	// };
+};
+
+&gpiote {
+	status = "okay";
+};
+
+&uicr {
+	// gpio-as-nreset;
+	nfct-pins-as-gpios;
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+spi_slave: &spi0 {
+	compatible = "nordic,nrf-spis";
+	status = "okay";
+	pinctrl-0 = <&spi0_default>;
+	pinctrl-1 = <&spi0_sleep>;
+	pinctrl-names = "default", "sleep";
+	def-char = <0xFF>;
+	overrun-character = <0xaa>;
+};
+
+// &uart0 {
+// 	status = "okay";
+// 	compatible = "nordic,nrf-uart";
+// 	current-speed = <115200>;
+// 	pinctrl-0 = <&uart0_default>;
+// 	pinctrl-1 = <&uart0_sleep>;
+// 	pinctrl-names = "default", "sleep";
+// };
+
+// Include flash partition table.
+#include "fstab.dtsi"

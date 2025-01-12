@@ -8,6 +8,11 @@
         "gatt.h": "c",
         "ant_common_page_80.h": "c",
         "smp_bt.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "spi.h": "c",
+        "bit": "c",
+        "*.tcc": "c",
+        "cmath": "c",
+        "random": "c"
     }
 }

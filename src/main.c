@@ -31,6 +31,9 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 #include "bluetooth.h"
 #include "ant.h"
+#include "spi.h"
+#include "retained.h"
+
 
 // TODO: check DT nodes on compile time
 // #if !DT_NODE_EXISTS(DT_NODELABEL(wake_pin))
@@ -60,8 +63,11 @@ K_WORK_DELAYABLE_DEFINE(poweroff_work, poweroff);
 static void supervise(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(supervision_work, supervise);
 
+
 static void poweroff(struct k_work *work)
 {
+	spis_suspend();
+	
 	int ret = gpio_pin_interrupt_configure_dt(&wake_signal, GPIO_INT_LEVEL_ACTIVE);
 
 	if (ret != 0)
@@ -74,8 +80,12 @@ static void poweroff(struct k_work *work)
 	else
 	{
 		LOG_INF("Set up wake signal at %s pin %d\n", wake_signal.port->name, wake_signal.pin);
-		
-		LOG_INF("powering off now");
+
+		/* Update the retained state */
+		retained.off_count += 1;
+		retained_update();
+
+		LOG_INF("Powering OFF NOW");
 		sys_poweroff();
 
 		// infinite loop for emulated power off
@@ -98,14 +108,52 @@ static void supervise(struct k_work *work)
 	}
 }
 
+// #include <hal/nrf_gpio.h>
+
+// static void enable_fxth_spi(struct k_work *work);
+// K_WORK_DELAYABLE_DEFINE(enable_fxth_spi_work, enable_fxth_spi);
+
+// // TODO: read from dts
+// #define SPI_SLAVE_CSN_PIN 22
+
+// static void enable_fxth_spi(struct k_work *work)
+// {
+// 	nrf_gpio_pin_pull_t csn_pull_down_cfg = NRF_GPIO_PIN_PULLDOWN;
+// 	nrf_gpio_reconfigure(
+// 		SPI_SLAVE_CSN_PIN,
+// 		NULL,
+// 		NULL,
+// 		&csn_pull_down_cfg,
+// 		NULL,
+// 		NULL
+// 	);
+// }
+
 int main(void)
 {
+	// k_work_schedule(&enable_fxth_spi_work, K_MSEC(470));
+
 	int ret;
 
 	// /* using __TIME__ ensure that a new binary will be built on every
 	//  * compile which is convenient when testing firmware upgrade.
 	//  */
 	// LOG_INF("build time: " __DATE__ " " __TIME__);
+	
+	///////////////////////////////////////////
+	LOG_INF("reading BOOT state...");
+
+	bool retained_ok = retained_validate();
+	if( !retained_ok )
+	{
+		LOG_WRN("Retained data is INVALID; initializing");
+	}
+
+	/* Increment for this boot attempt and update. */
+	retained.boots += 1;
+	retained_update();
+
+	LOG_INF("Boot: %u; Off: %u; Active Ticks: %" PRIu64, retained.boots, retained.off_count, retained.uptime_sum);
 
 	///////////////////////////////////////////
 	LOG_INF("starting DFU components...");
@@ -118,11 +166,17 @@ int main(void)
 	LOG_INF("OK mounted littlefs");
 
 	///////////////////////////////////////////
-	LOG_INF("starting bluetooth advertising...");
+	if( retained.boots <= 1)
+	{
+		LOG_INF("starting bluetooth services...");
 
-	start_bluetooth_services();
-	LOG_INF("OK bluetooth advertising");
-
+		start_bluetooth_services();
+		LOG_INF("OK bluetooth advertising");
+	}
+	else
+	{
+		LOG_INF("will not start bluetooth");
+	}
 	///////////////////////////////////////////
 	LOG_INF("starting ANT+ device...");
 
@@ -147,57 +201,10 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 
-	// ret = gpio_pin_interrupt_configure_dt(&wake_signal,
-	// 									  GPIO_INT_LEVEL_ACTIVE);
-	// 									//   GPIO_INT_EDGE_TO_ACTIVE);
-	// 									//   GPIO_INT_LEVEL_HIGH);
-	// if (ret != 0)
-	// {
-	// 	printk("Error %d: failed to configure interrupt on %s pin %d\n",
-	// 		   ret, wake_signal.port->name, wake_signal.pin);
-	// 	return EXIT_FAILURE;
-	// }
-
-	// // gpio_init_callback(&wake_signal_cb_data, wake_signal_received, BITwake_signal.pin));
-	// // gpio_add_callback(wake_signal.port, &wake_signal_cb_data);
-	// printk("Set up wake signal at %s pin %d\n", wake_signal.port->name, wake_signal.pin);
-
-
 	///////////////////////////////////////////
 	LOG_INF("Scheduling application supervision");
 	k_work_schedule(&supervision_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
 	
-	// while (1)
-	// {
-	// 	k_msleep(SUPERVISION_CYCLE_TIME_MS);
-
-	// 	int val = gpio_pin_get_dt(&wake_signal);
-
-	// 	if (val == 0)
-	// 	{
-	// 		ret = gpio_pin_interrupt_configure_dt(&wake_signal, GPIO_INT_LEVEL_ACTIVE);
-
-	// 		if (ret != 0)
-	// 		{
-	// 			LOG_ERR("Error %d: failed to configure interrupt on %s pin %d\n",
-	// 				ret, wake_signal.port->name, wake_signal.pin);
-
-	// 			// try again
-	// 			continue;
-	// 		}
-
-	// 		LOG_INF("Set up wake signal at %s pin %d\n", wake_signal.port->name, wake_signal.pin);
-
-	// 		LOG_INF("Will power off in 500ms");
-	// 		k_msleep(500);
-
-	// 		sys_poweroff();
-
-	// 		// infinite loop for emulated power off
-	// 		while(true){ continue; }
-	// 	}
-	// }
-
 
 	return EXIT_SUCCESS;
 }

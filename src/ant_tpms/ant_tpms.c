@@ -14,7 +14,8 @@
 #include <ant_interface.h>
 #include <ant_profiles/tpms/ant_tpms.h>
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(ant_tpms, LOG_LEVEL_DBG);
+// TODO: use kconfig option
+LOG_MODULE_REGISTER(ant_tpms, LOG_LEVEL_WRN);
 // LOG_MODULE_REGISTER(ant_tpms, CONFIG_ANT_TPMS_LOG_LEVEL);
 
 

@@ -1,0 +1,13 @@
+# Copyright (c) 2023 Libre Solar Technologies GmbH
+# SPDX-License-Identifier: Apache-2.0
+
+description: GPIO pin to wake up controller from low power mode
+
+compatible: "wake-signal-pin"
+
+properties:
+  gpios:
+    type: phandle-array
+    required: true
+    description: |
+      The GPIO connected to the wake up signal source.

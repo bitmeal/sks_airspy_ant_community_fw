@@ -118,14 +118,14 @@
 	status = "okay";
 };
 
-&uart0 {
-	compatible = "nordic,nrf-uarte";
-	status = "okay";
-	current-speed = <115200>;
-	pinctrl-0 = <&uart0_default>;
-	pinctrl-1 = <&uart0_sleep>;
-	pinctrl-names = "default", "sleep";
-};
+// &uart0 {
+// 	compatible = "nordic,nrf-uarte";
+// 	status = "okay";
+// 	current-speed = <115200>;
+// 	pinctrl-0 = <&uart0_default>;
+// 	pinctrl-1 = <&uart0_sleep>;
+// 	pinctrl-names = "default", "sleep";
+// };
 
 spi_slave: &spi0 {
 	compatible = "nordic,nrf-spis";
@@ -137,14 +137,14 @@ spi_slave: &spi0 {
 	overrun-character = <0xaa>;
 };
 
-&ieee802154 {
-	status = "okay";
-};
+// &ieee802154 {
+// 	status = "okay";
+// };
 
 // Include flash partition table.
 #include "fstab.dtsi"
 
-zephyr_udc0: &usbd {
-	compatible = "nordic,nrf-usbd";
-	status = "okay";
-};
+// zephyr_udc0: &usbd {
+// 	compatible = "nordic,nrf-usbd";
+// 	status = "okay";
+// };

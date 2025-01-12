@@ -1,0 +1,11 @@
+# SKS AirSpy configuration
+
+# Copyright (c) 2024 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_SKS_DEVEL_SKS_AIRSPY
+
+config BT_CTLR
+	default BT
+
+endif # BOARD_SKS_DEVEL_SKS_AIRSPY
