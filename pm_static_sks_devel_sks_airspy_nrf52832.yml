@@ -1,7 +1,7 @@
 app:
   region: flash_primary
-  address: 0x6200
-  size: 0x39E00
+  address: 0x6400
+  size: 0x3CC00
 
 
 mcuboot:
@@ -19,7 +19,7 @@ mcuboot_primary:
   - mcuboot_primary_app
   span: *id001
   address: 0x6000
-  size: 0x3A000
+  size: 0x3D000
 mcuboot_pad:
   region: flash_primary
   placement:
@@ -28,7 +28,7 @@ mcuboot_pad:
     after:
     - mcuboot
   address: 0x6000
-  size: 0x200
+  size: 0x400
 mcuboot_primary_app:
   region: flash_primary
   placement:
@@ -37,31 +37,22 @@ mcuboot_primary_app:
   orig_span: &id002
   - app
   span: *id002
-  address: 0x6200
-  size: 0x39E00
+  address: 0x6400
+  size: 0x3CC00
 
 mcuboot_secondary:
   region: flash_primary
   placement:
     after:
     - mcuboot_primary
+    before:
+    - end
     align:
       start: 0x1000
-  address: 0x40000
-  size: 0x3A000
+  address: 0x43000
+  size: 0x3D000
   share_size:
   - mcuboot_primary
-
-
-littlefs_storage:
-  region: flash_primary
-  placement:
-    after: mcuboot_secondary
-    before: end
-    align:
-      start: 0x1000
-  address: 0x7A000
-  size: 0x6000
 
 
 sram_primary:

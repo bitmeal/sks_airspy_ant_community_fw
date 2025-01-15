@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <zephyr/kernel.h>
 
 #include <zephyr/device.h>
@@ -14,17 +14,17 @@
 #include <zephyr/pm/device.h>
 #include <zephyr/sys/poweroff.h>
 
-#include <zephyr/fs/fs.h>
-#include <zephyr/fs/littlefs.h>
-#define STORAGE_PARTITION_LABEL storage_partition
-#define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION_LABEL)
+// #include <zephyr/fs/fs.h>
+// #include <zephyr/fs/littlefs.h>
+// #define STORAGE_PARTITION_LABEL storage_partition
+// #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION_LABEL)
 
-FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(cstorage);
-static struct fs_mount_t littlefs_mnt = {
-	.type = FS_LITTLEFS,
-	.fs_data = &cstorage,
-	.storage_dev = (void *)STORAGE_PARTITION_ID,
-	.mnt_point = "/lfs1"};
+// FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(cstorage);
+// static struct fs_mount_t littlefs_mnt = {
+// 	.type = FS_LITTLEFS,
+// 	.fs_data = &cstorage,
+// 	.storage_dev = (void *)STORAGE_PARTITION_ID,
+// 	.mnt_point = "/lfs1"};
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
@@ -47,12 +47,6 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 // 							      {0});
 
 static const struct gpio_dt_spec wake_signal = GPIO_DT_SPEC_GET(DT_ALIAS(wake_pin), gpios);
-// static struct gpio_callback wake_signal_cb_data;
-// void wake_signal_received(const struct device *dev, struct gpio_callback *cb,
-// 						  uint32_t pins)
-// {
-// 	LOG_INF("Wake signal received");
-// }
 
 #define SUPERVISION_CYCLE_TIME_MS 1000
 #define SYS_POWEROFF_DELAY 500
@@ -66,7 +60,7 @@ K_WORK_DELAYABLE_DEFINE(supervision_work, supervise);
 
 static void poweroff(struct k_work *work)
 {
-	spis_suspend();
+	// spis_suspend();
 	
 	int ret = gpio_pin_interrupt_configure_dt(&wake_signal, GPIO_INT_LEVEL_ACTIVE);
 
@@ -108,27 +102,6 @@ static void supervise(struct k_work *work)
 	}
 }
 
-// #include <hal/nrf_gpio.h>
-
-// static void enable_fxth_spi(struct k_work *work);
-// K_WORK_DELAYABLE_DEFINE(enable_fxth_spi_work, enable_fxth_spi);
-
-// // TODO: read from dts
-// #define SPI_SLAVE_CSN_PIN 22
-
-// static void enable_fxth_spi(struct k_work *work)
-// {
-// 	nrf_gpio_pin_pull_t csn_pull_down_cfg = NRF_GPIO_PIN_PULLDOWN;
-// 	nrf_gpio_reconfigure(
-// 		SPI_SLAVE_CSN_PIN,
-// 		NULL,
-// 		NULL,
-// 		&csn_pull_down_cfg,
-// 		NULL,
-// 		NULL
-// 	);
-// }
-
 int main(void)
 {
 	// k_work_schedule(&enable_fxth_spi_work, K_MSEC(470));
@@ -158,14 +131,14 @@ int main(void)
 	///////////////////////////////////////////
 	LOG_INF("starting DFU components...");
 
-	ret = fs_mount(&littlefs_mnt);
-	if (ret < 0)
-	{
-		LOG_ERR("Error mounting littlefs [%d]", ret);
-	}
-	LOG_INF("OK mounted littlefs");
+	// ret = fs_mount(&littlefs_mnt);
+	// if (ret < 0)
+	// {
+	// 	LOG_ERR("Error mounting littlefs [%d]", ret);
+	// }
+	// LOG_INF("OK mounted littlefs");
 
-	///////////////////////////////////////////
+	// ///////////////////////////////////////////
 	if( retained.boots <= 1)
 	{
 		LOG_INF("starting bluetooth services...");
@@ -200,6 +173,10 @@ int main(void)
 			   ret, wake_signal.port->name, wake_signal.pin);
 		return EXIT_FAILURE;
 	}
+
+	///////////////////////////////////////////
+	LOG_INF("starting SPI sensor interface...");
+	spim_init();
 
 	///////////////////////////////////////////
 	LOG_INF("Scheduling application supervision");

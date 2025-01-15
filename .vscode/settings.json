@@ -13,6 +13,8 @@
         "bit": "c",
         "*.tcc": "c",
         "cmath": "c",
-        "random": "c"
+        "random": "c",
+        "system_error": "c",
+        "xlocale": "c"
     }
 }

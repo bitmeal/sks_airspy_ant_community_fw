@@ -3,17 +3,11 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
-// #include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/spi.h>
 #include <zephyr/drivers/gpio.h>
-// #include <zephyr/drivers/pinctrl.h>
-#include <zephyr/pm/device.h>
-
-
-// #include <zephyr/dt-bindings/pinctrl/nrf-pinctrl.h>
+#include <zephyr/drivers/spi.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(spis, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
 
 #include "spi.h"
 #include "com.h"
@@ -25,164 +19,119 @@ LOG_MODULE_REGISTER(spis, LOG_LEVEL_DBG);
 //  sample on CLK rise
 //  freq: 47 / 4.5317e-3 ^= 10.37 kHz
 
-// #define DT_DRV_COMPAT nordic_nrf_spis
-#define SPI_SLAVE_DT_LABEL spi_slave
-#define SPI_SLAVE_NODE DT_NODELABEL(SPI_SLAVE_DT_LABEL)
+#define SPI_MASTER_DT_LABEL spi_master
+#define SPI_MASTER_NODE DT_NODELABEL(SPI_MASTER_DT_LABEL)
 
 // SPI slave functionality
-const struct device *spis_dev;
+const struct device *spim_dev;
+static const struct gpio_dt_spec cs_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, cs_gpios);
 
-static const struct spi_config spis_cfg = {
-	.frequency = 0,
+static const struct spi_config spim_cfg = {
+	// .frequency = 125000,
+	.frequency = 10000,
 	.operation =	SPI_WORD_SET(8) |
-					SPI_TRANSFER_MSB |
-					// SPI_MODE_CPHA |
-					// SPI_MODE_CPOL |
-					SPI_OP_MODE_SLAVE,
+					// SPI_TRANSFER_MSB |
+					SPI_OP_MODE_MASTER,
 	.slave = 0,
 	.cs = NULL
 };
+#define SPIM_CS_TRANSFER_DELAY_MS 0
 
-#define SPIS_STACK_SIZE 500
-#define SPIS_PRIORITY 5
+// #define SPIM_STACK_SIZE 500
+// #define SPIM_PRIORITY 5
 
-extern void spis_thread(void *, void *, void *);
+// extern void spim_thread(void *, void *, void *);
+// K_THREAD_DEFINE(spim_tid, SPIM_STACK_SIZE, spim_thread, NULL, NULL, NULL,
+// 				SPIM_PRIORITY, 0, 0);
 
-K_THREAD_DEFINE(spis_tid, SPIS_STACK_SIZE, spis_thread, NULL, NULL, NULL,
-				SPIS_PRIORITY, 0, 0);
+static void spim_receive(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(spim_receive_work, spim_receive);
 
-#include <hal/nrf_gpio.h>
-#include <math.h>
-// // TODO: read from dts
-#define SPI_SLAVE_CSN_PIN 22
-#define SPI_SLAVE_CLK_PIN 19
-#define SPI_SLAVE_MOSI_PIN 15
-
-#define SPI_PIN_STATES 3
-#define SPI_PINS_ACTIVE 3
-
-#define SPI_PINS_CHANGE_STATE_EVERY 4
-
-// change pull/bias state of all SPI pins to find working one: pin state forumla:
-// pprint.pp([(i / (outputs**0) % states, int(i / (outputs**1)) % states, int(i / (outputs**2)) % states) for i in range(states**outputs)])
-static void cycle_spi_pin_config(void)
+static struct gpio_callback cs_cb_data;
+void cs_cb_handler(const struct device *dev, struct gpio_callback *cb,
+						  uint32_t pins)
 {
-	const static nrf_gpio_pin_pull_t spi_pin_pull_lookup[SPI_PIN_STATES] = { NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_PULLDOWN, NRF_GPIO_PIN_PULLUP };
-	// const static char* spi_pin_pull_lookup_str[SPI_PIN_STATES] = { "NRF_GPIO_PIN_NOPULL", "NRF_GPIO_PIN_PULLDOWN", "NRF_GPIO_PIN_PULLUP" };
-
-	static int cycle_counter = 0;
-
-	if(cycle_counter % SPI_PINS_CHANGE_STATE_EVERY == 0)
-	{
-		int cycle_idx = cycle_counter / SPI_PINS_CHANGE_STATE_EVERY;
-
-		int csn_pull_idx = cycle_idx % SPI_PIN_STATES;
-		int clk_pull_idx = ( cycle_idx / SPI_PINS_ACTIVE ) % SPI_PIN_STATES;
-		int mosi_pull_idx = ( cycle_idx / ( SPI_PINS_ACTIVE * SPI_PINS_ACTIVE ) ) % SPI_PIN_STATES;
-
-		// LOG_INF("CSN: %s; CLK: %s; MOSI: %s", spi_pin_pull_lookup_str[csn_pull_idx], spi_pin_pull_lookup_str[clk_pull_idx], spi_pin_pull_lookup_str[mosi_pull_idx]);
-		LOG_INF("CSN: %d; CLK: %d; MOSI: %d", csn_pull_idx, clk_pull_idx, mosi_pull_idx);
-
-		nrf_gpio_reconfigure(
-			SPI_SLAVE_CSN_PIN,
-			NULL,
-			NULL,
-			&spi_pin_pull_lookup[csn_pull_idx],
-			NULL,
-			NULL
-		);
-
-		nrf_gpio_reconfigure(
-			SPI_SLAVE_CLK_PIN,
-			NULL,
-			NULL,
-			&spi_pin_pull_lookup[clk_pull_idx],
-			NULL,
-			NULL
-		);
-
-		nrf_gpio_reconfigure(
-			SPI_SLAVE_MOSI_PIN,
-			NULL,
-			NULL,
-			&spi_pin_pull_lookup[mosi_pull_idx],
-			NULL,
-			NULL
-		);
-
-	}
+	LOG_INF("CS signal received from slave; scheduling SPI receive");
 	
-	cycle_counter++;
+	k_work_schedule(&spim_receive_work, K_MSEC(SPIM_CS_TRANSFER_DELAY_MS));
 }
 
-static void spis_init(void)
+int spim_init(void)
 {
-	spis_dev = DEVICE_DT_GET(SPI_SLAVE_NODE);
+	int ret;
 
-	if (spis_dev == NULL)
+	spim_dev = DEVICE_DT_GET(SPI_MASTER_NODE);
+
+	if (spim_dev == NULL)
 	{
-		LOG_ERR("Could not get %s device", spis_dev->name);
-		return;
-	}
-
-	if (!device_is_ready(spis_dev))
-	{
-		LOG_ERR("SPI slave device not ready!");
-		return;
-	}
-
-	LOG_DBG("Device name: %s", spis_dev->name);
-
-	// nrf_gpio_pin_pull_t csn_pull_cfg = nrf_gpio_pin_pull_get(SPI_SLAVE_CSN_PIN);
-	// nrf_gpio_pin_pull_t csn_pull_down_cfg = NRF_GPIO_PIN_PULLDOWN;
-	// nrf_gpio_reconfigure(
-	// 	SPI_SLAVE_CSN_PIN,
-	// 	NULL,
-	// 	NULL,
-	// 	&csn_pull_down_cfg,
-	// 	NULL,
-	// 	NULL
-	// );
-	
-	// k_sleep(K_MSEC(52));
-
-	// nrf_gpio_reconfigure(
-	// 	SPI_SLAVE_CSN_PIN,
-	// 	NULL,
-	// 	NULL,
-	// 	&csn_pull_cfg,
-	// 	NULL,
-	// 	NULL
-	// );
-
-	// LOG_INF("SPI CSN %d, MISO %d, MOSI %d, CLK %d\n",
-	// 		DT_PROP_BY_IDX(SPI_SLAVE_PINCTRL_NODE, psels, NRF_FUN_SPIS_CSN),
-	// 		DT_PROP_BY_IDX(SPI_SLAVE_PINCTRL_NODE, psels, NRF_FUN_SPIS_MISO),
-	// 		DT_PROP_BY_IDX(SPI_SLAVE_PINCTRL_NODE, psels, NRF_FUN_SPIS_MOSI),
-	// 		DT_PROP_BY_IDX(SPI_SLAVE_PINCTRL_NODE, psels, NRF_FUN_SPIS_SCK)
-	// 	);
-}
-
-int spis_suspend(void)
-{
-	// spis_dev = DEVICE_DT_GET(DT_NODELABEL(SPI_SLAVE_DT_LABEL));
-
-	if (spis_dev == NULL)
-	{
-		LOG_ERR("Could not get %s device", spis_dev->name);
+		LOG_ERR("Could not get %s device", spim_dev->name);
 		return EXIT_FAILURE;
 	}
 
-	int rc = pm_device_action_run(spis_dev, PM_DEVICE_ACTION_SUSPEND);
-	if(rc != 0)
+	if (!device_is_ready(spim_dev))
 	{
-		LOG_ERR("Could not suspend %s device", spis_dev->name);
+		LOG_ERR("SPI slave device not ready!");
+		return EXIT_FAILURE;
 	}
 
-	return rc;
+	if (!gpio_is_ready_dt(&cs_gpio))
+	{
+		LOG_ERR("Error: SPIM CS GPIO device %s is not ready",
+				cs_gpio.port->name);
+		return EXIT_FAILURE;
+	}
+
+	ret = gpio_pin_configure_dt(&cs_gpio, GPIO_INPUT);
+	if (ret != 0)
+	{
+		LOG_ERR("Error %d: failed to configure %s pin %d",
+			   ret, cs_gpio.port->name, cs_gpio.pin);
+		return EXIT_FAILURE;
+	}
+
+	ret = gpio_pin_interrupt_configure_dt(&cs_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+	if (ret != 0)
+	{
+		LOG_ERR("Error %d: failed to configure interrupt on %s pin %d\n",
+			ret, cs_gpio.port->name, cs_gpio.pin);
+		return EXIT_FAILURE;
+	}
+
+	gpio_init_callback(&cs_cb_data, cs_cb_handler, BIT(cs_gpio.pin));
+
+	ret = gpio_add_callback(cs_gpio.port, &cs_cb_data);
+	if (ret != 0)
+	{
+		LOG_ERR("Error %d: failed to configure callback for interrupt on %s pin %d\n",
+			ret, cs_gpio.port->name, cs_gpio.pin);
+		return EXIT_FAILURE;
+	}
+
+	LOG_DBG("SPI device %s OK", spim_dev->name);
+
+	return EXIT_SUCCESS;
 }
 
-static void spis_receive(void)
+// int spim_suspend(void)
+// {
+// 	// spim_dev = DEVICE_DT_GET(DT_NODELABEL(SPI_SLAVE_DT_LABEL));
+
+// 	if (spim_dev == NULL)
+// 	{
+// 		LOG_ERR("Could not get %s device", spim_dev->name);
+// 		return EXIT_FAILURE;
+// 	}
+
+// 	int rc = pm_device_action_run(spim_dev, PM_DEVICE_ACTION_SUSPEND);
+// 	if(rc != 0)
+// 	{
+// 		LOG_ERR("Could not suspend %s device", spim_dev->name);
+// 	}
+
+// 	return rc;
+// }
+
+static void spim_receive(struct k_work *work)
 {
 	int err;
 
@@ -192,48 +141,29 @@ static void spis_receive(void)
 	struct spi_buf rx_buf = {.buf = rx_buffer, .len = sizeof(rx_buffer),};
 	const struct spi_buf_set rx = {.buffers = &rx_buf, .count = 1};
 
-	const struct spi_buf_set tx = {.buffers = NULL, .count = 0};
-
-	cycle_spi_pin_config();
-
-	err = spi_transceive(spis_dev, &spis_cfg, &tx, &rx);
+	err = spi_read(spim_dev, &spim_cfg, &rx);
 	if (err < 0)
 	{
 		LOG_ERR("SPI error: %d", err);
 	}
 	else
 	{
-		LOG_HEXDUMP_INF(rx_buffer, err, "SPI rx:");
-
 		err = decode_sensor_buffer(rx_buffer, &sensor_data);
 
-		LOG_DBG("CHK: buff: %x; decoder: %x", rx_buffer[5], sensor_data.checksum);
-
-		if (err != SENSOR_ERROR_CHK)
+		if (err == SENSOR_ERROR_CHK)
 		{
+			LOG_WRN("SPI sensor data checksum error! buff: %x; decoder: %x", rx_buffer[5], sensor_data.checksum);
+			return;
+		}
 		
-			LOG_INF("P[hPa]: %u; T[C]: %d; V[mV]: %u", sensor_data.pressure_hpa, sensor_data.temperature_c, sensor_data.voltage_mv);
+		LOG_HEXDUMP_INF(rx_buffer, sizeof(rx_buffer), "SPI rx:");
+		LOG_INF("P[hPa]: %u; T[C]: %d; V[mV]: %u", sensor_data.pressure_hpa, sensor_data.temperature_c, sensor_data.voltage_mv);
 
-			while (k_msgq_put(&spi_ant_queue, &(sensor_data.pressure_hpa), K_NO_WAIT) != 0)
-			{
-				/* message queue is full: purge old data & try again */
-				LOG_WRN("SPI message queue exhausted; purging messages");
-				k_msgq_purge(&spi_ant_queue);
-			}
-		}
-		else
+		while (k_msgq_put(&spi_ant_queue, &(sensor_data.pressure_hpa), K_NO_WAIT) != 0)
 		{
-			LOG_ERR("SPI sensor data checksum error");
+			/* message queue is full: purge old data & try again */
+			LOG_WRN("SPI message queue exhausted; purging messages");
+			k_msgq_purge(&spi_ant_queue);
 		}
-	}
-}
-
-extern void spis_thread(void *unused1, void *unused2, void *unused3)
-{
-	spis_init();
-
-	while (1)
-	{
-		spis_receive();
 	}
 }
