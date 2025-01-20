@@ -14,18 +14,6 @@
 #include <zephyr/pm/device.h>
 #include <zephyr/sys/poweroff.h>
 
-// #include <zephyr/fs/fs.h>
-// #include <zephyr/fs/littlefs.h>
-// #define STORAGE_PARTITION_LABEL storage_partition
-// #define STORAGE_PARTITION_ID FIXED_PARTITION_ID(STORAGE_PARTITION_LABEL)
-
-// FS_LITTLEFS_DECLARE_DEFAULT_CONFIG(cstorage);
-// static struct fs_mount_t littlefs_mnt = {
-// 	.type = FS_LITTLEFS,
-// 	.fs_data = &cstorage,
-// 	.storage_dev = (void *)STORAGE_PARTITION_ID,
-// 	.mnt_point = "/lfs1"};
-
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
@@ -33,6 +21,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 #include "ant.h"
 #include "spi.h"
 #include "retained.h"
+
 
 
 // TODO: check DT nodes on compile time
@@ -104,8 +93,6 @@ static void supervise(struct k_work *work)
 
 int main(void)
 {
-	// k_work_schedule(&enable_fxth_spi_work, K_MSEC(470));
-
 	int ret;
 
 	// /* using __TIME__ ensure that a new binary will be built on every

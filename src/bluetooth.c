@@ -13,6 +13,8 @@
 
 #include <zephyr/logging/log_backend_ble.h>
 
+#include "common.h"
+
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt, LOG_LEVEL_DBG);
@@ -36,7 +38,8 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 };
 
 static const struct bt_data advertising_data_smp[] = {
-#if CONFIG_BT_DEVICE_APPEARANCE && CONFIG_BT_DIS
+// #if CONFIG_BT_DEVICE_APPEARANCE && CONFIG_BT_DIS
+#if CONFIG_BT_DEVICE_APPEARANCE
 	/* Appearance */
 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
@@ -66,9 +69,12 @@ static const struct bt_data advertising_data_nus[] = {
 };
 #endif
 
-static const struct bt_data scan_response_data[] = {
-	BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
-};
+struct bt_data scan_response_data[1];
+// struct bt_data scan_response_data[] = {
+// 	BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
+// };
+
+char bt_name[CONFIG_BT_DEVICE_NAME_MAX + 1];
 
 static void auth_cancel(struct bt_conn *conn)
 {
@@ -91,6 +97,12 @@ static void advertise(struct k_work *work)
 
 	bt_conn_auth_cb_register(&auth_cb_display);
 
+	// construct dynamic device name
+	snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05d", CONFIG_BT_DEVICE_NAME, get_hwid_16bit());
+	LOG_INF("BT name: %s", bt_name);
+	bt_set_name(bt_name);
+
+	scan_response_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_smp, ARRAY_SIZE(advertising_data_smp), scan_response_data, ARRAY_SIZE(scan_response_data));
 	if (rc) {
 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_smp", rc);

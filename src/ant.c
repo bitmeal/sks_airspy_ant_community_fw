@@ -5,13 +5,12 @@
 #include <zephyr/kernel.h>
 
 #include "ant.h"
+#include "common.h"
 
 #include <ant_parameters.h>
 #include <ant_key_manager.h>
 
 #include <ant_profiles/tpms/ant_tpms.h>
-// #include <ant_profiles/tpms/simulator/ant_tpms_simulator.h>
-
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ant, LOG_LEVEL_INF);
@@ -23,19 +22,16 @@ LOG_MODULE_REGISTER(ant, LOG_LEVEL_INF);
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event);
 
 TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_evt_handler);
-TPMS_SENS_CHANNEL_CONFIG_DEF(tpms,
-  0,    // hardware ANT channel 0
-  5,    // transmission type: use common pages
-  1234, // device number id
-  0     // network number
-);
+ant_channel_config_t tpms_channel_tpms_sens_config;
+// TPMS_SENS_CHANNEL_CONFIG_DEF(tpms,
+//   0,    // hardware ANT channel 0
+//   5,    // transmission type: use common pages
+//   0xffff, // device number id; placeholder 0xffff
+//   0     // network number
+// );
 
-// #define TIMER_TICK_MS (ANT_TPMS_OPERATING_TIME_UNIT * 1000)
-// static void timeout_handler(struct k_timer *timer_id);
-// static K_TIMER_DEFINE(timer, timeout_handler, NULL);
 
 static ant_tpms_profile_t tpms;
-// static ant_tpms_simulator_t tpms_simulator;
 
 #define LOG_MSGQ_EMPTY_WRN_EVERY 4
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event)
@@ -66,21 +62,6 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
   }
 }
 
-// static void simulator_setup(void)
-// {
-//   const ant_tpms_simulator_cfg_t simulator_cfg = {
-//       .p_profile = &tpms,
-//   };
-
-//   ant_tpms_simulator_init(&tpms_simulator, &simulator_cfg, true);
-// }
-
-// static void timeout_handler(struct k_timer *timer_id)
-// {
-//     /* noop */
-//     /* cyclic timer callback */
-// }
-
 static void ant_evt_handler(ant_evt_t *p_ant_evt)
 {
   ant_tpms_sens_evt_handler(p_ant_evt, &tpms);
@@ -88,6 +69,18 @@ static void ant_evt_handler(ant_evt_t *p_ant_evt)
 
 static int profile_setup(void)
 {
+  tpms_channel_tpms_sens_config = (ant_channel_config_t) {
+        .channel_number    = 0,                       // hardware ANT channel 0
+        .channel_type      = TPMS_SENS_CHANNEL_TYPE,
+        .ext_assign        = TPMS_EXT_ASSIGN,
+        .rf_freq           = TPMS_ANTPLUS_RF_FREQ,
+        .transmission_type = 5,                       // transmission type: use common pages
+        .device_type       = TPMS_DEVICE_TYPE,
+        .device_number     = get_hwid_16bit(),        // device number id
+        .channel_period    = TPMS_MSG_PERIOD,
+        .network_number    = 0,                       // network number
+    };
+
   int err = ant_tpms_sens_init(&tpms,
     TPMS_SENS_CHANNEL_CONFIG(tpms),
     TPMS_SENS_PROFILE_CONFIG(tpms));
