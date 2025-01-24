@@ -24,7 +24,7 @@
 #include "ant_tpms_page_1.h"        // Tire pressure main data page.
 #include "ant_profiles/common/pages/ant_common_page_80.h"     // Manufacturer's information data page.
 #include "ant_profiles/common/pages/ant_common_page_81.h"     // Product information data page.
-// #include "ant_profiles/common/pages/ant_common_page_82.h"     // Battery status data page.
+#include "ant_profiles/common/pages/ant_common_page_82.h"     // Battery status data page.
 
 #ifdef __cplusplus
 extern "C" {

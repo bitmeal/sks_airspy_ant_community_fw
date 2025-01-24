@@ -37,8 +37,9 @@ target_sources(app PRIVATE src/com.c)
 target_sources(app PRIVATE src/decoder.c)
 
 # TODO: build as library
-target_sources(app PRIVATE src/ant_tpms/ant_tpms.c)
-target_sources(app PRIVATE src/ant_tpms/pages/ant_tpms_page_1.c)
+target_sources(app PRIVATE src/ant_profiles/ant_tpms/ant_tpms.c)
+target_sources(app PRIVATE src/ant_profiles/ant_tpms/pages/ant_tpms_page_1.c)
 # target_sources(app PRIVATE src/ant_tpms/simulator/ant_tpms_simulator.c)
+target_sources(app PRIVATE src/ant_profiles/ant_common/pages/ant_common_page_82.c)
 
 # zephyr_library_include_directories(.)

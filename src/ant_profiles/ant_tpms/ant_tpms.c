@@ -43,10 +43,10 @@ static int ant_tpms_init(ant_tpms_profile_t         * p_profile,
 {
     p_profile->channel_number = p_channel_config->channel_number;
 
-    p_profile->page_1  = DEFAULT_ANT_TPMS_PAGE1();
+    p_profile->page_1  = DEFAULT_ANT_TPMS_page1();
     p_profile->page_80 = DEFAULT_ANT_COMMON_page80();
     p_profile->page_81 = DEFAULT_ANT_COMMON_page81();
-    // p_profile->page_82 = DEFAULT_ANT_COMMON_page82();
+    p_profile->page_82 = DEFAULT_ANT_COMMON_page82();
 
     LOG_INF("ANT TPMS channel %u init", p_profile->channel_number);
     return ant_channel_init(p_channel_config);
@@ -109,11 +109,11 @@ static ant_tpms_page_t next_page_number_get(ant_tpms_profile_t * p_profile)
             break;
         case COMMON_PAGE_81_INTERVAL:
             page_number = ANT_TPMS_PAGE_81;
+            break;
+        case COMMON_PAGE_82_INTERVAL:
+            page_number = ANT_TPMS_PAGE_82;
             p_tpms_cb->message_counter = 0;
             break;
-        // case COMMON_PAGE_82_INTERVAL:
-        //     page_number = ANT_TPMS_PAGE_82;
-        //     break;
         default:
             page_number = ANT_TPMS_PAGE_1;
     }
@@ -149,9 +149,9 @@ static void sens_message_encode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
             ant_common_page_81_encode(p_tpms_message_payload->page_payload, &(p_profile->page_81));
             break;
 
-        // case ANT_COMMON_PAGE_82:
-        //     ant_common_page_82_encode(p_tpms_message_payload->page_payload, &(p_profile->page_82));
-        //     break;
+        case ANT_COMMON_PAGE_82:
+            ant_common_page_82_encode(p_tpms_message_payload->page_payload, &(p_profile->page_82));
+            break;
 
         default:
             return;
@@ -209,9 +209,9 @@ static void disp_message_decode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
             ant_common_page_81_decode(p_tpms_message_payload->page_payload, &(p_profile->page_81));
             break;
 
-        // case ANT_COMMON_PAGE_82:
-        //     ant_common_page_82_decode(p_tpms_message_payload->page_payload, &(p_profile->page_82));
-        //     break;
+        case ANT_COMMON_PAGE_82:
+            ant_common_page_82_decode(p_tpms_message_payload->page_payload, &(p_profile->page_82));
+            break;
 
         default:
             return;

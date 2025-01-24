@@ -30,7 +30,7 @@ typedef struct
 
 /**@brief Initialize page 1.
  */
-#define DEFAULT_ANT_TPMS_PAGE1()                                \
+#define DEFAULT_ANT_TPMS_page1()                                \
     (ant_tpms_page1_data_t)                                     \
     {                                                           \
         .pressure = 0,                                          \

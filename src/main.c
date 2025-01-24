@@ -113,17 +113,7 @@ int main(void)
 	retained.boots += 1;
 	retained_update();
 
-	LOG_INF("Boot: %u; Off: %u; Active Ticks: %" PRIu64, retained.boots, retained.off_count, retained.uptime_sum);
-
-	///////////////////////////////////////////
-	LOG_INF("starting DFU components...");
-
-	// ret = fs_mount(&littlefs_mnt);
-	// if (ret < 0)
-	// {
-	// 	LOG_ERR("Error mounting littlefs [%d]", ret);
-	// }
-	// LOG_INF("OK mounted littlefs");
+	LOG_INF("Boot: %u; Uptime: %us" PRIu64, retained.boots, retained.off_count, retained.uptime_sum);
 
 	// ///////////////////////////////////////////
 	if( retained.boots <= 1)

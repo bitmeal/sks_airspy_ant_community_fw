@@ -124,8 +124,8 @@ typedef enum
 {
     ANT_TPMS_PAGE_1  = 1,  ///< Tire pressure main data page.
     ANT_TPMS_PAGE_80 = ANT_COMMON_PAGE_80,
-    ANT_TPMS_PAGE_81 = ANT_COMMON_PAGE_81
-    // ANT_TPMS_PAGE_82 = ANT_COMMON_PAGE_82
+    ANT_TPMS_PAGE_81 = ANT_COMMON_PAGE_81,
+    ANT_TPMS_PAGE_82 = ANT_COMMON_PAGE_82
 } ant_tpms_page_t;
 
 /**@brief TPMS profile event type. */
@@ -133,8 +133,8 @@ typedef enum
 {
     ANT_TPMS_PAGE_1_UPDATED  = ANT_TPMS_PAGE_1,  ///< Data page 1 and speed have been updated (Display) or sent (Sensor).
     ANT_TPMS_PAGE_80_UPDATED = ANT_TPMS_PAGE_80, ///< Data page 80 has been updated (Display) or sent (Sensor).
-    ANT_TPMS_PAGE_81_UPDATED = ANT_TPMS_PAGE_81 ///< Data page 81 has been updated (Display) or sent (Sensor).
-    // ANT_TPMS_PAGE_82_UPDATED = ANT_TPMS_PAGE_82 ///< Data page 82 has been updated (Display) or sent (Sensor).
+    ANT_TPMS_PAGE_81_UPDATED = ANT_TPMS_PAGE_81, ///< Data page 81 has been updated (Display) or sent (Sensor).
+    ANT_TPMS_PAGE_82_UPDATED = ANT_TPMS_PAGE_82 ///< Data page 82 has been updated (Display) or sent (Sensor).
 } ant_tpms_evt_t;
 
 // Forward declaration of the ant_tpms_profile_t type.
@@ -176,21 +176,29 @@ struct ant_tpms_profile_s
     ant_tpms_page1_data_t    page_1;         ///< Page 1.
     ant_common_page80_data_t page_80;        ///< Page 80.
     ant_common_page81_data_t page_81;        ///< Page 81.
-    // ant_common_page82_data_t page_82;        ///< Page 82.
+    ant_common_page82_data_t page_82;        ///< Page 82.
 };
 
 /** @name Defines for accessing ant_tpms_profile_t member variables
    @{ */
-#define TPMS_PROFILE_pressure                   page_1.pressure
+#define TPMS_PROFILE_pressure               page_1.pressure
 
-#define TPMS_PROFILE_manuf_id                    page_80.manuf_id
-#define TPMS_PROFILE_hw_revision                 page_80.hw_revision
-#define TPMS_PROFILE_manufacturer_id             page_80.manufacturer_id
-#define TPMS_PROFILE_model_number                page_80.model_number
-#define TPMS_PROFILE_sw_revision_minor           page_81.sw_revision_minor
-#define TPMS_PROFILE_sw_revision_major           page_81.sw_revision_major
-#define TPMS_PROFILE_serial_number               page_81.serial_number
-//TODO page 82 access
+#define TPMS_PROFILE_manuf_id               page_80.manuf_id
+#define TPMS_PROFILE_hw_revision            page_80.hw_revision
+#define TPMS_PROFILE_manufacturer_id        page_80.manufacturer_id
+#define TPMS_PROFILE_model_number           page_80.model_number
+
+#define TPMS_PROFILE_sw_revision_minor      page_81.sw_revision_minor
+#define TPMS_PROFILE_sw_revision_major      page_81.sw_revision_major
+#define TPMS_PROFILE_serial_number          page_81.serial_number
+
+#define TPMS_PROFILE_battery_count          page_82.battery_count
+#define TPMS_PROFILE_battery_id             page_82.battery_id
+#define TPMS_PROFILE_operating_time         page_82.operating_time
+#define TPMS_PROFILE_battery_voltage_mv     page_82.battery_voltage_mv
+#define TPMS_PROFILE_battery_status         page_82.battery_status
+
+
 /** @} */
 
 /**@brief Function for initializing the ANT Tire Pressure Display profile instance.

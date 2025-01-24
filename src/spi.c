@@ -37,12 +37,6 @@ static const struct spi_config spim_cfg = {
 };
 #define SPIM_CS_TRANSFER_DELAY_MS 0
 
-// #define SPIM_STACK_SIZE 500
-// #define SPIM_PRIORITY 5
-
-// extern void spim_thread(void *, void *, void *);
-// K_THREAD_DEFINE(spim_tid, SPIM_STACK_SIZE, spim_thread, NULL, NULL, NULL,
-// 				SPIM_PRIORITY, 0, 0);
 
 static void spim_receive(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(spim_receive_work, spim_receive);
@@ -111,25 +105,6 @@ int spim_init(void)
 
 	return EXIT_SUCCESS;
 }
-
-// int spim_suspend(void)
-// {
-// 	// spim_dev = DEVICE_DT_GET(DT_NODELABEL(SPI_SLAVE_DT_LABEL));
-
-// 	if (spim_dev == NULL)
-// 	{
-// 		LOG_ERR("Could not get %s device", spim_dev->name);
-// 		return EXIT_FAILURE;
-// 	}
-
-// 	int rc = pm_device_action_run(spim_dev, PM_DEVICE_ACTION_SUSPEND);
-// 	if(rc != 0)
-// 	{
-// 		LOG_ERR("Could not suspend %s device", spim_dev->name);
-// 	}
-
-// 	return rc;
-// }
 
 static void spim_receive(struct k_work *work)
 {

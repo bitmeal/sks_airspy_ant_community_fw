@@ -4,6 +4,8 @@
 
 #include <zephyr/kernel.h>
 
+#include "app_version.h"
+
 #include "ant.h"
 #include "common.h"
 
@@ -23,14 +25,6 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
 
 TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_evt_handler);
 ant_channel_config_t tpms_channel_tpms_sens_config;
-// TPMS_SENS_CHANNEL_CONFIG_DEF(tpms,
-//   0,    // hardware ANT channel 0
-//   5,    // transmission type: use common pages
-//   0xffff, // device number id; placeholder 0xffff
-//   0     // network number
-// );
-
-
 static ant_tpms_profile_t tpms;
 
 #define LOG_MSGQ_EMPTY_WRN_EVERY 4
@@ -56,6 +50,11 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
         msgq_empty_counter = 0;
         p_profile->TPMS_PROFILE_pressure = data;
       }
+      break;
+    case ANT_TPMS_PAGE_82_UPDATED:
+      // TODO: use actual sensor data
+      p_profile->TPMS_PROFILE_battery_voltage_mv = 3125;
+      p_profile->TPMS_PROFILE_battery_status = ANT_COMMON_page82_BATTERY_STATE_OK;
       break;
     default:
       break;
@@ -89,11 +88,9 @@ static int profile_setup(void)
     return err;
   }
 
-//   tpms.TPMS_PROFILE_manuf_id   = TPMS_TX_MFG_ID;
-//   tpms.TPMS_PROFILE_serial_num = TPMS_TX_SERIAL_NUM;
-//   tpms.TPMS_PROFILE_hw_version = TPMS_TX_HW_VERSION;
-//   tpms.TPMS_PROFILE_sw_version = TPMS_TX_SW_VERSION;
-//   tpms.TPMS_PROFILE_model_num  = TPMS_TX_MODEL_NUM;
+  tpms.TPMS_PROFILE_sw_revision_minor = APP_VERSION_MINOR;
+  tpms.TPMS_PROFILE_sw_revision_major = APP_VERSION_MAJOR;
+  tpms.TPMS_PROFILE_serial_number  = get_hwid_16bit();
 
   err = ant_tpms_sens_open(&tpms);
   if (err) {
