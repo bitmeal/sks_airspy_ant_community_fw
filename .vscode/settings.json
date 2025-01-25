@@ -15,6 +15,7 @@
         "cmath": "c",
         "random": "c",
         "system_error": "c",
-        "xlocale": "c"
+        "xlocale": "c",
+        "ant.h": "c"
     }
 }

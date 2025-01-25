@@ -10,8 +10,8 @@
 LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
 
 #include "spi.h"
-#include "com.h"
-#include "decoder.h"
+#include "zbus_com.h"
+#include "sensor.h"
 
 // SPI:
 //  CS: active low
@@ -22,7 +22,7 @@ LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
 #define SPI_MASTER_DT_LABEL spi_master
 #define SPI_MASTER_NODE DT_NODELABEL(SPI_MASTER_DT_LABEL)
 
-// SPI slave functionality
+// SPI slave 
 const struct device *spim_dev;
 static const struct gpio_dt_spec cs_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, cs_gpios);
 
@@ -134,11 +134,6 @@ static void spim_receive(struct k_work *work)
 		LOG_HEXDUMP_INF(rx_buffer, sizeof(rx_buffer), "SPI rx:");
 		LOG_INF("P[hPa]: %u; T[C]: %d; V[mV]: %u", sensor_data.pressure_hpa, sensor_data.temperature_c, sensor_data.voltage_mv);
 
-		while (k_msgq_put(&spi_ant_queue, &(sensor_data.pressure_hpa), K_NO_WAIT) != 0)
-		{
-			/* message queue is full: purge old data & try again */
-			LOG_WRN("SPI message queue exhausted; purging messages");
-			k_msgq_purge(&spi_ant_queue);
-		}
+		zbus_chan_pub(&sensor_data_chan, &sensor_data, K_MSEC(250));
 	}
 }

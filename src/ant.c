@@ -17,8 +17,10 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ant, LOG_LEVEL_INF);
 
-#include "com.h"
-#include "decoder.h"
+#include "zbus_com.h"
+#include "sensor.h"
+#include "retained.h"
+
 // typedef typeof(((struct sensor_readings_t){}).pressure_hpa) pressure_hpa_t;
 
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event);
@@ -27,34 +29,16 @@ TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_evt_handler);
 ant_channel_config_t tpms_channel_tpms_sens_config;
 static ant_tpms_profile_t tpms;
 
-#define LOG_MSGQ_EMPTY_WRN_EVERY 4
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event)
 {
-  static size_t msgq_empty_counter = 0;
-
   switch (event) {
     case ANT_TPMS_PAGE_1_UPDATED:
-      // TODO: get type from struct
-      int16_t data;
-      
-      if (k_msgq_get(&spi_ant_queue, &data, K_NO_WAIT) != 0)
-      {
-        if(msgq_empty_counter % LOG_MSGQ_EMPTY_WRN_EVERY == 0)
-        {
-          LOG_WRN("no new data in sensor queue");
-        }
-        msgq_empty_counter++;
-      }
-      else
-      {
-        msgq_empty_counter = 0;
-        p_profile->TPMS_PROFILE_pressure = data;
-      }
+      break;
+    case ANT_TPMS_PAGE_80_UPDATED:
+      break;
+    case ANT_TPMS_PAGE_81_UPDATED:
       break;
     case ANT_TPMS_PAGE_82_UPDATED:
-      // TODO: use actual sensor data
-      p_profile->TPMS_PROFILE_battery_voltage_mv = 3125;
-      p_profile->TPMS_PROFILE_battery_status = ANT_COMMON_page82_BATTERY_STATE_OK;
       break;
     default:
       break;
@@ -64,6 +48,46 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
 static void ant_evt_handler(ant_evt_t *p_ant_evt)
 {
   ant_tpms_sens_evt_handler(p_ant_evt, &tpms);
+}
+
+void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
+{
+	const struct sensor_readings_t *msg = zbus_chan_const_msg(chan);
+
+	LOG_INF("Updating ANT+ pages with sensor data");
+
+  // page 1: pressure
+  tpms.page_1.pressure = msg->pressure_hpa;
+
+  // page 82: battery state and uptime
+  uint8_t battery_perc = battery_level_percent(msg->voltage_mv);
+  ANT_COMMON_page82_BATTERY_STATE battery_state = ANT_COMMON_page82_BATTERY_STATE_INVALID;
+  if(battery_perc >= 100)
+  {
+    battery_state = ANT_COMMON_page82_BATTERY_STATE_NEW;
+  }
+  else if(battery_perc >= 50) // < 100
+  {
+    battery_state = ANT_COMMON_page82_BATTERY_STATE_GOOD;
+  }
+  else if(battery_perc >= 15) // < 50
+  {
+    battery_state = ANT_COMMON_page82_BATTERY_STATE_OK;
+  }
+  else if(battery_perc >= 5) // < 15
+  {
+    battery_state = ANT_COMMON_page82_BATTERY_STATE_LOW;
+  }
+  else // < 5
+  {
+    battery_state = ANT_COMMON_page82_BATTERY_STATE_CRITICAL;
+  }
+
+  tpms.page_82.operating_time = retained.uptime_sum + (k_uptime_seconds() - retained.uptime_latest);
+  tpms.page_82.battery_voltage_mv = msg->voltage_mv;
+  tpms.page_82.battery_status = battery_state;
+  // tpms.page_82.battery_status
+
 }
 
 static int profile_setup(void)
@@ -88,9 +112,12 @@ static int profile_setup(void)
     return err;
   }
 
-  tpms.TPMS_PROFILE_sw_revision_minor = APP_VERSION_MINOR;
-  tpms.TPMS_PROFILE_sw_revision_major = APP_VERSION_MAJOR;
-  tpms.TPMS_PROFILE_serial_number  = get_hwid_16bit();
+  tpms.page_81.sw_revision_minor = APP_VERSION_MINOR;
+  tpms.page_81.sw_revision_major = APP_VERSION_MAJOR;
+  tpms.page_81.serial_number  = get_hwid_16bit();
+
+  // tpms.page_82.battery_count = 1;
+  // tpms.page_82.battery_id = 0;
 
   err = ant_tpms_sens_open(&tpms);
   if (err) {
@@ -118,7 +145,6 @@ static int ant_stack_setup(void)
     return err;
   }
 
-//   err = ant_plus_key_set(TPMS_TX_NETWORK_NUM);
   err = ant_plus_key_set(0); // default network number
   if (err) {
     LOG_ERR("ant_plus_key_set failed: %d", err);
@@ -135,9 +161,6 @@ int start_ant_device(void)
     LOG_ERR("ANT stack setup failed (rc %d)", err);
     return err;
   }
-
-
-  // simulator_setup();
 
   err = profile_setup();
   if (err) {

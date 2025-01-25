@@ -1,35 +1,10 @@
-#pragma once
+#ifndef INCLUDE_APP_ANT_H__
+#define INCLUDE_APP_ANT_H__
+
+#include <zephyr/zbus/zbus.h>
 
 int start_ant_device(void);
 
-// #define HRM_TX_HW_VERSION 5
-// #define HRM_TX_MFG_ID 2
-// #define HRM_TX_MODEL_NUM 2
-// #define HRM_TX_SW_VERSION 0
-// #define HRM_TX_SERIAL_NUM 43981
+void ant_sensor_data_handler_cb(const struct zbus_channel *chan);
 
-// config HRM_TX_HW_VERSION
-// 	int "Hardware revision"
-// 	default 5
-// 	range 0 255
-
-// config HRM_TX_MFG_ID
-// 	int "Manufacturer ID"
-// 	default 2
-// 	range 0 255
-
-// config HRM_TX_MODEL_NUM
-// 	int "Model number"
-// 	default 2
-// 	range 0 255
-
-// config HRM_TX_SW_VERSION
-// 	int "Software version"
-// 	default 0
-// 	range 0 255
-
-// config HRM_TX_SERIAL_NUM
-// 	int "Serial number"
-// 	default 43981
-// 	range 0 65535
-//  */
+#endif // INCLUDE_APP_ANT_H__
