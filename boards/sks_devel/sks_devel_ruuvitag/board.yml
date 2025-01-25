@@ -1,5 +1,0 @@
-board:
-  name: sks_devel_ruuvitag
-  vendor: sks_devel
-  socs:
-  - name: nrf52832

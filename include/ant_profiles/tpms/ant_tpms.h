@@ -11,8 +11,8 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
-#ifndef ANT_BICYCLE_POWER_H__
-#define ANT_BICYCLE_POWER_H__
+#ifndef ANT_TPMS_H__
+#define ANT_TPMS_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -272,5 +272,5 @@ void ant_tpms_disp_evt_handler(ant_evt_t * p_ant_evt, void * p_context);
 }
 #endif
 
-#endif // ANT_BICYCLE_POWER_H__
+#endif // ANT_TPMS_H__
 

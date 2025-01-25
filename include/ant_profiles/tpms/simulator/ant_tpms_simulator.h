@@ -25,10 +25,10 @@
  * @ingroup ant_sdk_simulators
  * @brief ANT TPMS simulator module.
  *
- * @details This module simulates power for the ANT TPMS profile. The module calculates
+ * @details This module simulates pressure for the ANT TPMS profile. The module calculates
  * abstract values, which are handled by the TPMS pages data model to ensure that they are
- * compatible. It provides a handler for changing the power value manually and functionality
- * for changing the power automatically.
+ * compatible. It provides a handler for changing the pressure value manually and functionality
+ * for changing the pressure automatically.
  *
  */
 
@@ -61,7 +61,7 @@ typedef struct
  *
  * @param[in]  p_simulator      Pointer to the simulator instance.
  * @param[in]  p_config         Pointer to the simulator configuration structure.
- * @param[in]  auto_change      Enable or disable automatic changes of the power.
+ * @param[in]  auto_change      Enable or disable automatic changes of the pressure.
  */
 void ant_tpms_simulator_init(ant_tpms_simulator_t           * p_simulator,
                              ant_tpms_simulator_cfg_t const * p_config,
@@ -75,13 +75,13 @@ void ant_tpms_simulator_init(ant_tpms_simulator_t           * p_simulator,
  */
 void ant_tpms_simulator_one_iteration(ant_tpms_simulator_t * p_simulator, ant_tpms_evt_t event);
 
-/**@brief Function for incrementing the power value.
+/**@brief Function for incrementing the pressure value.
  *
  * @param[in]  p_simulator      Pointer to the simulator instance.
  */
 void ant_tpms_simulator_increment(ant_tpms_simulator_t * p_simulator);
 
-/**@brief Function for decrementing the power value.
+/**@brief Function for decrementing the pressure value.
  *
  * @param[in]  p_simulator      Pointer to the simulator instance.
  */
