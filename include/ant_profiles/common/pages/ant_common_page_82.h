@@ -41,16 +41,8 @@ typedef enum {
     ANT_COMMON_page82_BATTERY_STATE_INVALID = 7
 } ANT_COMMON_page82_BATTERY_STATE;
 
-const static char* ant_common_page_82_battery_status_strings[] = {
-    "RESERVED_0",
-    "NEW",
-    "GOOD",
-    "OK",
-    "LOW",
-    "CRITICAL",
-    "RESERVED_6",
-    "INVALID"
-};
+const char* get_ant_common_page_82_battery_status_string(const ANT_COMMON_page82_BATTERY_STATE state);
+
 /**@brief Data structure for ANT+ common data page 82.
  *
  * @note This structure implements only page 82 specific data.

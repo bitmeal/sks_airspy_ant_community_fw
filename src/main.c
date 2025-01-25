@@ -113,7 +113,7 @@ int main(void)
 	retained.boots += 1;
 	retained_update();
 
-	LOG_INF("Boot: %u; Uptime: %us" PRIu64, retained.boots, retained.uptime_sum);
+	LOG_INF("Boot: %u; Uptime: %llus", retained.boots, retained.uptime_sum);
 
 	// ///////////////////////////////////////////
 	if( retained.boots <= 1)

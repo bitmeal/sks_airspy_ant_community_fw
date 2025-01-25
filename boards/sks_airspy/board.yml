@@ -1,0 +1,5 @@
+board:
+  name: sks_airspy
+  vendor: sks
+  socs:
+  - name: nrf52832

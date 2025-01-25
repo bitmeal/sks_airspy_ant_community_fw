@@ -17,6 +17,21 @@
 
 LOG_MODULE_REGISTER(ant_common_page_82, LOG_LEVEL_INF);
 
+const static char* ant_common_page_82_battery_status_strings[] = {
+    "RESERVED_0",
+    "NEW",
+    "GOOD",
+    "OK",
+    "LOW",
+    "CRITICAL",
+    "RESERVED_6",
+    "INVALID"
+};
+const char* get_ant_common_page_82_battery_status_string(const ANT_COMMON_page82_BATTERY_STATE state)
+{
+    return ant_common_page_82_battery_status_strings[(uint8_t)state];
+}
+
 /**@brief ant+ common page 82 data layout structure. */
 typedef struct
 {
@@ -52,7 +67,7 @@ static void page82_data_log(volatile ant_common_page82_data_t const * p_page_dat
     {
         LOG_INF("Battery Voltage [mV]: %u", p_page_data->battery_voltage_mv);
     }
-    LOG_INF("Battery Status: %u (%s)", (uint8_t)(p_page_data->battery_status), ant_common_page_82_battery_status_strings[(uint8_t)(p_page_data->battery_status)]);
+    LOG_INF("Battery Status: %u (%s)", (uint8_t)(p_page_data->battery_status), get_ant_common_page_82_battery_status_string(p_page_data->battery_status));
 }
 
 // encodes with 2 second time resolution only

@@ -6,20 +6,15 @@
 
 /dts-v1/;
 #include <nordic/nrf52832_qfaa.dtsi>
-#include "sks_devel_sks_airspy-pinctrl.dtsi"
+#include "sks_airspy-pinctrl.dtsi"
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 / {
-	model = "SKS Devel SKS AirSpy";
-	compatible = "sks_devel_sks_airspy";
+	model = "SKS AirSpy";
+	compatible = "sks_airspy";
 
 	chosen {
 		zephyr,console = &rtt0;
-		// zephyr,shell-uart = &rtt0;
-		// zephyr,uart-mcumgr = &rtt0;
-		// zephyr,bt-mon-uart = &rtt0;
-		// zephyr,bt-c2h-uart = &rtt0;
-
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
@@ -45,7 +40,6 @@
 };
 
 &uicr {
-	// gpio-as-nreset;
 	nfct-pins-as-gpios;
 };
 

@@ -1,5 +1,5 @@
-identifier: sks_devel_sks_airspy
-name: SKS-Devel-SKS-AirSpy
+identifier: sks_airspy
+name: SKS-AirSpy
 type: mcu
 arch: arm
 toolchain:
@@ -11,4 +11,4 @@ supported:
   - gpio
   - spi
   - spi_bitbang
-# vendor: sks_devel
+vendor: sks

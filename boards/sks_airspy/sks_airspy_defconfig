@@ -6,7 +6,6 @@ CONFIG_BOOTLOADER_MCUBOOT=y
 # # 512kB flash; two images (each < 256kB); sector size 0x1000 / 4096B
 # CONFIG_BOOT_MAX_IMG_SECTORS=64
 
-
 # Enable MPU
 CONFIG_ARM_MPU=y
 
