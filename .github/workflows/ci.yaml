@@ -37,11 +37,11 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/ncs/
-          key: ncs-${{ runner.os }}-${NRF_TOOLCHAIN_VERSION}-${NRF_SDK_VERSION}
+          key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
 
       - uses: actions/checkout@v4
         with:
-          path: ${APP_REPO_ROOT}
+          path: ${{ env.APP_REPO_ROOT }}
 
       - name: Fetch Toolchain + NRF & ANT SDK
         if: steps.cache-ncs-restore.outputs.cache-hit != 'true'
@@ -56,7 +56,11 @@ jobs:
           cd ~/ncs/sdks/${NRF_SDK_VERSION}/
           west update
 
-          # install ant sdk
+          ## install ant SDK
+          # allow access
+          git config --global credential.helper cache
+          git ls-remote https://SKS_AIRSPY_ANT_TOKEN:${{ secrets.SKS_AIRSPY_ANT_TOKEN }}@github.com/ant-nrfconnect/sdk-ant
+          # fetch ant SDK
           west config manifest.group-filter +ant
           west update
           pushd ~/ncs/sdks/${NRF_SDK_VERSION}/ant && git apply --whitespace=fix ${APP_REPO_ROOT}/ant_sdk_nrf52832.patch && popd
@@ -71,15 +75,13 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ~/ncs/
-          key: ncs-${{ runner.os }}-${NRF_TOOLCHAIN_VERSION}-${NRF_SDK_VERSION}
+          key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
 
       - name: Build Application
         id: app-build
-        working-directory: ~/ncs/sdks/${NRF_SDK_VERSION}/
-        env:
-          MCUBOOT_SIGNING_KEY: ${{ secrets.MCUBOOT_SIGNING_KEY }}
+        working-directory: ~/ncs/sdks/${{ env.NRF_SDK_VERSION }}/
         run: |
-          echo ${MCUBOOT_SIGNING_KEY} > ${APP_REPO_ROOT}/mcuboot.pem
+          echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${APP_REPO_ROOT}/mcuboot.pem
           nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${APP_REPO_ROOT}/build/ --no-sysbuild ${APP_REPO_ROOT}
 
       - name: Save Artifacts
@@ -87,5 +89,5 @@ jobs:
         with:
           name: sks-airspy-community-firmware
           path: |
-            ${APP_REPO_ROOT}/build/zephyr/merged.hex
-            ${APP_REPO_ROOT}/build/zephyr/dfu_application.zip
+            ${{ env.APP_REPO_ROOT }}/build/zephyr/merged.hex
+            ${{ env.APP_REPO_ROOT }}/build/zephyr/dfu_application.zip
