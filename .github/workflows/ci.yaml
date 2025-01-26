@@ -12,7 +12,6 @@ on:
 env:
   NRF_TOOLCHAIN_VERSION: v2.7.0
   NRF_SDK_VERSION: v2.7.0
-  APP_REPO_ROOT: /app
 
 jobs:
   build:
@@ -39,9 +38,8 @@ jobs:
           path: ~/ncs/
           key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
 
-      - uses: actions/checkout@v4
-        with:
-          path: ${{ env.APP_REPO_ROOT }}
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Fetch Toolchain + NRF & ANT SDK
         if: steps.cache-ncs-restore.outputs.cache-hit != 'true'
@@ -63,7 +61,7 @@ jobs:
           # fetch ant SDK
           west config manifest.group-filter +ant
           west update
-          pushd ~/ncs/sdks/${NRF_SDK_VERSION}/ant && git apply --whitespace=fix ${APP_REPO_ROOT}/ant_sdk_nrf52832.patch && popd
+          pushd ~/ncs/sdks/${NRF_SDK_VERSION}/ant && git apply --whitespace=fix ${{ github.workspace }}/ant_sdk_nrf52832.patch && popd
           west list ant
 
           # finalize sdk install
@@ -81,13 +79,13 @@ jobs:
         id: app-build
         working-directory: ~/ncs/sdks/${{ env.NRF_SDK_VERSION }}/
         run: |
-          echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${APP_REPO_ROOT}/mcuboot.pem
-          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${APP_REPO_ROOT}/build/ --no-sysbuild ${APP_REPO_ROOT}
+          echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.workspace }}/mcuboot.pem
+          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --no-sysbuild ${{ github.workspace }}
 
       - name: Save Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: sks-airspy-community-firmware
           path: |
-            ${{ env.APP_REPO_ROOT }}/build/zephyr/merged.hex
-            ${{ env.APP_REPO_ROOT }}/build/zephyr/dfu_application.zip
+            ${{ github.workspace }}/build/zephyr/merged.hex
+            ${{ github.workspace }}/build/zephyr/dfu_application.zip
