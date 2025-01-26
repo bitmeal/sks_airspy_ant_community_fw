@@ -35,7 +35,7 @@ jobs:
         id: cache-ncs-restore
         uses: actions/cache/restore@v4
         with:
-          path: ~/ncs/
+          path: /home/runner/ncs/
           key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
 
       - name: Checkout
@@ -48,20 +48,20 @@ jobs:
           nrfutil toolchain-manager install --ncs-version ${NRF_TOOLCHAIN_VERSION}
 
           # install nrf sdk
-          mkdir -p ~/ncs/sdks/
-          cd ~/ncs/sdks/
+          mkdir -p /home/runner/ncs/sdks/
+          cd /home/runner/ncs/sdks/
           west init -m https://github.com/nrfconnect/sdk-nrf --mr ${NRF_SDK_VERSION} ${NRF_SDK_VERSION}
-          cd ~/ncs/sdks/${NRF_SDK_VERSION}/
+          cd /home/runner/ncs/sdks/${NRF_SDK_VERSION}/
           west update
 
           ## install ant SDK
           # allow access
           git config --global credential.helper cache
-          git ls-remote https://SKS_AIRSPY_ANT_TOKEN:${{ secrets.SKS_AIRSPY_ANT_TOKEN }}@github.com/ant-nrfconnect/sdk-ant
+          git ls-remote https://SKS_AIRSPY_ANT_TOKEN:${{ secrets.SKS_AIRSPY_ANT_TOKEN }}@github.com/ant-nrfconnect/sdk-ant > /dev/null
           # fetch ant SDK
           west config manifest.group-filter +ant
           west update
-          pushd ~/ncs/sdks/${NRF_SDK_VERSION}/ant && git apply --whitespace=fix ${{ github.workspace }}/ant_sdk_nrf52832.patch && popd
+          pushd /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant && git apply --whitespace=fix ${{ github.workspace }}/ant_sdk_nrf52832.patch && popd
           west list ant
 
           # finalize sdk install
@@ -72,12 +72,12 @@ jobs:
         id: cache-ncs-save
         uses: actions/cache/save@v4
         with:
-          path: ~/ncs/
+          path: /home/runner/ncs/
           key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
 
       - name: Build Application
         id: app-build
-        working-directory: ~/ncs/sdks/${{ env.NRF_SDK_VERSION }}/
+        working-directory: /home/runner/ncs/sdks/${{ env.NRF_SDK_VERSION }}/
         run: |
           echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.workspace }}/mcuboot.pem
           nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --no-sysbuild ${{ github.workspace }}
