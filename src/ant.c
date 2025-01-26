@@ -1,5 +1,6 @@
-/**
- *
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
  */
 
 #include <zephyr/kernel.h>
@@ -86,8 +87,6 @@ void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
   tpms.page_82.operating_time = retained.uptime_sum + (k_uptime_seconds() - retained.uptime_latest);
   tpms.page_82.battery_voltage_mv = msg->voltage_mv;
   tpms.page_82.battery_status = battery_state;
-  // tpms.page_82.battery_status
-
 }
 
 static int profile_setup(void)

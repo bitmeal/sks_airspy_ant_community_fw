@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * 
  * Copyright (c) 2023 by Garmin Ltd. or its subsidiaries.
  * All rights reserved.
  *

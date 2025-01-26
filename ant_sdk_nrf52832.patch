@@ -1,0 +1,13 @@
+diff --git a/Kconfig b/Kconfig
+index 3d8204b..bfe9111 100644
+--- a/Kconfig
++++ b/Kconfig
+@@ -11,7 +11,7 @@ menu "ANT Wireless"
+ 
+ config ANT
+     bool "ANT Wireless"
+-    depends on (SOC_NRF5340_CPUNET || SOC_NRF5340_CPUAPP || SOC_NRF52840)
++    depends on (SOC_NRF5340_CPUNET || SOC_NRF5340_CPUAPP || SOC_NRF52840 || SOC_NRF52832)
+     help
+        Enable ANT ultra low power wireless protocol by Garmin Canada Inc.
+ 

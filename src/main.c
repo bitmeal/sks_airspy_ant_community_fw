@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2016 Intel Corporation
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
  */
 
 #include <stdlib.h>

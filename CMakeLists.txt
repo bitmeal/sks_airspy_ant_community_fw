@@ -1,4 +1,5 @@
-# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
 
 cmake_minimum_required(VERSION 3.20.0)
 
@@ -14,7 +15,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 zephyr_include_directories(include)
 
 ## configure project
-project(sks_airspy)
+project(sks_airspy_community)
 
 ### APP
 # app sources

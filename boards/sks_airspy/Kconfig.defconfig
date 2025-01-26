@@ -1,7 +1,7 @@
-# SKS AirSpy configuration
+# Copyright (c) 2025 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
 
-# Copyright (c) 2024 Arne Wendt (@bitmeal)
-# SPDX-License-Identifier: Apache-2.0
+# SKS AIRSPY configuration
 
 if BOARD_SKS_AIRSPY
 

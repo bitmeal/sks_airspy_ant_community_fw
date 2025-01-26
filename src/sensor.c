@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 #include "sensor.h"
 
 /*
@@ -21,10 +26,6 @@ int decode_sensor_buffer(uint8_t* buffer, struct sensor_readings_t* sensor_readi
             buffer[i] |= buffer[i + 1] >> 7;
         }
     }
-
-    // (*(uint32_t*)buffer) = (*(uint32_t*)buffer) << 1;
-    // buffer[3] |= (buffer[4] >> 7);
-    // (*(uint16_t*)(buffer + 4)) = (*(uint16_t*)(buffer + 4)) << 1;
 
     // compensate and assign data
     sensor_readings->pressure_hpa = ( (int16_t)( ( (*(uint16_t*)buffer) >> 8 ) | ( (*(uint16_t*)buffer) << 8 ) ) - SENSOR_COMP_CONST_PRESS ) * SENSOR_COMP_CONST_PRESS;

@@ -1,4 +1,6 @@
-/**
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * 
  * Copyright (c) 2015 - 2021, Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause

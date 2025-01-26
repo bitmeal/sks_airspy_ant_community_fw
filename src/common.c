@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 #include "common.h"
 
 #include <stdlib.h>

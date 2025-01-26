@@ -1,8 +1,6 @@
 /*
- * Copyright (c) 2012-2014 Wind River Systems, Inc.
- * Copyright (c) 2020 Prevas A/S
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
  */
 
 #include <zephyr/bluetooth/bluetooth.h>
@@ -70,10 +68,6 @@ static const struct bt_data advertising_data_nus[] = {
 #endif
 
 struct bt_data scan_response_data[1];
-// struct bt_data scan_response_data[] = {
-// 	BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
-// };
-
 char bt_name[CONFIG_BT_DEVICE_NAME_MAX + 1];
 
 static void auth_cancel(struct bt_conn *conn)

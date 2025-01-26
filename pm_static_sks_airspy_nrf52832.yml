@@ -1,3 +1,8 @@
+# Copyright (c) 2025 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
+
+# partition manager configuration for minimum MCUBoot size on NRF52832
+
 app:
   region: flash_primary
   address: 0x6400

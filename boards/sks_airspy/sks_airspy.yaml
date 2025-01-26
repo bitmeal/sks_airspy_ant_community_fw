@@ -1,5 +1,8 @@
+# Copyright (c) 2025 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
+
 identifier: sks_airspy
-name: SKS-AirSpy
+name: SKS-AIRSPY
 type: mcu
 arch: arm
 toolchain:

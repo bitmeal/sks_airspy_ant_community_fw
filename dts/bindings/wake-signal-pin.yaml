@@ -1,5 +1,5 @@
-# Copyright (c) 2023 Libre Solar Technologies GmbH
-# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2025 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
 
 description: GPIO pin to wake up controller from low power mode
 

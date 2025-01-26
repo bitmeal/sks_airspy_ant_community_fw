@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 #ifndef INCLUDE_BLUETOOTH_H__
 #define INCLUDE_BLUETOOTH_H__
 

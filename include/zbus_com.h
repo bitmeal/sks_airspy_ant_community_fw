@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 #ifndef INCLUDE_ZBUS_COM_H__
 #define INCLUDE_ZBUS_COM_H__
 

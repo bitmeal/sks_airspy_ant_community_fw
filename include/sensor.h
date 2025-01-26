@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
 #ifndef INCLUDE_DECODER_H__
 #define INCLUDE_DECODER_H__
 

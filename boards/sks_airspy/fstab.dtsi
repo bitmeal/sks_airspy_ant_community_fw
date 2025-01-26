@@ -1,5 +1,10 @@
-/* Flash partition table for use with MCUBoot */
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
 
+
+/* Flash partition table for use with MCUBoot */
 &flash0 {
 	partitions {
 		compatible = "fixed-partitions";

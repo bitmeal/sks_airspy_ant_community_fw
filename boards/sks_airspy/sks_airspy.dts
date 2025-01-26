@@ -1,7 +1,6 @@
 /*
- * Copyright (c) 2024 Arne Wendt (@bitmeal)
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
  */
 
 /dts-v1/;
@@ -10,7 +9,7 @@
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 / {
-	model = "SKS AirSpy";
+	model = "SKS AIRSPY";
 	compatible = "sks_airspy";
 
 	chosen {
