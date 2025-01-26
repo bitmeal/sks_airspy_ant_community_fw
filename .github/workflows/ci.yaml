@@ -16,7 +16,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Install Dependencies + West + NRF Util
         run: |
@@ -28,8 +28,8 @@ jobs:
 
           pip3 install --break-system-packages west
 
-          curl https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil -o /usr/bin/nrfutil
-          chmod +x /usr/bin/nrfutil
+          curl https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil -o /usr/local/bin/nrfutil
+          chmod +x /usr/local/bin/nrfutil
           nrfutil install toolchain-manager
 
       - name: Restore NCS
