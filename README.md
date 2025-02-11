@@ -96,7 +96,7 @@ If you already have a version of this firmware on your sensors, you can update w
 2. Install and open [nRF Connect](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-mobile) mobile app
 3. Remove battery from sensor for some seconds (up to a minute)
 4. Re-install battery
-5. Using nRf Connect app, find and connect to the sensor **within 30 seconds** of inserting the battery
+5. Using nRF Connect app, find and connect to the sensor **within 30 seconds** of inserting the battery
 6. Start firmware update by tapping the **DFU** button and selecting the update package
 
 ![BLE OTA DFU using Nordic nRF Connect app](./doc/resources/ble_ota_dfu_app.jpg)

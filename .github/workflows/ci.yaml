@@ -35,6 +35,10 @@ jobs:
           chmod +x /usr/local/bin/nrfutil
           nrfutil install toolchain-manager
 
+      - name: Prepare Restore NCS
+        run: |
+          mkdir -p /home/runner/ncs/
+
       - name: Restore NCS
         id: cache-ncs-restore
         uses: actions/cache/restore@v4
