@@ -1,10 +1,14 @@
 name: Builder
 
 on:
-  pull_request:
-    branches:
-      - main
   push:
+    branches:
+      - master
+  pull_request_target:
+    # prevent secret leaks by enabling: "Require approval for all external contributors" in repository settings "Actions">"General"
+    types:
+      - opened
+      - synchronize
     branches:
       - master
   workflow_dispatch:
@@ -89,3 +93,10 @@ jobs:
           path: |
             ${{ github.workspace }}/build/zephyr/merged.hex
             ${{ github.workspace }}/build/zephyr/dfu_application.zip
+
+      # - name: Release
+      #   uses: ???
+      #   with:
+
+      # # ANT SDK version
+      #  sed -n -E 's/.*ANT_VERSION_STRING\s+\"([[:digit:]\.]*)\".*$/\1/p;' /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant/include/ant_parameters.h
