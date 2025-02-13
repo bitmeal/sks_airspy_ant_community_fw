@@ -155,8 +155,8 @@ jobs:
         run: |
           gh release create \
             ${VERSION_TAG_NAME} \
-            release_artifacts/${FILENAME_PREFIX}_*.hex \
-            release_artifacts/${FILENAME_PREFIX}_ota_dfu_*.zip \
+            release_artifacts/${FILENAME_PREFIX}*.hex \
+            release_artifacts/${FILENAME_PREFIX}_ota_dfu*.zip \
             --title ${VERSION_TAG_NAME} \
             --notes-file release_artifacts/NOTES \
             --verify-tag \
