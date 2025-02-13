@@ -154,11 +154,13 @@ jobs:
             GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create \
+            ${VERSION_TAG_NAME} \
+            release_artifacts/${FILENAME_PREFIX}_*.hex \
+            release_artifacts/${FILENAME_PREFIX}_ota_dfu_*.zip \
+            --title ${VERSION_TAG_NAME} \
+            --notes-file release_artifacts/NOTES \
             --verify-tag \
             --latest \
             --target ${{ github.sha }} \
-            --repo ${{ github.repository }} \
-            --title ${VERSION_TAG_NAME}
-            --notes-file release_artifacts/NOTES \
-            ${VERSION_TAG_NAME} \
-            release_artifacts/${FILENAME_PREFIX}_*.hex release_artifacts/${FILENAME_PREFIX}_ota_dfu_*.zip
+            --repo ${{ github.repository }}
+          
