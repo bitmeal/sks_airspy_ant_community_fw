@@ -111,10 +111,11 @@ For debugging in operation, logging over BLE - using Nordic UART Service in [nRF
 
 
 ## TODO
-- [ ] Check README display & links
 - [ ] Release from CI
 - [ ] Write development documentation / article
 - [ ] Clean up code
+- [ ] [Migrate to sysbuild](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_sysbuild.html)
+- [ ] [Testing using BabbleSim](https://docs.zephyrproject.org/latest/boards/native/nrf_bsim/doc/nrf52_bsim.html)
 - [ ] Thank everybody I pestered with this project for too long
 
 

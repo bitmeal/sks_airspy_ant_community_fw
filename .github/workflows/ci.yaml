@@ -98,9 +98,65 @@ jobs:
             ${{ github.workspace }}/build/zephyr/merged.hex
             ${{ github.workspace }}/build/zephyr/dfu_application.zip
 
-      # - name: Release
-      #   uses: ???
-      #   with:
+  release:
+    runs-on: ubuntu-24.04
+    if: ${{ ! startsWith(github.ref, 'refs/tags/v') }}
+    env:
+      VERSION_TAG_NAME: ${{ github.ref_name }}
+      FILENAME_PREFIX: sascf
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
 
-      # # ANT SDK version
-      #  sed -n -E 's/.*ANT_VERSION_STRING\s+\"([[:digit:]\.]*)\".*$/\1/p;' /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant/include/ant_parameters.h
+      # TODO: do not rely on cache restoration, but use outputs for ANT SDK version
+      - name: Restore NCS
+        id: cache-ncs-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: /home/runner/ncs/
+          key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
+      
+      - uses: actions/download-artifact@v4
+        with:
+          name: sks-airspy-community-firmware
+          path: release_artifacts
+      
+      - name: Prepare Release Notes
+        run: |
+          touch release_artifacts/NOTES
+
+          echo "|Release | ${VERSION_TAG_NAME}|" >> release_artifacts/NOTES
+          echo "|---|---|" >> release_artifacts/NOTES
+
+          # read and write VERSION file version info
+          set -o allexport
+          source <(cat envfile | tr -d ' ')
+          set +o allexport
+          echo "| APP | ${VERSION_MAJOR}.${VERSION_MINOR}.${PATCHLEVEL} |" >> release_artifacts/NOTES
+
+          # get ANT SDK version
+          ANT_SDK_VERSION=$(sed -n -E 's/.*ANT_VERSION_STRING\s+\"([[:digit:]\.]*)\".*$/\1/p;' /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant/include/ant_parameters.h)
+          
+          # write SDKs and toolchain versions
+          echo "| nRF SDK | ${NRF_SDK_VERSION} |" >> release_artifacts/NOTES
+          echo "| ANT SDK | ${ANT_SDK_VERSION} |" >> release_artifacts/NOTES
+          echo "| Toolchain | ${NRF_TOOLCHAIN_VERSION} |" >> release_artifacts/NOTES          
+
+      - name: Prepare Release Files
+        run: |
+          mv release_artifacts/merged.hex release_artifacts/${FILENAME_PREFIX}_${VERSION_TAG_NAME}_$(git describe --abbrev=12 --always).hex
+          mv release_artifacts/dfu_application.zip release_artifacts/${FILENAME_PREFIX}_ota_dfu_${VERSION_TAG_NAME}_$(git describe --abbrev=12 --always).zip
+
+      - name: Release
+        env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create \
+            --verify-tag \
+            --latest \
+            --target master \
+            --repo ${{ github.repository }} \
+            --title ${VERSION_TAG_NAME}
+            --notes-file release_artifacts/NOTES \
+            ${VERSION_TAG_NAME} \
+            release_artifacts/${FILENAME_PREFIX}_*.hex release_artifacts/${FILENAME_PREFIX}_ota_dfu_*.zip
