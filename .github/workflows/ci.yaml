@@ -146,8 +146,8 @@ jobs:
 
       - name: Prepare Release Files
         run: |
-          mv release_artifacts/merged.hex release_artifacts/${FILENAME_PREFIX}_${VERSION_TAG_NAME}_$(git describe --abbrev=12 --always).hex
-          mv release_artifacts/dfu_application.zip release_artifacts/${FILENAME_PREFIX}_ota_dfu_${VERSION_TAG_NAME}_$(git describe --abbrev=12 --always).zip
+          mv release_artifacts/merged.hex release_artifacts/${FILENAME_PREFIX}-${VERSION_TAG_NAME}-$(git describe --abbrev=7 --always).hex
+          mv release_artifacts/dfu_application.zip release_artifacts/${FILENAME_PREFIX}_ota_dfu-${VERSION_TAG_NAME}-$(git describe --abbrev=7 --always).zip
 
       - name: Release
         env:
