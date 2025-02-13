@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - v*
   pull_request_target:
     # prevent secret leaks by enabling: "Require approval for all external contributors" in repository settings "Actions">"General"
     types:
@@ -154,7 +156,7 @@ jobs:
           gh release create \
             --verify-tag \
             --latest \
-            --target master \
+            --target ${{ github.sha }} \
             --repo ${{ github.repository }} \
             --title ${VERSION_TAG_NAME}
             --notes-file release_artifacts/NOTES \
