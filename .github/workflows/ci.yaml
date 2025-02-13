@@ -102,7 +102,7 @@ jobs:
 
   release:
     runs-on: ubuntu-24.04
-    if: ${{ ! startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     env:
       VERSION_TAG_NAME: ${{ github.ref_name }}
       FILENAME_PREFIX: sascf
@@ -132,7 +132,7 @@ jobs:
 
           # read and write VERSION file version info
           set -o allexport
-          source <(cat envfile | tr -d ' ')
+          source <(cat VERSION | tr -d ' ')
           set +o allexport
           echo "| APP | ${VERSION_MAJOR}.${VERSION_MINOR}.${PATCHLEVEL} |" >> release_artifacts/NOTES
 
