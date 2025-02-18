@@ -7,7 +7,7 @@ An alternative firmware for the SKS AIRSPY tire pressure sensor. Implementing a 
 ## What is it and why do I want it?
 Stock SKS AIRSPY sensors only talk to a proprietary companion app on Android, iOS or Garmin devices. They do not implement any industry standard to provide the tire pressure information. Let's change this! With this firmware, your AIRSPY sensors seamlessly integrate with a range of cycling computers supporting the ANT+ TPMS profile, providing real-time tire pressure monitoring without need for a proprietary app.
 
-You may want this, if you like some more gadgets on you bike, own a bike computer, like some tinkering, and because these can be had second hand for as low as 30€ a pair.
+You may want this, if you like some more gadgets on you bike, own a bike computer, like some tinkering, and because these can be had second hand for as low as 30€ a pair. As the sensor uses a nRF52832 for communication, implementing and flashing new firmware is pretty straightforward, as development tools are openly accessible.
 
 
 ### Features
@@ -101,6 +101,8 @@ If you already have a version of this firmware on your sensors, you can update w
 
 ![BLE OTA DFU using Nordic nRF Connect app](./doc/resources/ble_ota_dfu_app.jpg)
 
+## Inside the Hardware
+More info about the internal workings of the sensor and another part of the story of this project can be found in [`./doc/HARDWARE_PROTO.md`](./doc/HARDWARE_PROTO.md).
 
 ## Developing & Debugging
 For development you need the nRF SDK, matching toolchain, the [ANT SDK](https://www.thisisant.com/APIassets/ANTnRFConnectDoc/) (need to register and [become an ANT adopter](https://www.thisisant.com/my-ant/join-adopter) for this). Additionally, for the current version of the ANT SDK (*1.3.0*) you need to [patch the SDKs](./ant_sdk_nrf52832.patch) `Kconfig` to allow builds for the nRF52832 SoC. You will need to generate your own signing key as well. As the images are signed, you will not be able to use the OTA DFU functionality to flash your own build.

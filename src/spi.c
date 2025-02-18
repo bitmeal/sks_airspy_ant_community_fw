@@ -17,7 +17,7 @@ LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
 #include "sensor.h"
 
 // SPI:
-//  CS: active low
+//  /INT: active low
 //  CLK: idle low
 //  sample on CLK rise
 //  freq: 47 / 4.5317e-3 ^= 10.37 kHz
@@ -27,7 +27,7 @@ LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
 
 // SPI slave 
 const struct device *spim_dev;
-static const struct gpio_dt_spec cs_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, cs_gpios);
+static const struct gpio_dt_spec int_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, cs_gpios);
 
 static const struct spi_config spim_cfg = {
 	// .frequency = 125000,
@@ -38,19 +38,19 @@ static const struct spi_config spim_cfg = {
 	.slave = 0,
 	.cs = NULL
 };
-#define SPIM_CS_TRANSFER_DELAY_MS 0
+#define SPIM_INT_TRANSFER_DELAY_MS 0
 
 
 static void spim_receive(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(spim_receive_work, spim_receive);
 
-static struct gpio_callback cs_cb_data;
-void cs_cb_handler(const struct device *dev, struct gpio_callback *cb,
+static struct gpio_callback int_cb_data;
+void int_cb_handler(const struct device *dev, struct gpio_callback *cb,
 						  uint32_t pins)
 {
-	LOG_INF("CS signal received from slave; scheduling SPI receive");
+	LOG_INF("interrupt signal received from slave; scheduling SPI receive");
 	
-	k_work_schedule(&spim_receive_work, K_MSEC(SPIM_CS_TRANSFER_DELAY_MS));
+	k_work_schedule(&spim_receive_work, K_MSEC(SPIM_INT_TRANSFER_DELAY_MS));
 }
 
 int spim_init(void)
@@ -71,36 +71,36 @@ int spim_init(void)
 		return EXIT_FAILURE;
 	}
 
-	if (!gpio_is_ready_dt(&cs_gpio))
+	if (!gpio_is_ready_dt(&int_gpio))
 	{
-		LOG_ERR("Error: SPIM CS GPIO device %s is not ready",
-				cs_gpio.port->name);
+		LOG_ERR("Error: SPIM interrupt GPIO device %s is not ready",
+				int_gpio.port->name);
 		return EXIT_FAILURE;
 	}
 
-	ret = gpio_pin_configure_dt(&cs_gpio, GPIO_INPUT);
+	ret = gpio_pin_configure_dt(&int_gpio, GPIO_INPUT);
 	if (ret != 0)
 	{
 		LOG_ERR("Error %d: failed to configure %s pin %d",
-			   ret, cs_gpio.port->name, cs_gpio.pin);
+			   ret, int_gpio.port->name, int_gpio.pin);
 		return EXIT_FAILURE;
 	}
 
-	ret = gpio_pin_interrupt_configure_dt(&cs_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+	ret = gpio_pin_interrupt_configure_dt(&int_gpio, GPIO_INT_EDGE_TO_ACTIVE);
 	if (ret != 0)
 	{
 		LOG_ERR("Error %d: failed to configure interrupt on %s pin %d\n",
-			ret, cs_gpio.port->name, cs_gpio.pin);
+			ret, int_gpio.port->name, int_gpio.pin);
 		return EXIT_FAILURE;
 	}
 
-	gpio_init_callback(&cs_cb_data, cs_cb_handler, BIT(cs_gpio.pin));
+	gpio_init_callback(&int_cb_data, int_cb_handler, BIT(int_gpio.pin));
 
-	ret = gpio_add_callback(cs_gpio.port, &cs_cb_data);
+	ret = gpio_add_callback(int_gpio.port, &int_cb_data);
 	if (ret != 0)
 	{
 		LOG_ERR("Error %d: failed to configure callback for interrupt on %s pin %d\n",
-			ret, cs_gpio.port->name, cs_gpio.pin);
+			ret, int_gpio.port->name, int_gpio.pin);
 		return EXIT_FAILURE;
 	}
 

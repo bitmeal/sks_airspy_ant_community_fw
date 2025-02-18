@@ -11,6 +11,15 @@
 
 #define SENSOR_BUFFER_SIZE 6
 
+/*
+layout:
+    [0, 17): pressure --> (b[9:17].int - 17) * 17
+    [17, 25) - 55 ^= temperature
+    [25, 33) + 122 ^= voltage
+    35: FLAG: under voltage
+    [40,48): XOR checksum; ignore lowest bit after shifting whole buffer
+*/
+
 struct __attribute__((__packed__)) sensor_readings_t {
     int16_t pressure_hpa;
     int8_t temperature_c;

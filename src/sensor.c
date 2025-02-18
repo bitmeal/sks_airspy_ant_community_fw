@@ -7,8 +7,7 @@
 
 /*
 layout:
-    [0, 8): unknown
-    [8, 17): pressure --> (b[9:17].int - 17) * 17
+    [0, 17): pressure --> (b[9:17].int - 17) * 17
     [17, 25) - 55 ^= temperature
     [25, 33) + 122 ^= voltage
     35: FLAG: under voltage

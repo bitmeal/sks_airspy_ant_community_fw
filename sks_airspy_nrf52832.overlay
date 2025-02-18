@@ -13,6 +13,8 @@
 	
 		clk-gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
 		miso-gpios = <&gpio0 15 0>;
+
+		// interrupt pin
 		cs-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
 	};
 };
