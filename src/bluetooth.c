@@ -11,11 +11,11 @@
 
 #include <zephyr/logging/log_backend_ble.h>
 
-#include "common.h"
+#include "settings.h"
 
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(bt, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(bt, LOG_LEVEL_INF);
 
 #define BT_DISABLE_DELAY 30000
 #define BT_DISABLE_RESCHEDULE 500
@@ -92,9 +92,18 @@ static void advertise(struct k_work *work)
 	bt_conn_auth_cb_register(&auth_cb_display);
 
 	// construct dynamic device name
-	snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05d", CONFIG_BT_DEVICE_NAME, get_hwid_16bit());
+	uint16_t device_id;
+	rc = load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
+	if(rc)
+	{
+		LOG_ERR("failed reading %s to set BT name", DEVICE_ID_SETTINGS_KEY);
+		return;
+	}
+
+	snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05d", CONFIG_BT_DEVICE_NAME, device_id);
 	LOG_INF("BT name: %s", bt_name);
 	bt_set_name(bt_name);
+
 
 	scan_response_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_smp, ARRAY_SIZE(advertising_data_smp), scan_response_data, ARRAY_SIZE(scan_response_data));

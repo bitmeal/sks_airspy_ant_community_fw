@@ -21,6 +21,7 @@ project(sks_airspy_community)
 # app sources
 target_sources(app PRIVATE src/main.c)
 target_sources(app PRIVATE src/common.c)
+target_sources(app PRIVATE src/settings.c)
 target_sources(app PRIVATE src/bluetooth.c)
 target_sources(app PRIVATE src/ant.c)
 target_sources(app PRIVATE src/retained.c)

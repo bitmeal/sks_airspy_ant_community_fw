@@ -8,7 +8,6 @@
 #include "app_version.h"
 
 #include "ant.h"
-#include "common.h"
 
 #include <ant_parameters.h>
 #include <ant_key_manager.h>
@@ -18,9 +17,11 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(ant, LOG_LEVEL_INF);
 
+#include "common.h"
+#include "retained.h"
+#include "settings.h"
 #include "zbus_com.h"
 #include "sensor.h"
-#include "retained.h"
 
 // typedef typeof(((struct sensor_readings_t){}).pressure_hpa) pressure_hpa_t;
 
@@ -91,6 +92,16 @@ void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
 
 static int profile_setup(void)
 {
+    int rc;
+
+  	uint16_t device_id;
+    rc = load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
+    if(rc)
+    {
+      LOG_ERR("failed reading %s to set BT name", DEVICE_ID_SETTINGS_KEY);
+      return rc;
+    }
+
   tpms_channel_tpms_sens_config = (ant_channel_config_t) {
         .channel_number    = 0,                       // hardware ANT channel 0
         .channel_type      = TPMS_SENS_CHANNEL_TYPE,
@@ -98,7 +109,7 @@ static int profile_setup(void)
         .rf_freq           = TPMS_ANTPLUS_RF_FREQ,
         .transmission_type = 5,                       // transmission type: use common pages
         .device_type       = TPMS_DEVICE_TYPE,
-        .device_number     = get_hwid_16bit(),        // device number id
+        .device_number     = device_id,               // device number id
         .channel_period    = TPMS_MSG_PERIOD,
         .network_number    = 0,                       // network number
     };

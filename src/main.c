@@ -16,10 +16,12 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
+#include "retained.h"
+#include "settings.h"
+
 #include "bluetooth.h"
 #include "ant.h"
 #include "spi.h"
-#include "retained.h"
 
 
 
@@ -114,7 +116,11 @@ int main(void)
 
 	LOG_INF("Boot: %u; Uptime: %llus", retained.boots, retained.uptime_sum);
 
-	// ///////////////////////////////////////////
+	///////////////////////////////////////////
+	LOG_INF("initializing settings storage...");
+	start_settings_subsys();
+
+	///////////////////////////////////////////
 	if( retained.boots <= 1)
 	{
 		LOG_INF("starting bluetooth services...");

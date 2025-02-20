@@ -6,7 +6,7 @@
 app:
   region: flash_primary
   address: 0x6400
-  size: 0x3CC00
+  size: 0x3BC00
 
 
 mcuboot:
@@ -24,7 +24,7 @@ mcuboot_primary:
   - mcuboot_primary_app
   span: *id001
   address: 0x6000
-  size: 0x3D000
+  size: 0x3C000
 mcuboot_pad:
   region: flash_primary
   placement:
@@ -43,7 +43,7 @@ mcuboot_primary_app:
   - app
   span: *id002
   address: 0x6400
-  size: 0x3CC00
+  size: 0x3BC00
 
 mcuboot_secondary:
   region: flash_primary
@@ -51,11 +51,26 @@ mcuboot_secondary:
     after:
     - mcuboot_primary
     before:
+    - storage
+    align:
+      start: 0x1000
+  address: 0x42000
+  size: 0x3C000
+  share_size:
+  - mcuboot_primary
+
+
+storage:
+  region: flash_primary
+  placement:
+    after:
+    - mcuboot_secondary
+    before:
     - end
     align:
       start: 0x1000
-  address: 0x43000
-  size: 0x3D000
+  address: 0x7E000
+  size: 0x2000
   share_size:
   - mcuboot_primary
 
