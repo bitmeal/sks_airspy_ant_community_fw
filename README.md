@@ -37,6 +37,10 @@ Please report other hardware configurations, board revisions, etc. you find out 
 | [IpSensorMan](http://www.iforpowell.com/cms/index.php?page=ipantman)| ✅ | ✅ | ❌ | ✅ | [Garmin USB ANT Stick](https://www.garmin.com/en-US/p/10997) on Android 13 |
 
 
+## Usage
+After installation, just pair as any other ANT+ sensor with your bike computer. Done. Only ANT, no app, no Bluetooth. Consult manual of your bike computer for more info.
+
+
 ## Installation
 The stock firmware provides wireless update capabilities. Sadly, we cannot use it to load our own firmware, as the update payload has to be signed, and only SKS knows the private key to do so. To flash this firmware we need physical access to the programming interface (SWD port) and a programmer.
 
@@ -113,11 +117,13 @@ For debugging in operation, logging over BLE - using Nordic UART Service in [nRF
 
 
 ## TODO
-- [ ] Release from CI
-- [ ] Write development documentation / article
-- [ ] Clean up code
+- [x] Release from CI
+- [x] Write development documentation / article
+- [ ] Add storage partition; will break OTA DFU!
+- [ ] Allow ANT ID to be set using BLE service and store in storage partition
 - [ ] [Migrate to sysbuild](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_sysbuild.html)
 - [ ] [Testing using BabbleSim](https://docs.zephyrproject.org/latest/boards/native/nrf_bsim/doc/nrf52_bsim.html)
+- [ ] Clean up code
 - [ ] Thank everybody I pestered with this project for too long
 
 
