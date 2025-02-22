@@ -11,7 +11,10 @@
 
 #include <zephyr/logging/log_backend_ble.h>
 
+#include "bluetooth.h"
 #include "settings.h"
+
+#include <zephyr/sys/reboot.h>
 
 
 #include <zephyr/logging/log.h>
@@ -36,13 +39,11 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 };
 
 static const struct bt_data advertising_data_smp[] = {
-// #if CONFIG_BT_DEVICE_APPEARANCE && CONFIG_BT_DIS
-#if CONFIG_BT_DEVICE_APPEARANCE
 	/* Appearance */
 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
-#endif
+
 	/* Flags */
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 
@@ -66,6 +67,79 @@ static const struct bt_data advertising_data_nus[] = {
 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, LOGGER_BACKEND_BLE_ADV_UUID_DATA),
 };
 #endif
+
+// BEGIN config service
+
+static void reboot_work_wrapper(struct k_work *work)
+{
+	sys_reboot(SYS_REBOOT_COLD);
+}
+
+#define REBOOT_DELAY_MS 250
+K_WORK_DELAYABLE_DEFINE(reboot_work, reboot_work_wrapper);
+
+
+#define DEVICE_ID_SIZE 2
+
+static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
+			  const struct bt_gatt_attr *attr,
+			  const void *buf,
+			  uint16_t len,
+			  uint16_t offset,
+			  uint8_t flags)
+{
+    LOG_INF("Received BT data, handle %d, conn %p", attr->handle, (void *)conn);
+
+	if ( len && len <= DEVICE_ID_SIZE)
+	{
+		uint16_t device_id = 0x0000;
+		memcpy(&device_id, buf, len);
+
+		int rc;
+		rc = settings_save_one(DEVICE_ID_SETTINGS_KEY, (const void *)&device_id, sizeof(device_id));
+        if (rc)
+        {
+    		LOG_WRN("failed writing setting for %s; (rc %d)", DEVICE_ID_SETTINGS_KEY, rc);
+        }
+        else
+        {
+    		LOG_INF("set  %s: %d", DEVICE_ID_SETTINGS_KEY, device_id);
+    		LOG_INF("scheduling reboot");
+
+			// schedule reboot
+			k_work_schedule(&reboot_work, K_MSEC(REBOOT_DELAY_MS));
+        }
+
+	}
+
+	// we processed the whole message; signal to stack
+    return len;
+}
+
+static const struct bt_data advertising_data_cfg[] = {
+	/* Appearance */
+	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
+		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
+		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
+
+	/* Flags */
+	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+
+	/* SVC */
+    BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_CFG_SRV_UUID_ENC),
+};
+
+BT_GATT_SERVICE_DEFINE(
+	cfg_srv,
+	BT_GATT_PRIMARY_SERVICE(BT_CFG_SRV_UUID),
+    BT_GATT_CHARACTERISTIC(BT_CFG_SRV_DEVID_CHRX_UUID,
+                    BT_GATT_CHRC_WRITE_WITHOUT_RESP,
+                    BT_GATT_PERM_WRITE,
+                    NULL, cfg_srv_devid_chrx_on_write_cb, NULL),
+);
+
+// END config service
+
 
 struct bt_data scan_response_data[1];
 char bt_name[CONFIG_BT_DEVICE_NAME_MAX + 1];
@@ -106,6 +180,7 @@ static void advertise(struct k_work *work)
 
 
 	scan_response_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
+
 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_smp, ARRAY_SIZE(advertising_data_smp), scan_response_data, ARRAY_SIZE(scan_response_data));
 	if (rc) {
 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_smp", rc);
@@ -128,6 +203,15 @@ static void advertise(struct k_work *work)
 	}
 #endif
 
+	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_cfg, ARRAY_SIZE(advertising_data_cfg), scan_response_data, ARRAY_SIZE(scan_response_data));
+	if (rc) {
+		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_cfg", rc);
+		return;
+	}
+	else
+	{
+		LOG_INF("Advertising %s successfully started", "advertising_data_cfg");
+	}
 }
 
 static void connected(struct bt_conn *conn, uint8_t err)
