@@ -38,8 +38,7 @@ Please report other hardware configurations, board revisions, etc. you find out 
 
 
 ## Usage
-After installation, just pair as any other ANT+ sensor with your bike computer. Done. Only ANT, no app, no Bluetooth. Consult manual of your bike computer for more info.
-
+After installation, you just pair the sensor as any other ANT+ device with your bike computer. Done. Only ANT, no app, no Bluetooth.
 
 ## Installation
 The stock firmware provides wireless update capabilities. Sadly, we cannot use it to load our own firmware, as the update payload has to be signed, and only SKS knows the private key to do so. To flash this firmware we need physical access to the programming interface (SWD port) and a programmer.
@@ -50,12 +49,9 @@ The stock firmware provides wireless update capabilities. Sadly, we cannot use i
 ### Warnings
 > ⚠ The installation requires you to open up the hardware. All warranty will most likely be lost in this process. You may brick the device in the process. Proceed at own risk!
 
-
 > ⚠ To revert to the original firmware, you have to jump some hoops; [read here first](./doc/INSTALL.md)! Consider reverting to original firmware as impossible! Proceed at own risk!
 
-
-> ⚠ The ID of the sensor will change and not match the laser engraving on the bottom anymore! The original IDs are hardcoded into firmware and do not seem to relate to any hardware ID, BT-MAC, etc.
-
+> ℹ The ID of the sensor not match the laser engraving on the bottom after flashing. You can change the ID after flashing using the nRF Connect application.
 
 ### SWD Access
 Tools you need:
@@ -92,6 +88,20 @@ To connect the programmer, one of the best options is using the battery tabs to 
 
 > ℹ More information and examples in [INSTALL.md](./doc/INSTALL.md)
 
+### Setting Device ID
+After flashing the firmware, the ANT device ID will differ from the laser engraving on the sensor. You can reset it to the engraved ID using the [nRF Connect app for mobile](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-mobile) or [desktop](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-Desktop). The changed ID will persist across firmware updates.
+
+1. Connect to the sensor
+2. Select service with UUID `2079cd72-8955-487c-bfbf-0bf85b255f3c`
+3. Select attribute with UUID `f819d540-6c73-44e5-94bb-dfeb32926c2b`
+4. Tap *Write*/*Upload* button
+5. Enter Device ID (as engraved) - max. 65535 (16bit unsigned)
+6. Select *Type* as `UINT 16 (Little Endian)`
+7. Write
+8. Device will reboot und use new ID for BLE and ANT
+
+![set device ID](./doc/resources/ble_cfg_device_id_app.jpg)
+
 
 ## Updating
 If you already have a version of this firmware on your sensors, you can update wirelessly (OTA DFU) using your mobile phone:
@@ -119,8 +129,8 @@ For debugging in operation, logging over BLE - using Nordic UART Service in [nRF
 ## TODO
 - [x] Release from CI
 - [x] Write development documentation / article
-- [ ] Add storage partition; will break OTA DFU!
-- [ ] Allow ANT ID to be set using BLE service and store in storage partition
+- [x] Add storage partition; will break OTA DFU!
+- [x] Allow ANT ID to be set using BLE service and store in storage partition
 - [ ] [Migrate to sysbuild](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_sysbuild.html)
 - [ ] [Testing using BabbleSim](https://docs.zephyrproject.org/latest/boards/native/nrf_bsim/doc/nrf52_bsim.html)
 - [ ] Clean up code

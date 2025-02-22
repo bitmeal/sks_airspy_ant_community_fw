@@ -172,3 +172,6 @@ struct __attribute__((__packed__)) sensor_readings_t {
 
 ```
 🎉
+
+## Device IDs
+The IDs lasered on the devices do not not seem to relate to any hardware ID, BT-MAC, etc. of the nRF. The IDs can be found in a storage partition of the flash though. As there is no official method to change them, these might be just random hardcoded IDs.
