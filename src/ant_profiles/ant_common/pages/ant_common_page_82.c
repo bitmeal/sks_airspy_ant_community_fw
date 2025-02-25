@@ -17,7 +17,7 @@
 #include <ant_profiles/tpms/ant_tpms_utils.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(ant_common_page_82, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ant_common_page_82, LOG_LEVEL_WRN);
 
 const static char* ant_common_page_82_battery_status_strings[] = {
     "RESERVED_0",

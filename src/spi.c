@@ -48,7 +48,7 @@ static struct gpio_callback int_cb_data;
 void int_cb_handler(const struct device *dev, struct gpio_callback *cb,
 						  uint32_t pins)
 {
-	LOG_INF("interrupt signal received from slave; scheduling SPI receive");
+	LOG_DBG("interrupt signal received from slave; scheduling SPI receive");
 	
 	k_work_schedule(&spim_receive_work, K_MSEC(SPIM_INT_TRANSFER_DELAY_MS));
 }

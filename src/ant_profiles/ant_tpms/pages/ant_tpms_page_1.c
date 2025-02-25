@@ -17,7 +17,7 @@
 #include <ant_profiles/tpms/ant_tpms_utils.h>
 #include <zephyr/logging/log.h>
 // LOG_MODULE_REGISTER(ant_tpms_page_1, CONFIG_TPMS_PAGES_LOG_LEVEL);
-LOG_MODULE_REGISTER(ant_tpms_page_1, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ant_tpms_page_1, LOG_LEVEL_WRN);
 
 /**@brief tire pressure page 1 data layout structure. */
 typedef struct

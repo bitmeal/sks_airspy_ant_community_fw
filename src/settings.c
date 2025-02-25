@@ -38,7 +38,7 @@ static int direct_loader_immediate_value(const char *name, size_t len,
 			rc = read_cb(cb_arg, one_value->dest, len);
 			if (rc >= 0) {
 				one_value->fetched = 1;
-				LOG_INF("immediate load: OK");
+				LOG_DBG("immediate load: OK");
 				return 0;
 			}
 
@@ -110,7 +110,7 @@ static int initialize_settings_defaults_DEVICE_ID()
 
     if (rc == 0)
     {
-    	LOG_INF("loaded { %s: %d }", DEVICE_ID_SETTINGS_KEY, device_id);
+    	LOG_DBG("loaded { %s: %d }", DEVICE_ID_SETTINGS_KEY, device_id);
 	}
     else
     {

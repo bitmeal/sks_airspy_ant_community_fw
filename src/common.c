@@ -22,7 +22,7 @@ uint16_t get_hwid_16bit()
 	else
 	{
         hwid_16bit = (uint16_t)strtoul(hw_id_buf + (HW_ID_LEN - 1 - 2*sizeof(uint16_t)), NULL, 16);
-		// LOG_INF_ONCE("hwid: %s, hwid_16bit: %d", hw_id_buf, hwid_16bit);
+		LOG_DBG("hwid: %s, hwid_16bit: %d", hw_id_buf, hwid_16bit);
 	}
     
     return hwid_16bit;

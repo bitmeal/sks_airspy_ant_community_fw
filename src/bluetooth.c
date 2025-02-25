@@ -88,7 +88,7 @@ static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
 			  uint16_t offset,
 			  uint8_t flags)
 {
-    LOG_INF("Received BT data, handle %d, conn %p", attr->handle, (void *)conn);
+    LOG_DBG("Received BT data, handle %d, conn %p", attr->handle, (void *)conn);
 
 	if ( len && len <= DEVICE_ID_SIZE)
 	{
@@ -150,7 +150,7 @@ static void auth_cancel(struct bt_conn *conn)
 
 	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-	LOG_INF("Pairing cancelled: %s", addr);
+	LOG_DBG("Pairing cancelled: %s", addr);
 }
 
 static struct bt_conn_auth_cb auth_cb_display = {
@@ -268,9 +268,9 @@ void logging_backend_ble_hook(bool status, void *ctx)
 	ARG_UNUSED(ctx);
 
 	if (status) {
-		LOG_INF("BLE Logger Backend enabled.");
+		LOG_DBG("BLE Logger Backend enabled.");
 	} else {
-		LOG_INF("BLE Logger Backend disabled.");
+		LOG_DBG("BLE Logger Backend disabled.");
 	}
 }
 #endif

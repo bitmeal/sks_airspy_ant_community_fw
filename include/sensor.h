@@ -13,7 +13,7 @@
 
 /*
 layout:
-    [0, 17): pressure --> (b[9:17].int - 17) * 17
+    [0, 17): pressure --> b[9:17].int * 16.75 - 248
     [17, 25) - 55 ^= temperature
     [25, 33) + 122 ^= voltage
     35: FLAG: under voltage
@@ -28,7 +28,9 @@ struct __attribute__((__packed__)) sensor_readings_t {
     unsigned char checksum;
 };
 
-#define SENSOR_COMP_CONST_PRESS 17
+#define SENSOR_CLAMP_PRESS_LOW_HPA 75
+#define SENSOR_COMP_CONST_PRESS_SLOPE 16.75
+#define SENSOR_COMP_CONST_PRESS_OFFSET -248
 #define SENSOR_COMP_CONST_TEMP -55
 #define SENSOR_COMP_CONST_VOLT 122
 

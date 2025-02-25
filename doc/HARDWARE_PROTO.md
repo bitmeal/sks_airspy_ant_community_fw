@@ -124,9 +124,13 @@ The **first two Bytes** is the pressure value, as evident from the experiment st
 
 > The pressure in kPa can be calculated [...]: P = ΔP * P_CODE + (P_min - ΔP ) [3]
 
-Where ΔP depends on calibration range of the FXTH. P_min = 100 kPa to normalize overpressure readings for atmospheric pressure. No source for the possible value of ΔP could be found, and the function did not match the data. With experiments, the best transfer function is:
+Where ΔP depends on calibration range of the FXTH. P_min = 100 kPa to normalize overpressure readings for atmospheric pressure. No source for the possible value of ΔP could be found, and **the given function did not match the data**. With experiments, as in the figure below, and with a least squares linear regression, the best transfer function was found to be:
 
-P_kPa = 17 * ( P_CODE - 17 )
+```
+P_hPa = P_CODE * 16.75 - 248
+```
+
+![calibration setup](./resources/calibration.jpg)
 
 #### Voltage
 > For most part numbers, converting the value in Volt is done by adding 122 and then dividing by 100. [...]
@@ -149,7 +153,7 @@ Byte 4 seems to include additional status flags. By now, only a low-voltage flag
 ```C
 /*
 layout:
-    [0, 17): pressure --> (b[9:17].int - 17) * 17
+    [0, 17): pressure --> b[9:17].int * 16.75 - 248
     [17, 25) - 55 ^= temperature
     [25, 33) + 122 ^= voltage
     35: FLAG: under voltage
@@ -164,7 +168,9 @@ struct __attribute__((__packed__)) sensor_readings_t {
     unsigned char checksum;
 };
 
-#define SENSOR_COMP_CONST_PRESS 17
+#define SENSOR_CLAMP_PRESS_LOW_HPA 75
+#define SENSOR_COMP_CONST_PRESS_SLOPE 16.75
+#define SENSOR_COMP_CONST_PRESS_OFFSET -248
 #define SENSOR_COMP_CONST_TEMP -55
 #define SENSOR_COMP_CONST_VOLT 122
 

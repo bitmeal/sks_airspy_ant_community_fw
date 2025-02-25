@@ -56,7 +56,7 @@ void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
 {
 	const struct sensor_readings_t *msg = zbus_chan_const_msg(chan);
 
-	LOG_INF("Updating ANT+ pages with sensor data");
+	LOG_DBG("Updating ANT+ pages with sensor data");
 
   // page 1: pressure
   tpms.page_1.pressure = msg->pressure_hpa;
