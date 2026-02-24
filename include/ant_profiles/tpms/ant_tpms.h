@@ -184,8 +184,8 @@ struct ant_tpms_profile_s
 /** @name Defines for accessing ant_tpms_profile_t member variables
    @{ */
 #define TPMS_PROFILE_pressure               page_1.pressure
+#define TPMS_PROFILE_update_event_count     page_1.update_event_count
 
-#define TPMS_PROFILE_manuf_id               page_80.manuf_id
 #define TPMS_PROFILE_hw_revision            page_80.hw_revision
 #define TPMS_PROFILE_manufacturer_id        page_80.manufacturer_id
 #define TPMS_PROFILE_model_number           page_80.model_number

@@ -54,11 +54,15 @@ static void ant_evt_handler(ant_evt_t *p_ant_evt)
 
 void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
 {
+  static uint8_t update_event_count = 0;
+  update_event_count++;
+
 	const struct sensor_readings_t *msg = zbus_chan_const_msg(chan);
 
 	LOG_DBG("Updating ANT+ pages with sensor data");
 
   // page 1: pressure
+  tpms.page_1.update_event_count = update_event_count;
   tpms.page_1.pressure = msg->pressure_hpa;
 
   // page 82: battery state and uptime
@@ -126,8 +130,8 @@ static int profile_setup(void)
   tpms.page_81.sw_revision_major = APP_VERSION_MAJOR;
   tpms.page_81.serial_number  = get_hwid_16bit();
 
-  // tpms.page_82.battery_count = 1;
-  // tpms.page_82.battery_id = 0;
+  tpms.page_82.battery_count = 1;
+  tpms.page_82.battery_id = 0;
 
   err = ant_tpms_sens_open(&tpms);
   if (err) {

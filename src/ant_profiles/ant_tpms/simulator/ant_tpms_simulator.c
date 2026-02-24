@@ -53,6 +53,7 @@ void ant_tpms_simulator_one_iteration(ant_tpms_simulator_t * p_simulator, ant_tp
                                                    &(p_simulator->_cb.pressure_sensorsim_cfg));
             }
 
+            p_simulator->p_profile->TPMS_PROFILE_update_event_count++;
             p_simulator->p_profile->TPMS_PROFILE_pressure =
                 p_simulator->_cb.pressure_sensorsim_state.current_val;
             break;
