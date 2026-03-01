@@ -18,10 +18,61 @@ The channel period is set such that the display device shall [SD_0003] receive d
 message rate (4 Hz) or at one half or one quarter of this rate; data can be received four times per
 second, twice per second, or once per second. The developer sets the channel period count to
 receive data at one of the allowable receive rates:
-• 8192 counts (4 Hz, 4 messages/second)
-• 16384 counts (2 Hz, 2 messages/second)
-• 32768 counts (1 Hz, 1 message/second)
+* 8192 counts (4 Hz, 4 messages/second)
+* 16384 counts (2 Hz, 2 messages/second)
+* 32768 counts (1 Hz, 1 message/second)
 The minimum receive rate allowed is 32768 counts (1 Hz).
 The longer the count (i.e. lower receive rate) the more power is conserved by the receiver, but a
 tradeoff is made for the latency of the data as it is being updated at a slower rate. The
 implementation of the receiving message rate by the display device is chosen by the developer.
+
+## Data Pages
+### Page 1 - Main Page
+|Byte|Value|Function|
+|---|---|---|
+|0|`0x01`| Page number |
+|1|`0xXX`| Role & Alerts |
+|2|`0xFF`|  |
+|3|`0xFF`|  |
+|4|`0xFF`|  |
+|5|`0xFF`|  |
+|6|`0xXX`| Pressure (LSB); 16 bit `0xFFFF` is invalid/unknown |
+|7|`0xXX`| Pressure (MSB); 16 bit `0xFFFF` is invalid/unknown |
+
+### Page 16 - Configuration
+|Byte|Value|Function|
+|---|---|---|
+|0|`0x10`| Page number |
+|1|`0xXX`| Sub Index / Command Number |
+|2|`0xXX`|  |
+|3|`0xXX`|  |
+|4|`0xXX`|  |
+|5|`0xXX`|  |
+|6|`0xXX`|  |
+|7|`0xXX`|  |
+
+#### 0x11 - Config
+If bytes 2-7 are `0xFFFFFFFFFF`, send current configuration as page 16 (`0x10`) with sub index `0x11`.
+
+|Byte|Value|Function|
+|---|---|---|
+|0|`0x10`| Page number |
+|1|`0x11`| Sub Index: Threshold |
+|2|`0xXX`|  |
+|3|`0xXX`|  |
+|4|`0xXX`|  |
+|5|`0xXX`|  |
+|6|`0xXX`|  |
+|7|`0xXX`|  |
+
+#### 0x20 - Atmospheric pressure
+|Byte|Value|Function|
+|---|---|---|
+|0|`0x10`| Page number |
+|1|`0x20`| Sub Index: Atmospheric Pressure |
+|2|`0xXX`| Atmospheric Pressure (LSB); hPa |
+|3|`0xXX`| Atmospheric Pressure (MSB); hPa |
+|4|`0xFF`| Reserved |
+|5|`0xFF`| Reserved |
+|6|`0xFF`| Reserved |
+|7|`0xFF`| Reserved |
