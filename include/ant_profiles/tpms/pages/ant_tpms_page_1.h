@@ -27,7 +27,7 @@ extern "C" {
  */
 typedef struct
 {
-    uint8_t update_event_count;
+    // uint8_t update_event_count;
     uint16_t pressure;   ///< Pressure type; in 0.1 bar or hPa.
 } ant_tpms_page1_data_t;
 
@@ -36,7 +36,7 @@ typedef struct
 #define DEFAULT_ANT_TPMS_page1()                                \
     (ant_tpms_page1_data_t)                                     \
     {                                                           \
-        .update_event_count = 0,                                \
+        /* .update_event_count = 0, */                                \
         .pressure = 0,                                          \
     }
 

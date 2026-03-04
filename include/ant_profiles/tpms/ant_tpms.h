@@ -184,7 +184,7 @@ struct ant_tpms_profile_s
 /** @name Defines for accessing ant_tpms_profile_t member variables
    @{ */
 #define TPMS_PROFILE_pressure               page_1.pressure
-#define TPMS_PROFILE_update_event_count     page_1.update_event_count
+// #define TPMS_PROFILE_update_event_count     page_1.update_event_count
 
 #define TPMS_PROFILE_hw_revision            page_80.hw_revision
 #define TPMS_PROFILE_manufacturer_id        page_80.manufacturer_id
@@ -256,6 +256,19 @@ int ant_tpms_sens_open(ant_tpms_profile_t * p_profile);
  * @param[in]   p_context       Pointer to the profile instance.
  */
 void ant_tpms_sens_evt_handler(ant_evt_t * p_ant_evt, void * p_context);
+
+
+/**@brief Function for requesting a data page
+ *
+ * @details This function sends a data page request, using common page 70 and requesting an ACK
+ *
+ * @param[in]   page_number     ANT profile page to request.
+ * @param[in]   p_context       Pointer to the profile instance.
+ * 
+ * @retval      true if request sent successfully; false otherwise
+ */
+bool ant_tpms_request_data_page(uint8_t page_number, void * p_context);
+
 
 /**@brief Function for handling the Display ANT events.
  *

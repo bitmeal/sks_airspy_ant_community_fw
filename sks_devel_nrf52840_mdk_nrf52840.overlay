@@ -1,0 +1,20 @@
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
+/ {
+	spi_master: spibb0 {
+		compatible = "zephyr,spi-bitbang";
+		status = "okay";
+		
+		#address-cells = <1>;
+		#size-cells = <0>;
+	
+		clk-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
+		miso-gpios = <&gpio0 7 0>;
+
+		// interrupt pin
+		cs-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+	};
+};

@@ -15,6 +15,10 @@
 #include <ant_error.h>
 #include <ant_interface.h>
 #include <ant_profiles/tpms/ant_tpms.h>
+// some include guards do not seem to work here:
+// guard against inclusion of "ant_init.h" from "ant_request_controller.h"
+#define ANT_INIT_H__
+#include <ant_profiles/common/ant_request_controller.h>
 #include <zephyr/logging/log.h>
 // TODO: use kconfig option
 LOG_MODULE_REGISTER(ant_tpms, LOG_LEVEL_WRN);
@@ -24,6 +28,8 @@ LOG_MODULE_REGISTER(ant_tpms, LOG_LEVEL_WRN);
 #define COMMON_PAGE_80_INTERVAL    119 // Minimum: Interleave every 121 messages
 #define COMMON_PAGE_81_INTERVAL    120 // Minimum: Interleave every 121 messages
 #define COMMON_PAGE_82_INTERVAL    121 // Minimum: Interleave every 121 messages
+
+ant_request_controller_t request_controller;
 
 /**@brief Tire Pressure message data layout structure. */
 typedef struct
@@ -49,6 +55,8 @@ static int ant_tpms_init(ant_tpms_profile_t         * p_profile,
     p_profile->page_80 = DEFAULT_ANT_COMMON_page80();
     p_profile->page_81 = DEFAULT_ANT_COMMON_page81();
     p_profile->page_82 = DEFAULT_ANT_COMMON_page82();
+
+    ant_request_controller_init(&request_controller);
 
     LOG_INF("ANT TPMS channel %u init", p_profile->channel_number);
     return ant_channel_init(p_channel_config);
@@ -104,6 +112,23 @@ static ant_tpms_page_t next_page_number_get(ant_tpms_profile_t * p_profile)
     ant_tpms_page_t      page_number;
 
     p_tpms_cb->message_counter++;
+
+    while(ant_request_controller_pending_get(&request_controller, &page_number))
+    {
+        // if unknown page: reset the controller
+        if( (page_number != ANT_TPMS_PAGE_1) &&
+            (page_number != ANT_TPMS_PAGE_80) &&
+            (page_number != ANT_TPMS_PAGE_81) &&
+            (page_number != ANT_TPMS_PAGE_82) )
+        {
+            request_controller.page_70.transmission_response.items.transmit_count = 0;
+            request_controller.state = ANT_REQUEST_CONTROLLER_IDLE;
+        }
+        else
+        {
+            return page_number;
+        }
+    }
 
     switch(p_tpms_cb->message_counter - 1){
         case COMMON_PAGE_80_INTERVAL:
@@ -180,6 +205,7 @@ static void sens_message_decode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
             ant_tpms_page_1_decode(p_tpms_message_payload->page_payload, &page1);
             break;
 
+        // case ANT_TPMS_PAGE_70: handled by request controller
         default:
             break;
     }
@@ -229,11 +255,22 @@ static void ant_message_send(ant_tpms_profile_t * p_profile)
 
     sens_message_encode(p_profile, p_message_payload);
 
-    int err_code = ant_broadcast_message_tx(p_profile->channel_number,
-                                sizeof (p_message_payload),
-                                p_message_payload);
+    int err_code = NRF_EINVAL;
 
-    __ASSERT_NO_MSG(err_code == 0);
+    if (ant_request_controller_ack_needed(&request_controller))
+    {
+        err_code = ant_acknowledge_message_tx(p_profile->channel_number,
+                                    sizeof (p_message_payload),
+                                    p_message_payload);
+    }
+    else
+    {
+        err_code = ant_broadcast_message_tx(p_profile->channel_number,
+                                    sizeof (p_message_payload),
+                                    p_message_payload);
+    }
+
+    __ASSERT_NO_MSG(err_code == NRF_ANT_SUCCESS);
 }
 
 
@@ -281,9 +318,19 @@ void ant_tpms_sens_evt_handler(ant_evt_t * p_ant_event, void * p_context)
                 // No implementation needed
                 break;
         }
+
+        ant_request_controller_sens_evt_handler(&request_controller, p_ant_event);
     }
 }
 
+bool ant_tpms_request_data_page(uint8_t page_number, void * p_context)
+{
+    ant_common_page70_data_t page_70 = ANT_COMMON_PAGE_DATA_REQUEST(page_number);
+    uint8_t channel_number = (( ant_tpms_profile_t *)p_context)->channel_number;
+
+    int err_code = ant_request_controller_request(&request_controller, channel_number, &page_70);
+    return (err_code == NRF_ANT_SUCCESS);
+}
 
 void ant_tpms_disp_evt_handler(ant_evt_t * p_ant_event, void * p_context)
 {
@@ -306,6 +353,8 @@ void ant_tpms_disp_evt_handler(ant_evt_t * p_ant_event, void * p_context)
             default:
                 break;
         }
+
+        ant_request_controller_disp_evt_handler(&request_controller, p_ant_event);
     }
 }
 

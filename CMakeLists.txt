@@ -7,6 +7,8 @@ cmake_minimum_required(VERSION 3.20.0)
 ## early stage configuration
 # MCUBoot signing key
 set(mcuboot_CONFIG_BOOT_SIGNATURE_KEY_FILE \"${CMAKE_CURRENT_LIST_DIR}/mcuboot.pem\")
+set(mcuboot_CONFIG_BOOT_SIGNATURE_TYPE_RSA y)
+
 # include board definition
 list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR})
 

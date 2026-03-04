@@ -1,0 +1,27 @@
+/*
+ * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
+/* partitions matching smaller controller on actual board */
+/* Flash partition table for use with MCUBoot */
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0x6000>;
+		};
+		slot0_partition: partition@6000 {
+			label = "image-0";
+			reg = <0x00006000 0x3D000>;
+		};
+		slot1_partition: partition@43000 {
+			label = "image-1";
+			reg = <0x00043000 0xBD000>;
+		};
+	};
+};

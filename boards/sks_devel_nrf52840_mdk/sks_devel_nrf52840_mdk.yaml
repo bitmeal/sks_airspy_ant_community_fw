@@ -1,0 +1,17 @@
+# Copyright (c) 2025 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
+
+identifier: sks_devel_nrf52840_mdk
+name: SKS-Devel-nRF52840-MDK
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+ram: 256
+flash: 1024
+supported:
+  - ble
+  - gpio
+  - spi
+  - spi_bitbang
+vendor: sks_devel

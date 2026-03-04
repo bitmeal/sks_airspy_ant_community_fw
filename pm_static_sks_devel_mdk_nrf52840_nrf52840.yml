@@ -70,7 +70,7 @@ storage:
     align:
       start: 0x1000
   address: 0x7E000
-  size: 0x2000
+  size: 0x82000
   # share_size:
   # - mcuboot_primary
 
@@ -78,4 +78,4 @@ storage:
 sram_primary:
   region: sram_primary
   address: 0x20000000
-  size: 0x10000
+  size: 0x40000

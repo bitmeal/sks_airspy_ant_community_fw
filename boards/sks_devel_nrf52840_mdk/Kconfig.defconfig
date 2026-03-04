@@ -1,0 +1,19 @@
+# Copyright (c) 2025 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
+
+# SKS Devel nRF52840 MDK board configuration
+
+if BOARD_SKS_DEVEL_NRF52840_MDK
+
+if USB_DEVICE_STACK
+
+# Enable UART driver, needed for CDC ACM
+config SERIAL
+	default y
+
+endif # USB_DEVICE_STACK
+
+config BT_CTLR
+	default BT
+
+endif # BOARD_SKS_DEVEL_NRF52840_MDK

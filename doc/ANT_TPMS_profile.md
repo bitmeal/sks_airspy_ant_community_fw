@@ -39,6 +39,9 @@ implementation of the receiving message rate by the display device is chosen by 
 |6|`0xXX`| Pressure (LSB); 16 bit `0xFFFF` is invalid/unknown |
 |7|`0xXX`| Pressure (MSB); 16 bit `0xFFFF` is invalid/unknown |
 
+#### Byte 1 Role & Alerts
+
+
 ### Page 16 - Configuration
 |Byte|Value|Function|
 |---|---|---|
