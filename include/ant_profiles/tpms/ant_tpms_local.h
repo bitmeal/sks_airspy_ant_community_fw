@@ -32,10 +32,11 @@ extern "C" {
 /** @brief Tire Pressure Sensor control block. */
 typedef struct
 {
-    uint8_t           message_counter;
+    ant_tpms_config_handler_t   config_handler;
+    uint8_t                     message_counter;
 } ant_tpms_sens_cb_t;
 
-/**@brief Tire Pressure Sensor RX control block. */
+/**@brief Tire Pressure Display control block. */
 typedef struct
 {
 } ant_tpms_disp_cb_t;

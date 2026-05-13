@@ -29,8 +29,9 @@ int decode_sensor_buffer(uint8_t* buffer, struct sensor_readings_t* sensor_readi
     // compensate and assign data
     sensor_readings->pressure_hpa = (uint16_t)( (float)SENSOR_COMP_CONST_PRESS_SLOPE * (int16_t)( ( (*(uint16_t*)buffer) >> 8 ) | ( (*(uint16_t*)buffer) << 8 ) ) ) + SENSOR_COMP_CONST_PRESS_OFFSET;
     
-    // clamp to avoid unstable readings at zero overpressure
-    sensor_readings->pressure_hpa = sensor_readings->pressure_hpa >= SENSOR_CLAMP_PRESS_LOW_HPA ? sensor_readings->pressure_hpa : 0; // clamp at 0
+    // do not clamp here, to correct for configured ambient pressure offset in ant module!
+    // // clamp to avoid unstable readings at zero overpressure
+    // sensor_readings->pressure_hpa = sensor_readings->pressure_hpa >= SENSOR_CLAMP_PRESS_LOW_HPA ? sensor_readings->pressure_hpa : 0; // clamp at 0
 
     sensor_readings->temperature_c = buffer[2] + SENSOR_COMP_CONST_TEMP;
 

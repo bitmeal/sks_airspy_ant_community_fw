@@ -131,6 +131,7 @@ For debugging in operation, logging over BLE - using Nordic UART Service in [nRF
 - [x] Write development documentation / article
 - [x] Add storage partition; will break OTA DFU!
 - [x] Allow ANT ID to be set using BLE service and store in storage partition
+- [ ] Upgrade ANT SDK Version to not rely on patching for nRF52832
 - [ ] [Migrate to sysbuild](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_sysbuild.html)
 - [ ] [Testing using BabbleSim](https://docs.zephyrproject.org/latest/boards/native/nrf_bsim/doc/nrf52_bsim.html)
 - [ ] Clean up code

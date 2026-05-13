@@ -28,54 +28,40 @@ implementation of the receiving message rate by the display device is chosen by 
 
 ## Data Pages
 ### Page 1 - Main Page
-|Byte|Value|Function|
-|---|---|---|
-|0|`0x01`| Page number |
-|1|`0xXX`| Role & Alerts |
-|2|`0xFF`|  |
-|3|`0xFF`|  |
-|4|`0xFF`|  |
-|5|`0xFF`|  |
-|6|`0xXX`| Pressure (LSB); 16 bit `0xFFFF` is invalid/unknown |
-|7|`0xXX`| Pressure (MSB); 16 bit `0xFFFF` is invalid/unknown |
+Page used to periodically transmit current tire pressure, alarms and role (F/R) of sensor.
 
-#### Byte 1 Role & Alerts
+|Byte|Description|Length|Value|Unit|
+|---|---|---|---|---|
+|0| Page number | 1 Byte |`0x01`|-|
+|1| Role (Front/Rear) | 1 Byte |`0x00`: *unknown role*; `0x01`: Front; `0x02`: Rear|-|
+|2| ***(guess)***Alarms | 1 Byte | observed static value of `0x03`; possibly alarms?, indicating high /low pressure alarm, with `1`/`set` being OK (no alarm); likely `0x01` low OK (no alarm), `0x02` high OK (no alarm)  |-|
+|3| - | 1 Byte |`0xFF`|-|
+|4| - | 1 Byte |`0xFF`|-|
+|5| - | 1 Byte |`0xFF`|-|
+|6| Pressure (LSB) ||||
+|7| Pressure (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
+
+<!-- #### Byte 1 Role & Alerts -->
 
 
 ### Page 16 - Configuration
-|Byte|Value|Function|
-|---|---|---|
-|0|`0x10`| Page number |
-|1|`0xXX`| Sub Index / Command Number |
-|2|`0xXX`|  |
-|3|`0xXX`|  |
-|4|`0xXX`|  |
-|5|`0xXX`|  |
-|6|`0xXX`|  |
-|7|`0xXX`|  |
+Page is used to transmit configuration data bi-directionally. 
+|Byte|Description|Length|Value|Unit|
+|---|---|---|---|---|
+|0| Page number | 1 Byte |`0x10`|-|
+|1 [4:8]| Command (Display --> Sensor) | 4 Bits | ***(guess)***`0x0`: Request page OR reset;`0x1`: Set Role; `0x2`: Set Ambient Pressure; ***(guess)*** `0x4`: Alarm Component 0; ***(guess)*** `0x8`: Alarm Component 1|-|
+|1 [0:4]| Role | 4 Bits |`0x0`/`0x1`/`0x2`|-|
+|2| Ambient Pressure Compensation (LSB) ||||
+|3| Ambient Pressure Compensation (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
+|4| Pressure Alarm Component 0 [Low, or range] (LSB) ||||
+|5| Pressure Alarm Component 0 [Low, or range] (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
+|6| Pressure Alarm Component 1 [High, or setpoint] (LSB) ||||
+|7| Pressure Alarm Component 1 [High, or setpoint] (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
 
-#### 0x11 - Config
-If bytes 2-7 are `0xFFFFFFFFFF`, send current configuration as page 16 (`0x10`) with sub index `0x11`.
 
-|Byte|Value|Function|
-|---|---|---|
-|0|`0x10`| Page number |
-|1|`0x11`| Sub Index: Threshold |
-|2|`0xXX`|  |
-|3|`0xXX`|  |
-|4|`0xXX`|  |
-|5|`0xXX`|  |
-|6|`0xXX`|  |
-|7|`0xXX`|  |
-
-#### 0x20 - Atmospheric pressure
-|Byte|Value|Function|
-|---|---|---|
-|0|`0x10`| Page number |
-|1|`0x20`| Sub Index: Atmospheric Pressure |
-|2|`0xXX`| Atmospheric Pressure (LSB); hPa |
-|3|`0xXX`| Atmospheric Pressure (MSB); hPa |
-|4|`0xFF`| Reserved |
-|5|`0xFF`| Reserved |
-|6|`0xFF`| Reserved |
-|7|`0xFF`| Reserved |
+### Common Pages
+Sends common Pages:
+* `80` Manufacturer's Information
+* `81` Product Information
+* `82` Battery Status
+  * Battery Identifier `0xff` to mark as unused

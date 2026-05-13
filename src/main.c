@@ -14,7 +14,7 @@
 #include <zephyr/sys/poweroff.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(main, LOG_LEVEL_WRN);
+LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 
 #include "retained.h"
 #include "settings.h"
@@ -25,7 +25,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_WRN);
 
 
 
-// TODO: check DT nodes on compile time
+// TODO(bitmeal): check DT nodes on compile time
 // #if !DT_NODE_EXISTS(DT_NODELABEL(wake_pin))
 // #error "DT nodes not properly configured."
 // #endif

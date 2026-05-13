@@ -17,30 +17,33 @@
  */
 
 #include <stdint.h>
+#include <ant_profiles/tpms/ant_tpms_common_types.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 
-/**@brief Data structure for Tire Pressure data page 1.
+/** @brief Data structure for Tire Pressure data page 1.
  */
 typedef struct
 {
-    // uint8_t update_event_count;
-    uint16_t pressure;   ///< Pressure type; in 0.1 bar or hPa.
+    ant_tpms_role_t role;       ///< Sensor role (front/rear)
+    ant_tpms_alarm_t alarms;    ///< High/Low pressure alarms
+    uint16_t pressure;          ///< Pressure type; in 0.1 bar or hPa.
 } ant_tpms_page1_data_t;
 
-/**@brief Initialize page 1.
+/** @brief Initialize page 1.
  */
 #define DEFAULT_ANT_TPMS_page1()                                \
     (ant_tpms_page1_data_t)                                     \
     {                                                           \
-        /* .update_event_count = 0, */                                \
-        .pressure = 0,                                          \
+        .role       = ANT_TPMS_ROLE_NONE,                       \
+        .alarms     = ANT_TPMS_ALARM_NONE,                      \
+        .pressure   = 0xffff,                                   \
     }
 
-/**@brief Function for encoding page 1.
+/** @brief Function for encoding page 1.
  *
  * @param[in]  p_page_data      Pointer to the page data.
  * @param[out] p_page_buffer    Pointer to the data buffer.
@@ -48,7 +51,7 @@ typedef struct
 void ant_tpms_page_1_encode(uint8_t                     * p_page_buffer,
                             ant_tpms_page1_data_t const * p_page_data);
 
-/**@brief Function for decoding page 1.
+/** @brief Function for decoding page 1.
  *
  * @param[in]  p_page_buffer    Pointer to the data buffer.
  * @param[out] p_page_data      Pointer to the page data.

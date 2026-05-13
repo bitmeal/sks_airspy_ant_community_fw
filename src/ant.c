@@ -23,11 +23,10 @@ LOG_MODULE_REGISTER(ant, LOG_LEVEL_INF);
 #include "zbus_com.h"
 #include "sensor.h"
 
-// typedef typeof(((struct sensor_readings_t){}).pressure_hpa) pressure_hpa_t;
-
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event);
+static void ant_tpms_config_handler(ant_tpms_profile_t *p_profile, ant_tpms_page16_data_t *p_page16);
 
-TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_evt_handler);
+TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_config_handler, ant_tpms_evt_handler);
 ant_channel_config_t tpms_channel_tpms_sens_config;
 static ant_tpms_profile_t tpms;
 
@@ -35,6 +34,8 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
 {
   switch (event) {
     case ANT_TPMS_PAGE_1_UPDATED:
+      break;
+    case ANT_TPMS_PAGE_16_UPDATED:
       break;
     case ANT_TPMS_PAGE_80_UPDATED:
       break;
@@ -52,18 +53,115 @@ static void ant_evt_handler(ant_evt_t *p_ant_evt)
   ant_tpms_sens_evt_handler(p_ant_evt, &tpms);
 }
 
+static void ant_tpms_config_handler(ant_tpms_profile_t *p_profile, ant_tpms_page16_data_t *p_page16) {
+  // configuration changes for runtime use will be stored in data pages 16 and 1 directly
+
+  // reset
+  // allows config reset by sending 10-00-ff-ff-ff-ff-ff-ff
+  // cannot find the source log entry for this behavior anymore; to be tested
+  if ( p_page16->command == ANT_TPMS_CONFIG_EMPTY_RESET &&
+        p_page16->ambient_pressure == 0xffff &&
+        p_page16->alarm_low_pressure == 0xffff &&
+        p_page16->alarm_high_pressure == 0xffff )
+  {
+    tpms.page_16 = DEFAULT_ANT_TPMS_page16();
+  }
+
+  // configure role
+  if ( p_page16->command & ANT_TPMS_CONFIG_SET_ROLE)
+  {
+    tpms.page_16.role = p_page16->role;
+
+    int rc = settings_save_one(ANT_TPMS_CONFIG_ROLE_SETTINGS_KEY, &tpms.page_16.role, sizeof(tpms.page_16.role));
+    if (rc)
+    {
+      LOG_WRN("failed saving %s; (rc %d)", ANT_TPMS_CONFIG_ROLE_SETTINGS_KEY, rc);
+    }
+    else
+    {
+      LOG_INF("saved %s", ANT_TPMS_CONFIG_ROLE_SETTINGS_KEY);
+    }
+  }
+
+  // configure ambient pressure offset
+  if ( p_page16->command & ANT_TPMS_CONFIG_SET_AMBIENT)
+  {
+    // do not store persistently
+    tpms.page_16.ambient_pressure = p_page16->ambient_pressure;
+  }
+
+  // configure low pressure alarm
+  if ( p_page16->command & ANT_TPMS_CONFIG_SET_ALARM_LOW)
+  {
+    tpms.page_16.alarm_low_pressure = p_page16->alarm_low_pressure;
+
+    int rc = settings_save_one(ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY, &tpms.page_16.alarm_low_pressure, sizeof(tpms.page_16.alarm_low_pressure));
+    if (rc)
+    {
+      LOG_WRN("failed saving %s; (rc %d)", ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY, rc);
+    }
+    else
+    {
+      LOG_INF("saved %s", ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY);
+    }
+  }
+
+  // configure high pressure alarm
+  if ( p_page16->command & ANT_TPMS_CONFIG_SET_ALARM_HIGH)
+  {
+    tpms.page_16.alarm_high_pressure = p_page16->alarm_high_pressure;
+
+    int rc = settings_save_one(ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY, &tpms.page_16.alarm_high_pressure, sizeof(tpms.page_16.alarm_high_pressure));
+    if (rc)
+    {
+      LOG_WRN("failed saving %s; (rc %d)", ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY, rc);
+    }
+    else
+    {
+      LOG_INF("saved %s", ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY);
+    }
+  }
+
+  // match page 1 to page 16
+  tpms.page_1.role = tpms.page_16.role;
+}
+
 void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
 {
-  // static uint8_t update_event_count = 0;
-  // update_event_count++;
-
 	const struct sensor_readings_t *msg = zbus_chan_const_msg(chan);
 
 	LOG_DBG("Updating ANT+ pages with sensor data");
 
-  // page 1: pressure
-  // tpms.page_1.update_event_count = update_event_count;
-  tpms.page_1.pressure = msg->pressure_hpa;
+  // only data depending on sensor readings or time will be updated here
+
+  // page 1: pressure & alarms
+  int16_t pressure_compensated = ANT_TPMS_AMBIENT_DEFAULT -
+                                  (tpms.page_16.ambient_pressure == 0xffff ?
+                                    ANT_TPMS_AMBIENT_DEFAULT :
+                                    tpms.page_16.ambient_pressure) +
+                                  msg->pressure_hpa;
+  // clamp under 75 hPa
+  tpms.page_1.pressure = (uint16_t)(pressure_compensated <= 75 ? 0 : pressure_compensated);
+  
+  if ( tpms.page_16.alarm_low_pressure != 0xffff && tpms.page_16.alarm_high_pressure != 0xffff)
+  {
+    // reset (set all) alarms as baseline before check
+    tpms.page_1.alarms = ANT_TPMS_ALARM_ALL;
+    if (tpms.page_16.alarm_low_pressure <= tpms.page_1.pressure)
+    {
+      tpms.page_1.alarms |= ANT_TPMS_ALARM_LOW_OK;
+    }
+
+    if (tpms.page_1.pressure <= tpms.page_16.alarm_high_pressure)
+    {
+      tpms.page_1.alarms |= ANT_TPMS_ALARM_HIGH_OK;
+    }
+  }
+  else
+  {
+    // ignore and do not send alarms
+    tpms.page_1.alarms = ANT_TPMS_ALARM_NONE;
+  }
 
   // page 82: battery state and uptime
   uint8_t battery_perc = battery_level_percent(msg->voltage_mv);
@@ -98,6 +196,12 @@ static int profile_setup(void)
 {
     int rc;
 
+    // TODO: load all config from persistent storage
+    // - role
+    // - alert high/low pressure
+    // - runtime changes will be commited to the data pages directly!
+    // TODO: set role and alert values below
+
   	uint16_t device_id;
     rc = load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
     if(rc)
@@ -126,12 +230,34 @@ static int profile_setup(void)
     return err;
   }
 
-  tpms.page_81.sw_revision_minor = APP_VERSION_MINOR;
-  tpms.page_81.sw_revision_major = APP_VERSION_MAJOR;
+  ant_tpms_role_t role_init = ANT_TPMS_ROLE_NONE;
+  ant_tpms_role_t role;
+  load_immediate_value_init_default(ANT_TPMS_CONFIG_ROLE_SETTINGS_KEY, &role, sizeof(role),
+                                      &role_init, sizeof(role_init));
+
+  tpms.page_1.role = role;
+  tpms.page_16.role = role;
+
+
+  uint16_t alarm_thres_init = 0xffff;
+  uint16_t alarm_thres;
+  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY, (const void*)&alarm_thres, sizeof(alarm_thres),
+                                      (const void*)&alarm_thres_init, sizeof(alarm_thres_init));
+
+  tpms.page_16.alarm_low_pressure = alarm_thres;
+
+  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY, (const void*)&alarm_thres, sizeof(alarm_thres),
+                                      (const void*)&alarm_thres_init, sizeof(alarm_thres_init));
+
+  tpms.page_16.alarm_high_pressure = alarm_thres;
+
+  tpms.page_81.sw_revision_minor = APP_VERSION_MINOR % 100;
+  tpms.page_81.sw_revision_major = ((uint16_t) APP_VERSION_MAJOR * 1000 + APP_VERSION_MINOR) / 100;
   tpms.page_81.serial_number  = get_hwid_16bit();
 
-  tpms.page_82.battery_count = 1;
-  tpms.page_82.battery_id = 0;
+  // mark as unused with 0xff
+  tpms.page_82.battery_count = 0xf;
+  tpms.page_82.battery_id = 0xf;
 
   err = ant_tpms_sens_open(&tpms);
   if (err) {

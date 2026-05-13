@@ -96,10 +96,10 @@ static const ant_channel_config_t   _ANT_TPMS_CONCAT_2(NAME, _channel_tpms_sens_
  */
 #define TPMS_DISP_PROFILE_CONFIG_DEF(NAME,                                          \
                                      EVT_HANDLER)                                   \
-static ant_tpms_disp_cb_t            _ANT_TPMS_CONCAT_2(NAME, _tpms_disp_cb);                 \
+static ant_tpms_disp_cb_t            _ANT_TPMS_CONCAT_2(NAME, _tpms_disp_cb);       \
 static const ant_tpms_disp_config_t  _ANT_TPMS_CONCAT_2(NAME, _profile_tpms_disp_config) =    \
     {                                                                               \
-        .p_cb               = &_ANT_TPMS_CONCAT_2(NAME, _tpms_disp_cb),                       \
+        .p_cb               = &_ANT_TPMS_CONCAT_2(NAME, _tpms_disp_cb),             \
         .evt_handler        = (EVT_HANDLER),                                        \
     }
 #define TPMS_DISP_PROFILE_CONFIG(NAME) &_ANT_TPMS_CONCAT_2(NAME, _profile_tpms_disp_config)
@@ -108,35 +108,39 @@ static const ant_tpms_disp_config_t  _ANT_TPMS_CONCAT_2(NAME, _profile_tpms_disp
 /**@brief Initialize an ANT profile configuration structure for the TPMS profile (Sensor).
  *
  * @param[in]  NAME                 Name of related instance.
+ * @param[in]  CONFIG_HANDLER       Event handler to update runtime configuration and store persistently.
  * @param[in]  EVT_HANDLER          Event handler to be called for handling events in the TPMS profile.
  */
 #define TPMS_SENS_PROFILE_CONFIG_DEF(NAME,                                          \
+                                    CONFIG_HANDLER,                                 \
                                      EVT_HANDLER)                                   \
 static ant_tpms_sens_cb_t            _ANT_TPMS_CONCAT_2(NAME, _tpms_sens_cb);                 \
 static const ant_tpms_sens_config_t  _ANT_TPMS_CONCAT_2(NAME, _profile_tpms_sens_config) =    \
     {                                                                               \
-        .p_cb               = &_ANT_TPMS_CONCAT_2(NAME, _tpms_sens_cb),                       \
+        .config_handler     = (CONFIG_HANDLER),                                     \
+        .p_cb               = &_ANT_TPMS_CONCAT_2(NAME, _tpms_sens_cb),             \
         .evt_handler        = (EVT_HANDLER),                                        \
     }
 #define TPMS_SENS_PROFILE_CONFIG(NAME) &NAME##_profile_tpms_sens_config
-
 
 /**@brief Tire Pressure page number type. */
 typedef enum
 {
     ANT_TPMS_PAGE_1  = 1,  ///< Tire pressure main data page.
+    ANT_TPMS_PAGE_16 = 16, ///< Configuration data page.
     ANT_TPMS_PAGE_80 = ANT_COMMON_PAGE_80,
     ANT_TPMS_PAGE_81 = ANT_COMMON_PAGE_81,
-    ANT_TPMS_PAGE_82 = ANT_COMMON_PAGE_82
+    ANT_TPMS_PAGE_82 = ANT_COMMON_PAGE_82,
 } ant_tpms_page_t;
 
 /**@brief TPMS profile event type. */
 typedef enum
 {
     ANT_TPMS_PAGE_1_UPDATED  = ANT_TPMS_PAGE_1,  ///< Data page 1 and speed have been updated (Display) or sent (Sensor).
+    ANT_TPMS_PAGE_16_UPDATED = ANT_TPMS_PAGE_16, ///< Data page 16 and speed have been updated (Display) or sent (Sensor).
     ANT_TPMS_PAGE_80_UPDATED = ANT_TPMS_PAGE_80, ///< Data page 80 has been updated (Display) or sent (Sensor).
     ANT_TPMS_PAGE_81_UPDATED = ANT_TPMS_PAGE_81, ///< Data page 81 has been updated (Display) or sent (Sensor).
-    ANT_TPMS_PAGE_82_UPDATED = ANT_TPMS_PAGE_82 ///< Data page 82 has been updated (Display) or sent (Sensor).
+    ANT_TPMS_PAGE_82_UPDATED = ANT_TPMS_PAGE_82, ///< Data page 82 has been updated (Display) or sent (Sensor).
 } ant_tpms_evt_t;
 
 // Forward declaration of the ant_tpms_profile_t type.
@@ -144,6 +148,9 @@ typedef struct ant_tpms_profile_s ant_tpms_profile_t;
 
 /**@brief TPMS event handler type. */
 typedef void (* ant_tpms_evt_handler_t) (ant_tpms_profile_t *, ant_tpms_evt_t);
+
+/**@brief TPMS config handler type. */
+typedef void (* ant_tpms_config_handler_t) (ant_tpms_profile_t *, ant_tpms_page16_data_t *);
 
 
 #include "ant_profiles/tpms/ant_tpms_local.h"
@@ -156,6 +163,7 @@ extern "C" {
 typedef struct
 {
     ant_tpms_sens_cb_t     * p_cb;          ///< Pointer to the data buffer for internal use.
+    ant_tpms_config_handler_t   config_handler;   ///< Event handler to update runtime configuration and store persistently.
     ant_tpms_evt_handler_t   evt_handler;   ///< Event handler to be called for handling events in the TPMS profile.
 } ant_tpms_sens_config_t;
 
@@ -176,6 +184,7 @@ struct ant_tpms_profile_s
     } _cb;                                ///< Pointer to internal control block.
     ant_tpms_evt_handler_t   evt_handler;    ///< Event handler to be called for handling events in the TPMS profile.
     ant_tpms_page1_data_t    page_1;         ///< Page 1.
+    ant_tpms_page16_data_t   page_16;        ///< Page 16.
     ant_common_page80_data_t page_80;        ///< Page 80.
     ant_common_page81_data_t page_81;        ///< Page 81.
     ant_common_page82_data_t page_82;        ///< Page 82.
@@ -183,8 +192,14 @@ struct ant_tpms_profile_s
 
 /** @name Defines for accessing ant_tpms_profile_t member variables
    @{ */
-#define TPMS_PROFILE_pressure               page_1.pressure
-// #define TPMS_PROFILE_update_event_count     page_1.update_event_count
+#define TPMS_PROFILE_role                   page_1.role
+#define TPMS_PROFILE_alarms                 page_1.alarms
+
+#define TPMS_PROFILE_config_command         page_16.command
+#define TPMS_PROFILE_config_role            page_16.role
+#define TPMS_PROFILE_ambient_pressure       page_16.ambient_pressure
+#define TPMS_PROFILE_alarm_low_pressure     page_16.alarm_low_pressure
+#define TPMS_PROFILE_alarm_high_pressure    page_16.alarm_high_pressure
 
 #define TPMS_PROFILE_hw_revision            page_80.hw_revision
 #define TPMS_PROFILE_manufacturer_id        page_80.manufacturer_id
@@ -211,9 +226,9 @@ struct ant_tpms_profile_s
  *
  * @retval     0 If initialization was successful. Otherwise, an error code is returned.
  */
-int ant_tpms_disp_init(ant_tpms_profile_t           * p_profile,
-                              ant_channel_config_t const   * p_channel_config,
-                              ant_tpms_disp_config_t const * p_disp_config);
+int ant_tpms_disp_init(ant_tpms_profile_t                   * p_profile,
+                              ant_channel_config_t const    * p_channel_config,
+                              ant_tpms_disp_config_t const  * p_disp_config);
 
 /**@brief Function for initializing the ANT Tire Pressure Sensor profile instance.
  *
@@ -223,9 +238,9 @@ int ant_tpms_disp_init(ant_tpms_profile_t           * p_profile,
  *
  * @retval     0 If initialization was successful. Otherwise, an error code is returned.
  */
-int ant_tpms_sens_init(ant_tpms_profile_t           * p_profile,
-                              ant_channel_config_t const   * p_channel_config,
-                              ant_tpms_sens_config_t const * p_sens_config);
+int ant_tpms_sens_init(ant_tpms_profile_t                   * p_profile,
+                              ant_channel_config_t const    * p_channel_config,
+                              ant_tpms_sens_config_t const  * p_sens_config);
 
 /**@brief Function for opening the profile instance channel for ANT TPMS Display.
  *

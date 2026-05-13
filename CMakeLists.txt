@@ -34,4 +34,5 @@ target_sources(app PRIVATE src/sensor.c)
 # ant tpms profile sources
 target_sources(app PRIVATE src/ant_profiles/ant_tpms/ant_tpms.c)
 target_sources(app PRIVATE src/ant_profiles/ant_tpms/pages/ant_tpms_page_1.c)
+target_sources(app PRIVATE src/ant_profiles/ant_tpms/pages/ant_tpms_page_16.c)
 target_sources(app PRIVATE src/ant_profiles/ant_common/pages/ant_common_page_82.c)

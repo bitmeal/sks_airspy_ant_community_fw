@@ -22,17 +22,19 @@ LOG_MODULE_REGISTER(ant_tpms_page_1, LOG_LEVEL_WRN);
 /**@brief tire pressure page 1 data layout structure. */
 typedef struct
 {
-    // uint8_t update_event_count;
-    uint8_t _reserved[5];
+    uint8_t role; // ant_tpms_role_t
+    uint8_t alarms;
+    uint8_t _reserved[3];
     uint8_t pressure[2];
-    // uint8_t tpms_pressure_LSB;
-    // uint8_t tpms_pressure_MSB;
 } ant_tpms_page1_data_layout_t;
 
 
 static void page1_data_log(ant_tpms_page1_data_t const * p_page_data)
 {
-    LOG_INF("Pressure [hPa]: %u", p_page_data->pressure);
+    LOG_INF("Role: %#x; Alarms: %#x; Pressure [hPa]: %u",
+        p_page_data->role,
+        p_page_data->alarms,
+        p_page_data->pressure);
 }
 
 
@@ -43,10 +45,10 @@ void ant_tpms_page_1_encode(uint8_t                     * p_page_buffer,
 
     page1_data_log(p_page_data);
 
-    // p_outcoming_data->update_event_count = p_page_data->update_event_count;
+    p_outcoming_data->role = p_page_data->role;
+    p_outcoming_data->alarms = p_page_data->alarms;
     memset(p_outcoming_data->_reserved, 0xFF, sizeof(p_outcoming_data->_reserved));
     uint16_encode(p_page_data->pressure, p_outcoming_data->pressure);
-    // uint16_encode(p_page_data->pressure, &p_outcoming_data->tpms_pressure_LSB);
 }
 
 
@@ -56,9 +58,9 @@ void ant_tpms_page_1_decode(uint8_t const         * p_page_buffer,
     ant_tpms_page1_data_layout_t const * p_incoming_data =
         (ant_tpms_page1_data_layout_t *)p_page_buffer;
 
-    // p_page_data->update_event_count = p_incoming_data->update_event_count;
+    p_page_data->role = p_incoming_data->role;
+    p_page_data->alarms = p_incoming_data->alarms;
     p_page_data->pressure = uint16_decode(p_incoming_data->pressure);
-    // p_page_data->pressure = uint16_decode(&p_incoming_data->tpms_pressure_LSB);
 
     page1_data_log(p_page_data);
 }

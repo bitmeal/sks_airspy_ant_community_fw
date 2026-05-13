@@ -20,7 +20,7 @@
 #define ANT_INIT_H__
 #include <ant_profiles/common/ant_request_controller.h>
 #include <zephyr/logging/log.h>
-// TODO: use kconfig option
+// TODO(bitmeal): use kconfig option
 LOG_MODULE_REGISTER(ant_tpms, LOG_LEVEL_WRN);
 // LOG_MODULE_REGISTER(ant_tpms, CONFIG_ANT_TPMS_LOG_LEVEL);
 
@@ -52,6 +52,7 @@ static int ant_tpms_init(ant_tpms_profile_t         * p_profile,
     p_profile->channel_number = p_channel_config->channel_number;
 
     p_profile->page_1  = DEFAULT_ANT_TPMS_page1();
+    p_profile->page_16 = DEFAULT_ANT_TPMS_page16();
     p_profile->page_80 = DEFAULT_ANT_COMMON_page80();
     p_profile->page_81 = DEFAULT_ANT_COMMON_page81();
     p_profile->page_82 = DEFAULT_ANT_COMMON_page82();
@@ -88,11 +89,13 @@ int ant_tpms_sens_init(ant_tpms_profile_t           * p_profile,
     __ASSERT_NO_MSG(p_channel_config != NULL);
     __ASSERT_NO_MSG(p_sens_config != NULL);
     __ASSERT_NO_MSG(p_sens_config->p_cb != NULL);
+    __ASSERT_NO_MSG(p_sens_config->config_handler != NULL);
     __ASSERT_NO_MSG(p_sens_config->evt_handler != NULL);
 
     p_profile->evt_handler   = p_sens_config->evt_handler;
     p_profile->_cb.p_sens_cb = p_sens_config->p_cb;
 
+    p_profile->_cb.p_sens_cb->config_handler   = p_sens_config->config_handler;
     p_profile->_cb.p_sens_cb->message_counter = 0;
 
     return ant_tpms_init(p_profile, p_channel_config);
@@ -117,6 +120,7 @@ static ant_tpms_page_t next_page_number_get(ant_tpms_profile_t * p_profile)
     {
         // if unknown page: reset the controller
         if( (page_number != ANT_TPMS_PAGE_1) &&
+            (page_number != ANT_TPMS_PAGE_16) &&
             (page_number != ANT_TPMS_PAGE_80) &&
             (page_number != ANT_TPMS_PAGE_81) &&
             (page_number != ANT_TPMS_PAGE_82) )
@@ -130,6 +134,7 @@ static ant_tpms_page_t next_page_number_get(ant_tpms_profile_t * p_profile)
         }
     }
 
+    // page 16 only transmitted on request
     switch(p_tpms_cb->message_counter - 1){
         case COMMON_PAGE_80_INTERVAL:
             page_number = ANT_TPMS_PAGE_80;
@@ -168,6 +173,10 @@ static void sens_message_encode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
             ant_tpms_page_1_encode(p_tpms_message_payload->page_payload, &(p_profile->page_1));
             break;
 
+        case ANT_TPMS_PAGE_16:
+            ant_tpms_page_16_encode(p_tpms_message_payload->page_payload, &(p_profile->page_16));
+            break;
+
         case ANT_COMMON_PAGE_80:
             ant_common_page_80_encode(p_tpms_message_payload->page_payload, &(p_profile->page_80));
             break;
@@ -197,12 +206,13 @@ static void sens_message_decode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
 {
     const ant_tpms_message_layout_t * p_tpms_message_payload =
         (ant_tpms_message_layout_t *)p_message_payload;
-    ant_tpms_page1_data_t page1;
+    ant_tpms_page16_data_t page16;
 
     switch (p_tpms_message_payload->page_number)
     {
-        case ANT_TPMS_PAGE_1:
-            ant_tpms_page_1_decode(p_tpms_message_payload->page_payload, &page1);
+        case ANT_TPMS_PAGE_16:
+            ant_tpms_page_16_decode(p_tpms_message_payload->page_payload, &page16);
+            p_profile->_cb.p_sens_cb->config_handler(p_profile, &page16);
             break;
 
         // case ANT_TPMS_PAGE_70: handled by request controller
@@ -227,6 +237,10 @@ static void disp_message_decode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
     {
         case ANT_TPMS_PAGE_1:
             ant_tpms_page_1_decode(p_tpms_message_payload->page_payload, &(p_profile->page_1));
+            break;
+
+        case ANT_TPMS_PAGE_16:
+            ant_tpms_page_16_decode(p_tpms_message_payload->page_payload, &(p_profile->page_16));
             break;
 
         case ANT_COMMON_PAGE_80:

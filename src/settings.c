@@ -7,7 +7,7 @@
 #include "settings.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(app_settings, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(app_settings, LOG_LEVEL_DBG);
 
 
 /*
@@ -58,16 +58,16 @@ static int direct_loader_immediate_value(const char *name, size_t len,
 int load_immediate_value(const char *name, void *dest, size_t len)
 {
 	int rc;
-	struct direct_immediate_value dov;
+	struct direct_immediate_value div;
 
-	dov.fetched = 0;
-	dov.len = len;
-	dov.dest = dest;
+	div.fetched = 0;
+	div.len = len;
+	div.dest = dest;
 
 	rc = settings_load_subtree_direct(name, direct_loader_immediate_value,
-					  (void *)&dov);
+					  (void *)&div);
 	if (rc == 0) {
-		if (!dov.fetched) {
+		if (!div.fetched) {
 			rc = -ENOENT;
 		}
 	}
@@ -80,45 +80,47 @@ int load_immediate_value(const char *name, void *dest, size_t len)
  * 
  */
 
-// TODO(bitmeal): implement universal helper method for default inti
-
-static int initialize_settings_defaults_DEVICE_ID()
+int load_immediate_value_init_default(const char *name, void *dest, size_t len, void *init, size_t len_init)
 {
     int rc;
-    
-    uint16_t device_id;
-    
-    while(load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id)) == -ENOENT)
+        
+    while(load_immediate_value(name, dest, len) == -ENOENT)
     {
-    	LOG_WRN("setting %s not existent; initializing to default", DEVICE_ID_SETTINGS_KEY);
+    	LOG_WRN("setting %s not existent; initializing to given default", name);
 
-        device_id = get_hwid_16bit();
-
-        rc = settings_save_one(DEVICE_ID_SETTINGS_KEY, (const void *)&device_id, sizeof(device_id));
+        rc = settings_save_one(name, init, len_init);
         if (rc)
         {
-    		LOG_WRN("failed writing default value for %s; (rc %d)", DEVICE_ID_SETTINGS_KEY, rc);
+    		LOG_WRN("failed writing default value for %s; (rc %d)", name, rc);
         }
         else
         {
-    		LOG_INF("initialized  %s: %d", DEVICE_ID_SETTINGS_KEY, device_id);
+    		LOG_INF("initialized %s", name);
         }
     };
 
     // final load (again)
-    rc = load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
+    rc = load_immediate_value(name, dest, len);
 
     if (rc == 0)
     {
-    	LOG_DBG("loaded { %s: %d }", DEVICE_ID_SETTINGS_KEY, device_id);
+    	LOG_DBG("loaded %s", name);
 	}
     else
     {
-		LOG_ERR("failed loading %s; (rc %d)", DEVICE_ID_SETTINGS_KEY, rc);
+		LOG_ERR("failed loading %s; (rc %d)", name, rc);
         return rc;
 	}
 
     return EXIT_SUCCESS;
+}
+
+static int initialize_settings_defaults_DEVICE_ID()
+{    
+    uint16_t device_id;
+	uint16_t device_id_init = get_hwid_16bit();
+    
+	return load_immediate_value_init_default(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id), &device_id_init, sizeof(device_id_init));
 }
 
 static int initialize_settings_defaults()
