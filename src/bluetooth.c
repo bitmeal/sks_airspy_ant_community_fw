@@ -38,35 +38,35 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.disconnected = disconnected,
 };
 
-static const struct bt_data advertising_data_smp[] = {
-	/* Appearance */
-	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
-		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
-		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
+// static const struct bt_data advertising_data_smp[] = {
+// 	/* Appearance */
+// 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
+// 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
+// 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
 
-	/* Flags */
-	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+// 	/* Flags */
+// 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 
-	/* SVC */
-	BT_DATA_BYTES(BT_DATA_UUID128_ALL,
-		      0x84, 0xaa, 0x60, 0x74, 0x52, 0x8a, 0x8b, 0x86,
-		      0xd3, 0x4c, 0xb7, 0x1d, 0x1d, 0xdc, 0x53, 0x8d),
-};
+// 	/* SVC */
+// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL,
+// 		      0x84, 0xaa, 0x60, 0x74, 0x52, 0x8a, 0x8b, 0x86,
+// 		      0xd3, 0x4c, 0xb7, 0x1d, 0x1d, 0xdc, 0x53, 0x8d),
+// };
 
-#if CONFIG_LOG_BACKEND_BLE
-static const struct bt_data advertising_data_nus[] = {
-	/* Appearance */
-	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
-		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
-		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
+// #if CONFIG_LOG_BACKEND_BLE
+// static const struct bt_data advertising_data_nus[] = {
+// 	/* Appearance */
+// 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
+// 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
+// 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
 
-	/* Flags */
-	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+// 	/* Flags */
+// 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 
-	/* SVC */
-	BT_DATA_BYTES(BT_DATA_UUID128_ALL, LOGGER_BACKEND_BLE_ADV_UUID_DATA),
-};
-#endif
+// 	/* SVC */
+// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, LOGGER_BACKEND_BLE_ADV_UUID_DATA),
+// };
+// #endif
 
 // BEGIN config service
 
@@ -96,7 +96,7 @@ static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
 		memcpy(&device_id, buf, len);
 
 		int rc;
-		rc = settings_save_one(DEVICE_ID_SETTINGS_KEY, (const void *)&device_id, sizeof(device_id));
+		rc = settings_save_one(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
         if (rc)
         {
     		LOG_WRN("failed writing setting for %s; (rc %d)", DEVICE_ID_SETTINGS_KEY, rc);
@@ -116,18 +116,18 @@ static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
     return len;
 }
 
-static const struct bt_data advertising_data_cfg[] = {
-	/* Appearance */
-	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
-		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
-		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
+// static const struct bt_data advertising_data_cfg[] = {
+// 	/* Appearance */
+// 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
+// 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
+// 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
 
-	/* Flags */
-	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+// 	/* Flags */
+// 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 
-	/* SVC */
-    BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_CFG_SRV_UUID_ENC),
-};
+// 	/* SVC */
+//     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_CFG_SRV_UUID_ENC),
+// };
 
 BT_GATT_SERVICE_DEFINE(
 	cfg_srv,
@@ -140,9 +140,36 @@ BT_GATT_SERVICE_DEFINE(
 
 // END config service
 
+static const struct bt_data advertising_data[] = {
+	// Flags
+	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
 
-struct bt_data scan_response_data[1];
+	// Services: only one; remaining in scan response data
+	// SMP/DFU Service
+	BT_DATA_BYTES(BT_DATA_UUID128_ALL,
+		      0x84, 0xaa, 0x60, 0x74, 0x52, 0x8a, 0x8b, 0x86,
+		      0xd3, 0x4c, 0xb7, 0x1d, 0x1d, 0xdc, 0x53, 0x8d),
+};
+
+// struct bt_data scan_response_data[1];
 char bt_name[CONFIG_BT_DEVICE_NAME_MAX + 1];
+
+static struct bt_data scan_data[] = {
+	// Device Name; has to be updated and set at runtime!
+	BT_DATA(BT_DATA_NAME_COMPLETE, NULL, 0),
+	// Appearance
+	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
+		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
+		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
+// 	// Services:
+// 	// Configuration
+// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_CFG_SRV_UUID_ENC),
+// 	// NUS
+// #if CONFIG_LOG_BACKEND_BLE
+// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, LOGGER_BACKEND_BLE_ADV_UUID_DATA),
+// #endif
+};
+
 
 static void auth_cancel(struct bt_conn *conn)
 {
@@ -159,59 +186,52 @@ static struct bt_conn_auth_cb auth_cb_display = {
 
 static void advertise(struct k_work *work)
 {
-	int rc;
-
-	bt_le_adv_stop();
-
-	bt_conn_auth_cb_register(&auth_cb_display);
-
-	// construct dynamic device name
-	uint16_t device_id;
-	rc = load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
-	if(rc)
-	{
-		LOG_ERR("failed reading %s to set BT name", DEVICE_ID_SETTINGS_KEY);
-		return;
-	}
-
-	snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05d", CONFIG_BT_DEVICE_NAME, device_id);
-	LOG_INF("BT name: %s", bt_name);
-	bt_set_name(bt_name);
-
-
-	scan_response_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
-
-	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_smp, ARRAY_SIZE(advertising_data_smp), scan_response_data, ARRAY_SIZE(scan_response_data));
+	int rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data, ARRAY_SIZE(advertising_data), scan_data, ARRAY_SIZE(scan_data));
 	if (rc) {
-		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_smp", rc);
+		LOG_ERR("Advertising failed to start (rc %d)", rc);
 		return;
 	}
 	else
 	{
-		LOG_INF("Advertising %s successfully started", "advertising_data_smp");
+		LOG_INF("Advertising successfully started with DFU service");
 	}
 
-#if CONFIG_LOG_BACKEND_BLE
-	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_nus, ARRAY_SIZE(advertising_data_nus), scan_response_data, ARRAY_SIZE(scan_response_data));
-	if (rc) {
-		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_nus", rc);
-		return;
-	}
-	else
-	{
-		LOG_INF("Advertising %s successfully started", "advertising_data_nus");
-	}
-#endif
 
-	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_cfg, ARRAY_SIZE(advertising_data_cfg), scan_response_data, ARRAY_SIZE(scan_response_data));
-	if (rc) {
-		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_cfg", rc);
-		return;
-	}
-	else
-	{
-		LOG_INF("Advertising %s successfully started", "advertising_data_cfg");
-	}
+// 	bt_le_adv_stop();
+
+// 	scan_response_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
+
+// 	int rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_smp, ARRAY_SIZE(advertising_data_smp), scan_response_data, ARRAY_SIZE(scan_response_data));
+// 	if (rc) {
+// 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_smp", rc);
+// 		return;
+// 	}
+// 	else
+// 	{
+// 		LOG_INF("Advertising %s successfully started", "advertising_data_smp");
+// 	}
+
+// #if CONFIG_LOG_BACKEND_BLE
+// 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_nus, ARRAY_SIZE(advertising_data_nus), scan_response_data, ARRAY_SIZE(scan_response_data));
+// 	if (rc) {
+// 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_nus", rc);
+// 		return;
+// 	}
+// 	else
+// 	{
+// 		LOG_INF("Advertising %s successfully started", "advertising_data_nus");
+// 	}
+// #endif
+
+// 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_cfg, ARRAY_SIZE(advertising_data_cfg), scan_response_data, ARRAY_SIZE(scan_response_data));
+// 	if (rc) {
+// 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_cfg", rc);
+// 		return;
+// 	}
+// 	else
+// 	{
+// 		LOG_INF("Advertising %s successfully started", "advertising_data_cfg");
+// 	}
 }
 
 static void connected(struct bt_conn *conn, uint8_t err)
@@ -253,11 +273,31 @@ static void bt_ready(int err)
 {
 	if (err != 0) {
 		LOG_ERR("Bluetooth failed to initialise: %d", err);
-	} else {
-		k_work_submit(&advertise_work);
+		return;
 	}
 
+	bt_conn_auth_cb_register(&auth_cb_display);
+
+	// construct dynamic device name
+	uint16_t device_id;
+	if(load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id)) == EXIT_SUCCESS)
+	{
+		snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05u", CONFIG_BT_DEVICE_NAME, device_id);
+		LOG_INF("BT name: %s", bt_name);
+
+		// update scan response data with name
+		scan_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
+
+		bt_set_name(bt_name);
+	} else {
+		LOG_ERR("failed reading %s to set BT name", DEVICE_ID_SETTINGS_KEY);
+		return;
+	}
+
+	k_work_submit(&advertise_work);
+
 	LOG_INF("Bluetooth enabled");
+
 	LOG_INF("Scheduling Bluetooth shutdown in %dms", BT_DISABLE_DELAY);
 	k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_DELAY));
 }
@@ -292,7 +332,7 @@ void start_bluetooth_services(void)
 
 static int shutdown_bluetooth(void)
 {
-	// TODO: possibly check for updater connection?
+	// TODO(bitmeal): possibly check for updater connection?
 	int rc;
 	
 	rc = bt_le_adv_stop();

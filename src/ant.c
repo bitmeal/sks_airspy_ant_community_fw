@@ -241,13 +241,13 @@ static int profile_setup(void)
 
   uint16_t alarm_thres_init = 0xffff;
   uint16_t alarm_thres;
-  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY, (const void*)&alarm_thres, sizeof(alarm_thres),
-                                      (const void*)&alarm_thres_init, sizeof(alarm_thres_init));
+  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY, (void*)&alarm_thres, sizeof(alarm_thres),
+                                      (void*)&alarm_thres_init, sizeof(alarm_thres_init));
 
   tpms.page_16.alarm_low_pressure = alarm_thres;
 
-  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY, (const void*)&alarm_thres, sizeof(alarm_thres),
-                                      (const void*)&alarm_thres_init, sizeof(alarm_thres_init));
+  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY, (void*)&alarm_thres, sizeof(alarm_thres),
+                                      (void*)&alarm_thres_init, sizeof(alarm_thres_init));
 
   tpms.page_16.alarm_high_pressure = alarm_thres;
 

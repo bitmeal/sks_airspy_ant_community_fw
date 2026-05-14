@@ -7,7 +7,7 @@
 #include "settings.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(app_settings, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(app_settings, LOG_LEVEL_INF);
 
 
 /*

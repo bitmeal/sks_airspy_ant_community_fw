@@ -14,7 +14,7 @@
 #include <zephyr/sys/poweroff.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
 #include "retained.h"
 #include "settings.h"
