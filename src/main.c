@@ -13,6 +13,9 @@
 #include <zephyr/pm/device.h>
 #include <zephyr/sys/poweroff.h>
 
+#include <zephyr/mgmt/mcumgr/mgmt/mgmt.h>
+#include <zephyr/mgmt/mcumgr/mgmt/callbacks.h>
+
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
@@ -22,7 +25,6 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #include "bluetooth.h"
 #include "ant.h"
 #include "spi.h"
-
 
 
 // TODO(bitmeal): check DT nodes on compile time
@@ -47,6 +49,26 @@ K_WORK_DELAYABLE_DEFINE(poweroff_work, poweroff);
 static void supervise(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(supervision_work, supervise);
 
+
+enum mgmt_cb_return dfu_pending_cb(uint32_t event, enum mgmt_cb_return _prev_status,
+                                int32_t *_rc, uint16_t *_group, bool *_abort_more,
+                                void *_data, size_t _data_size)
+{
+    if (event == MGMT_EVT_OP_IMG_MGMT_DFU_PENDING ) {
+		// reset boot count on firmware update
+		retained.boots = 0;
+		retained_update();
+
+		LOG_INF("Reset boot count after DFU; enable BT on next boot");
+    }
+
+    return MGMT_CB_OK;
+}
+
+struct mgmt_callback dfu_pending_reg = {
+	.callback = dfu_pending_cb,
+    .event_id = MGMT_EVT_OP_IMG_MGMT_DFU_PENDING,
+};
 
 static void poweroff(struct k_work *work)
 {
@@ -115,6 +137,10 @@ int main(void)
 	retained_update();
 
 	LOG_INF("Boot: %u; Uptime: %llus", retained.boots, retained.uptime_sum);
+
+	///////////////////////////////////////////
+	LOG_INF("registering management callbacks...");
+	mgmt_callback_register(&dfu_pending_reg);
 
 	///////////////////////////////////////////
 	LOG_INF("initializing settings storage...");

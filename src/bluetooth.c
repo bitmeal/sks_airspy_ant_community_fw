@@ -38,36 +38,6 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.disconnected = disconnected,
 };
 
-// static const struct bt_data advertising_data_smp[] = {
-// 	/* Appearance */
-// 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
-// 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
-// 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
-
-// 	/* Flags */
-// 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-
-// 	/* SVC */
-// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL,
-// 		      0x84, 0xaa, 0x60, 0x74, 0x52, 0x8a, 0x8b, 0x86,
-// 		      0xd3, 0x4c, 0xb7, 0x1d, 0x1d, 0xdc, 0x53, 0x8d),
-// };
-
-// #if CONFIG_LOG_BACKEND_BLE
-// static const struct bt_data advertising_data_nus[] = {
-// 	/* Appearance */
-// 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
-// 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
-// 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
-
-// 	/* Flags */
-// 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-
-// 	/* SVC */
-// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, LOGGER_BACKEND_BLE_ADV_UUID_DATA),
-// };
-// #endif
-
 // BEGIN config service
 
 static void reboot_work_wrapper(struct k_work *work)
@@ -116,18 +86,6 @@ static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
     return len;
 }
 
-// static const struct bt_data advertising_data_cfg[] = {
-// 	/* Appearance */
-// 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
-// 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
-// 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
-
-// 	/* Flags */
-// 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-
-// 	/* SVC */
-//     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_CFG_SRV_UUID_ENC),
-// };
 
 BT_GATT_SERVICE_DEFINE(
 	cfg_srv,
@@ -161,13 +119,6 @@ static struct bt_data scan_data[] = {
 	BT_DATA_BYTES(BT_DATA_GAP_APPEARANCE,
 		(CONFIG_BT_DEVICE_APPEARANCE >> 0) & 0xff,
 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
-// 	// Services:
-// 	// Configuration
-// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_CFG_SRV_UUID_ENC),
-// 	// NUS
-// #if CONFIG_LOG_BACKEND_BLE
-// 	BT_DATA_BYTES(BT_DATA_UUID128_ALL, LOGGER_BACKEND_BLE_ADV_UUID_DATA),
-// #endif
 };
 
 
@@ -195,49 +146,12 @@ static void advertise(struct k_work *work)
 	{
 		LOG_INF("Advertising successfully started with DFU service");
 	}
-
-
-// 	bt_le_adv_stop();
-
-// 	scan_response_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
-
-// 	int rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_smp, ARRAY_SIZE(advertising_data_smp), scan_response_data, ARRAY_SIZE(scan_response_data));
-// 	if (rc) {
-// 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_smp", rc);
-// 		return;
-// 	}
-// 	else
-// 	{
-// 		LOG_INF("Advertising %s successfully started", "advertising_data_smp");
-// 	}
-
-// #if CONFIG_LOG_BACKEND_BLE
-// 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_nus, ARRAY_SIZE(advertising_data_nus), scan_response_data, ARRAY_SIZE(scan_response_data));
-// 	if (rc) {
-// 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_nus", rc);
-// 		return;
-// 	}
-// 	else
-// 	{
-// 		LOG_INF("Advertising %s successfully started", "advertising_data_nus");
-// 	}
-// #endif
-
-// 	rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data_cfg, ARRAY_SIZE(advertising_data_cfg), scan_response_data, ARRAY_SIZE(scan_response_data));
-// 	if (rc) {
-// 		LOG_ERR("Advertising %s failed to start (rc %d)", "advertising_data_cfg", rc);
-// 		return;
-// 	}
-// 	else
-// 	{
-// 		LOG_INF("Advertising %s successfully started", "advertising_data_cfg");
-// 	}
 }
 
 static void connected(struct bt_conn *conn, uint8_t err)
 {
 	if (err) {
-		LOG_ERR("Bluetooth Connection failed (err 0x%02x)", err);
+		LOG_ERR("Bluetooth Connection failed (err %#02x)", err);
 	} else {
 		LOG_INF("Bluetooth Connected");
 		LOG_INF("Canceling Bluetooth disable task; staying alive");
@@ -247,7 +161,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
-	LOG_INF("Bluetooth Disconnected (reason 0x%02x)", reason);
+	LOG_INF("Bluetooth Disconnected (reason %#02x)", reason);
 	k_work_submit(&advertise_work);
 
 	LOG_INF("Scheduling Bluetooth shutdown in %dms", BT_DISABLE_DELAY);

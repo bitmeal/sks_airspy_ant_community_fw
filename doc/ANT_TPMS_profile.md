@@ -34,7 +34,7 @@ Page used to periodically transmit current tire pressure, alarms and role (F/R) 
 |---|---|---|---|---|
 |0| Page number | 1 Byte |`0x01`|-|
 |1| Role (Front/Rear) | 1 Byte |`0x00`: *unknown role*; `0x01`: Front; `0x02`: Rear|-|
-|2| ***(guess)***Alarms | 1 Byte | observed static value of `0x03`; possibly alarms?, indicating high /low pressure alarm, with `1`/`set` being OK (no alarm); likely `0x01` low OK (no alarm), `0x02` high OK (no alarm)  |-|
+|2| ***(guess)*** Alarms | 1 Byte | observed static value of `0x03`; possibly alarms?, indicating high /low pressure alarm, with `1`/`set` being OK (no alarm); likely `0x01` low OK (no alarm), `0x02` high OK (no alarm)  |-|
 |3| - | 1 Byte |`0xFF`|-|
 |4| - | 1 Byte |`0xFF`|-|
 |5| - | 1 Byte |`0xFF`|-|
@@ -65,3 +65,14 @@ Sends common Pages:
 * `81` Product Information
 * `82` Battery Status
   * Battery Identifier `0xff` to mark as unused
+
+### ANTware II
+Snippets to copy paste to send test messages with ANTware:
+
+|msg|info|
+|---|---|
+|`46-ff-ff-ff-ff-03-10-01`| Request data page 16 (`0x10`) |
+|`10-11-FF-FF-FF-FF-FF-FF`| Set Role: Front |
+|`10-12-FF-FF-FF-FF-FF-FF`| Set Role: Rear |
+|`10-30-FF-FF-F5-03-FF-FF`| Set Alarm 0 to ambient 1013 hPa |
+|`10-00-FF-FF-FF-FF-FF-FF`| Reset |
