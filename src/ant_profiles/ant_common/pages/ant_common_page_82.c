@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * Copyright (c) 2026 Arne Wendt (@bitmeal)
  * 
  * Copyright (c) 2023 by Garmin Ltd. or its subsidiaries.
  * All rights reserved.
@@ -34,7 +34,7 @@ const char* get_ant_common_page_82_battery_status_string(const ANT_COMMON_page82
     return ant_common_page_82_battery_status_strings[(uint8_t)state];
 }
 
-/**@brief ant+ common page 82 data layout structure. */
+/** @brief ant+ common page 82 data layout structure. */
 typedef struct
 {
     uint8_t _reserved[1]; ///< unused, fill by 0xFF
@@ -45,7 +45,7 @@ typedef struct
 }ant_common_page82_data_layout_t;
 
 
-/**@brief Function for tracing page 82 data.
+/** @brief Function for tracing page 82 data.
  *
  * @param[in]  p_page_data      Pointer to the page 82 data.
  */

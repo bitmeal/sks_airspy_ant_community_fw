@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * Copyright (c) 2026 Arne Wendt (@bitmeal)
  * 
  * Copyright (c) 2023 by Garmin Ltd. or its subsidiaries.
  * All rights reserved.
@@ -36,7 +36,7 @@ typedef struct
     uint8_t                     message_counter;
 } ant_tpms_sens_cb_t;
 
-/**@brief Tire Pressure Display control block. */
+/** @brief Tire Pressure Display control block. */
 typedef struct
 {
 } ant_tpms_disp_cb_t;

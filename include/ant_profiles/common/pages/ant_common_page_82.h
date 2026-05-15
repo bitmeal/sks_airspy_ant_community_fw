@@ -43,7 +43,7 @@ typedef enum {
 
 const char* get_ant_common_page_82_battery_status_string(const ANT_COMMON_page82_BATTERY_STATE state);
 
-/**@brief Data structure for ANT+ common data page 82.
+/** @brief Data structure for ANT+ common data page 82.
  *
  * @note This structure implements only page 82 specific data.
  */
@@ -57,7 +57,7 @@ typedef struct
 
 } ant_common_page82_data_t;
 
-/**@brief Initialize page 82.
+/** @brief Initialize page 82.
  */
 #define DEFAULT_ANT_COMMON_page82()                                 \
     (ant_common_page82_data_t)                                      \
@@ -69,7 +69,7 @@ typedef struct
         .battery_status = ANT_COMMON_page82_BATTERY_STATE_INVALID   \
     }
 
-/**@brief Initialize page 82.
+/** @brief Initialize page 82.
  */
 #define ANT_COMMON_page82(bat_cnt, bat_id, op_time, bat_vlt, bat_sta)   \
     (ant_common_page82_data_t)                                          \
@@ -81,7 +81,7 @@ typedef struct
         .battery_status = (bat_sta)                                     \
     }
 
-/**@brief Function for encoding page 82.
+/** @brief Function for encoding page 82.
  *
  * @param[in]  p_page_data      Pointer to the page data.
  * @param[out] p_page_buffer    Pointer to the data buffer.
@@ -89,7 +89,7 @@ typedef struct
 void ant_common_page_82_encode(uint8_t * p_page_buffer,
                                volatile ant_common_page82_data_t const * p_page_data);
 
-/**@brief Function for decoding page 82.
+/** @brief Function for decoding page 82.
  *
  * @param[in]  p_page_buffer    Pointer to the data buffer.
  * @param[out] p_page_data      Pointer to the page data.

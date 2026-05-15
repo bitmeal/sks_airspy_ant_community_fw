@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * Copyright (c) 2026 Arne Wendt (@bitmeal)
  * 
  * Copyright (c) 2023 by Garmin Ltd. or its subsidiaries.
  * All rights reserved.
@@ -19,7 +19,7 @@
 // LOG_MODULE_REGISTER(ant_tpms_page_16, CONFIG_TPMS_PAGES_LOG_LEVEL);
 LOG_MODULE_REGISTER(ant_tpms_page_16, LOG_LEVEL_WRN);
 
-/**@brief tire pressure page 16 data layout structure. */
+/** @brief tire pressure page 16 data layout structure. */
 typedef struct
 {
     ant_tpms_role_t role :4;

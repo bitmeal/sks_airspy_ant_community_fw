@@ -31,7 +31,7 @@ extern "C" {
  *
  */
 
-/**@brief Macro for performing rounded integer division (as opposed to truncating the result).
+/** @brief Macro for performing rounded integer division (as opposed to truncating the result).
  *
  * @param[in]   A   Numerator.
  * @param[in]   B   Denominator.
@@ -40,7 +40,7 @@ extern "C" {
  */
 #define ROUNDED_DIV(A, B) (((A) + ((B) / 2)) / (B))
 
-/**@brief Function for encoding a uint16 value.
+/** @brief Function for encoding a uint16 value.
  *
  * @param[in]   value            Value to be encoded.
  * @param[out]  p_encoded_data   Buffer where the encoded data is to be written.
@@ -54,7 +54,7 @@ static inline uint8_t uint16_encode(uint16_t value, uint8_t * p_encoded_data)
     return sizeof(uint16_t);
 }
 
-/**@brief Function for decoding a uint16 value.
+/** @brief Function for decoding a uint16 value.
  *
  * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
  *
@@ -66,7 +66,7 @@ static inline uint16_t uint16_decode(const uint8_t * p_encoded_data)
                  (((uint16_t)((uint8_t *)p_encoded_data)[1]) << 8 ));
 }
 
-/**@brief Function for encoding a uint24 value.
+/** @brief Function for encoding a uint24 value.
  *
  * @param[in]   value            Value to be encoded.
  * @param[out]  p_encoded_data   Buffer where the encoded data is to be written.
@@ -81,7 +81,7 @@ static inline uint8_t uint24_encode(uint32_t value, uint8_t * p_encoded_data)
     return 3;
 }
 
-/**@brief Function for decoding a uint24 value.
+/** @brief Function for decoding a uint24 value.
  *
  * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
  *
@@ -94,7 +94,7 @@ static inline uint32_t uint24_decode(const uint8_t * p_encoded_data)
                  (((uint32_t)((uint8_t *)p_encoded_data)[2]) << 16 ));
 }
 
-/**@brief Function for encoding a uint32 value.
+/** @brief Function for encoding a uint32 value.
  *
  * @param[in]   value            Value to be encoded.
  * @param[out]  p_encoded_data   Buffer where the encoded data is to be written.
@@ -110,7 +110,7 @@ static inline uint8_t uint32_encode(uint32_t value, uint8_t * p_encoded_data)
     return sizeof(uint32_t);
 }
 
-/**@brief Function for decoding a uint32 value.
+/** @brief Function for decoding a uint32 value.
  *
  * @param[in]   p_encoded_data   Buffer where the encoded data is stored.
  *

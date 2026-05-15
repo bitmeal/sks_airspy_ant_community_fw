@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Arne Wendt (@bitmeal)
+ * Copyright (c) 2026 Arne Wendt (@bitmeal)
  * 
  * Copyright (c) 2023 by Garmin Ltd. or its subsidiaries.
  * All rights reserved.
@@ -31,7 +31,7 @@ LOG_MODULE_REGISTER(ant_tpms, LOG_LEVEL_WRN);
 
 ant_request_controller_t request_controller;
 
-/**@brief Tire Pressure message data layout structure. */
+/** @brief Tire Pressure message data layout structure. */
 typedef struct
 {
     uint8_t page_number;
@@ -39,7 +39,7 @@ typedef struct
 } ant_tpms_message_layout_t;
 
 
-/**@brief Function for initializing the ANT Tire Pressure Profile instance.
+/** @brief Function for initializing the ANT Tire Pressure Profile instance.
  *
  * @param[in]  p_profile        Pointer to the profile instance.
  * @param[in]  p_channel_config Pointer to the ANT channel configuration structure.
@@ -103,7 +103,7 @@ int ant_tpms_sens_init(ant_tpms_profile_t           * p_profile,
 
 
 
-/**@brief Function for getting next page number to send.
+/** @brief Function for getting next page number to send.
  *
  * @param[in]  p_profile        Pointer to the profile instance.
  *
@@ -154,7 +154,7 @@ static ant_tpms_page_t next_page_number_get(ant_tpms_profile_t * p_profile)
 }
 
 
-/**@brief Function for encoding Tire Pressure Sensor message.
+/** @brief Function for encoding Tire Pressure Sensor message.
  *
  * @note Assume to be call each time when Tx window will occur.
  */
@@ -198,7 +198,7 @@ static void sens_message_encode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
 }
 
 
-/**@brief Function for decoding messages received by Tire Pressure sensor message.
+/** @brief Function for decoding messages received by Tire Pressure sensor message.
  *
  * @note Assume to be call each time when Rx window will occur.
  */
@@ -222,7 +222,7 @@ static void sens_message_decode(ant_tpms_profile_t * p_profile, uint8_t * p_mess
 }
 
 
-/**@brief Function for decoding messages received by Tire Pressure display message.
+/** @brief Function for decoding messages received by Tire Pressure display message.
  *
  * @note Assume to be call each time when Rx window will occur.
  */

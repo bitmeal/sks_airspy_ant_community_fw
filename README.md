@@ -12,7 +12,7 @@ You may want this, if you like some more gadgets on you bike, own a bike compute
 
 ### Features
 * ANT+ TPMS compatible device profile (non certified)
-  * Battery state and cummulated operating time (ANT common page 82)
+  * Battery state and cumulated operating time (ANT common page 82)
   * Software Version (ANT common page 81)
   * Manufacturer Info (default values) (ANT common page 80)
 * OTA DFU: firmware updates over BLE; using DFU in [nRF Connect](https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-mobile) mobile app
@@ -31,10 +31,13 @@ Please report other hardware configurations, board revisions, etc. you find out 
 
 
 ### Tested ANT+ Displays (Devices):
-| Device | Tire Pressure | Battery | Software Info | Manufacturer Info | Comments |
-|---|---|---|---|---|---|
-| Wahoo ELEMNT Bolt | ✅ | ❌ | ✅ | ❌ | |
-| [IpSensorMan](http://www.iforpowell.com/cms/index.php?page=ipantman)| ✅ | ✅ | ❌ | ✅ | [Garmin USB ANT Stick](https://www.garmin.com/en-US/p/10997) on Android 13 |
+Compatibility listed here describes what info is shown by the device.
+| Device | Tire Pressure | Battery | Software Info | Manufacturer Info | Alarms | Configuration | Comments |
+|---|---|---|---|---|---|---|---|
+| Wahoo ELEMNT Bolt | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | |
+| Wahoo ELEMNT Bolt 3 | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | |
+| Hammerhead Karoo 3 | ✅ | ❔ | ❔ | ❔ | ✅ | ✅ | |
+| [IpSensorMan](http://www.iforpowell.com/cms/index.php?page=ipantman)| ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | [Garmin USB ANT Stick](https://www.garmin.com/en-US/p/10997) on Android 13 |
 
 
 ## Usage
@@ -112,6 +115,7 @@ If you already have a version of this firmware on your sensors, you can update w
 4. Re-install battery
 5. Using nRF Connect app, find and connect to the sensor **within 30 seconds** of inserting the battery
 6. Start firmware update by tapping the **DFU** button and selecting the update package
+7. **IMPORTANT:** Updating *from* all firmware versions prior to `1.3`, DFU is a little broken. Try **two** updates, with battery removal in-between, using **Upload only (no revert)** first.
 
 ![BLE OTA DFU using Nordic nRF Connect app](./doc/resources/ble_ota_dfu_app.jpg)
 
@@ -124,18 +128,6 @@ For development you need the nRF SDK, matching toolchain, the [ANT SDK](https://
 For development on your bench, a RTT console is provided over SWD. Memory location is unknown, as the Black Magic probe did pick it up automatically.
 
 For debugging in operation, logging over BLE - using Nordic UART Service in [nRF Toolbox](https://www.nordicsemi.com/Products/Development-tools/nRF-Toolbox) mobile app - is provided. As with updating, connect to the console **within 30 seconds** after a cold-boot (remove and re-install battery).
-
-
-## TODO
-- [x] Release from CI
-- [x] Write development documentation / article
-- [x] Add storage partition; will break OTA DFU!
-- [x] Allow ANT ID to be set using BLE service and store in storage partition
-- [ ] Upgrade ANT SDK Version to not rely on patching for nRF52832
-- [ ] [Migrate to sysbuild](https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/releases_and_maturity/migration/migration_sysbuild.html)
-- [ ] [Testing using BabbleSim](https://docs.zephyrproject.org/latest/boards/native/nrf_bsim/doc/nrf52_bsim.html)
-- [ ] Clean up code
-- [ ] Thank everybody I pestered with this project for too long
 
 
 ## License

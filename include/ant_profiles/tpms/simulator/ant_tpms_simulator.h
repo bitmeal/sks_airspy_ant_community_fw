@@ -45,13 +45,13 @@ extern "C" {
 #endif
 
 
-/**@brief TPMS simulator configuration structure. */
+/** @brief TPMS simulator configuration structure. */
 typedef struct
 {
     ant_tpms_profile_t * p_profile;   ///< Related profile.
 } ant_tpms_simulator_cfg_t;
 
-/**@brief TPMS simulator structure. */
+/** @brief TPMS simulator structure. */
 typedef struct
 {
     ant_tpms_profile_t      * p_profile;    ///< Related profile.
@@ -59,7 +59,7 @@ typedef struct
 } ant_tpms_simulator_t;
 
 
-/**@brief Function for initializing the ANT TPMS simulator instance.
+/** @brief Function for initializing the ANT TPMS simulator instance.
  *
  * @param[in]  p_simulator      Pointer to the simulator instance.
  * @param[in]  p_config         Pointer to the simulator configuration structure.
@@ -69,7 +69,7 @@ void ant_tpms_simulator_init(ant_tpms_simulator_t           * p_simulator,
                              ant_tpms_simulator_cfg_t const * p_config,
                              bool                             auto_change);
 
-/**@brief Function for simulating a device event.
+/** @brief Function for simulating a device event.
  *
  * @details Based on this event, the transmitter data is simulated.
  *
@@ -77,13 +77,13 @@ void ant_tpms_simulator_init(ant_tpms_simulator_t           * p_simulator,
  */
 void ant_tpms_simulator_one_iteration(ant_tpms_simulator_t * p_simulator, ant_tpms_evt_t event);
 
-/**@brief Function for incrementing the pressure value.
+/** @brief Function for incrementing the pressure value.
  *
  * @param[in]  p_simulator      Pointer to the simulator instance.
  */
 void ant_tpms_simulator_increment(ant_tpms_simulator_t * p_simulator);
 
-/**@brief Function for decrementing the pressure value.
+/** @brief Function for decrementing the pressure value.
  *
  * @param[in]  p_simulator      Pointer to the simulator instance.
  */
