@@ -34,7 +34,7 @@ Page used to periodically transmit current tire pressure, alarms and role (F/R) 
 |---|---|---|---|---|
 |0| Page number | 1 Byte |`0x01`|-|
 |1| Role (Front/Rear) | 1 Byte |`0x00`: *unknown role*; `0x01`: Front; `0x02`: Rear|-|
-|2| ***(guess)*** Alarms | 1 Byte | observed static value of `0x03`; possibly alarms?, indicating high /low pressure alarm, with `1`/`set` being OK (no alarm); likely `0x01` low OK (no alarm), `0x02` high OK (no alarm)  |-|
+|2| Alarms | 1 Byte | high/low pressure alarm bitfield; `b1`/`set` being OK (no alarm); `0x01`: low OK; `0x02`: high OK; (`0x01 \| 0x02 = 0x03`: all OK)|-|
 |3| - | 1 Byte |`0xFF`|-|
 |4| - | 1 Byte |`0xFF`|-|
 |5| - | 1 Byte |`0xFF`|-|
@@ -49,14 +49,14 @@ Page is used to transmit configuration data bi-directionally.
 |Byte|Description|Length|Value|Unit|
 |---|---|---|---|---|
 |0| Page number | 1 Byte |`0x10`|-|
-|1 [4:8]| Command (Display --> Sensor) | 4 Bits | ***(guess)***`0x0`: Request page OR reset;`0x1`: Set Role; `0x2`: Set Ambient Pressure; ***(guess)*** `0x4`: Alarm Component 0; ***(guess)*** `0x8`: Alarm Component 1|-|
+|1 [4:8]| Command (Display --> Sensor) | 4 Bits | ***(guess)***`0x0`: Request page OR reset;`0x1`: Set Role; `0x2`: Set Ambient Pressure; `0x4`: Set Low Alarm Threshold; `0x8`: Set High Alarm Threshold |-|
 |1 [0:4]| Role | 4 Bits |`0x0`/`0x1`/`0x2`|-|
 |2| Ambient Pressure Compensation (LSB) ||||
 |3| Ambient Pressure Compensation (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
-|4| Pressure Alarm Component 0 [Low, or range] (LSB) ||||
-|5| Pressure Alarm Component 0 [Low, or range] (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
-|6| Pressure Alarm Component 1 [High, or setpoint] (LSB) ||||
-|7| Pressure Alarm Component 1 [High, or setpoint] (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
+|4| Low Pressure Alarm Threshold (LSB) ||||
+|5| Low Pressure Alarm Threshold (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
+|6| High Pressure Alarm Threshold (LSB) ||||
+|7| High Pressure Alarm Threshold (MSB)| 2 Byte |16 bit `0xFFFF` is invalid/unknown|hPa|
 
 
 ### Common Pages
