@@ -1,0 +1,5 @@
+/*
+ * Copyright (c) 2026 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+

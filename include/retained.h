@@ -1,11 +1,12 @@
 /*
+ * Copyright (c) 2026 Arne Wendt (@bitmeal)
  * Copyright (c) 2021 Nordic Semiconductor ASA
  *
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef RETAINED_H_
-#define RETAINED_H_
+#ifndef INCLUDE_RETAINED_H__
+#define INCLUDE_RETAINED_H__
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -52,4 +53,4 @@ bool retained_validate(void);
  */
 void retained_update(void);
 
-#endif /* RETAINED_H_ */
+#endif // INCLUDE_RETAINED_H__

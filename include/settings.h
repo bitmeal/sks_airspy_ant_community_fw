@@ -6,10 +6,6 @@
 #ifndef INCLUDE_SETTINGS_H__
 #define INCLUDE_SETTINGS_H__
 
-#include <errno.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <zephyr/settings/settings.h>
 
 // implement first-boot initialization of all shared and required settings!
 #define DEVICE_ID_SETTINGS_KEY "id"

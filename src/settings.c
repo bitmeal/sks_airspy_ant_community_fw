@@ -6,6 +6,11 @@
 #include "common.h"
 #include "settings.h"
 
+#include <errno.h>
+#include <inttypes.h>
+#include <stdlib.h>
+#include <zephyr/settings/settings.h>
+
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app_settings, LOG_LEVEL_INF);
 

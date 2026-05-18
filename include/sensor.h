@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-#ifndef INCLUDE_DECODER_H__
-#define INCLUDE_DECODER_H__
+#ifndef INCLUDE_SENSOR_H__
+#define INCLUDE_SENSOR_H__
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -41,4 +41,4 @@ struct __attribute__((__packed__)) sensor_readings_t {
 int decode_sensor_buffer(uint8_t* buffer, struct sensor_readings_t* sensor_readings);
 uint8_t battery_level_percent(const int16_t voltage_mv);
 
-#endif // INCLUDE_DECODER_H__
+#endif // INCLUDE_SENSOR_H__
