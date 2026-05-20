@@ -255,11 +255,11 @@ static int shutdown_bluetooth(void)
 		return rc;
 	}
 
-	rc = smp_bt_unregister();
-	if (rc != 0) {
-		LOG_ERR("Failed to unregister McuMgr SMP service: %d", rc);
-		return rc;
-	}
+	// rc = smp_bt_unregister();
+	// if (rc != 0) {
+	// 	LOG_ERR("Failed to unregister McuMgr SMP service: %d", rc);
+	// 	return rc;
+	// }
 
 	rc = bt_disable();
 	if (rc != 0) {

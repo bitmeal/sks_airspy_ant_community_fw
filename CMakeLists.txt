@@ -9,13 +9,13 @@ list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR})
 
 ## zephyr
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-zephyr_include_directories(include)
 
 ## configure project
 project(sks_airspy_community)
 
 ## check if we are building with sysbuild
 test_sysbuild()
+
 
 ### APP
 # app sources
@@ -34,3 +34,8 @@ target_sources(app PRIVATE src/ant_profiles/ant_tpms/ant_tpms.c)
 target_sources(app PRIVATE src/ant_profiles/ant_tpms/pages/ant_tpms_page_1.c)
 target_sources(app PRIVATE src/ant_profiles/ant_tpms/pages/ant_tpms_page_16.c)
 target_sources(app PRIVATE src/ant_profiles/ant_common/pages/ant_common_page_82.c)
+
+
+## include paths
+target_include_directories(app PRIVATE include/)
+zephyr_library_include_directories(.)
