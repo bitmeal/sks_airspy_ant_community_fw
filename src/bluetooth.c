@@ -137,7 +137,7 @@ static struct bt_conn_auth_cb auth_cb_display = {
 
 static void advertise(struct k_work *work)
 {
-	int rc = bt_le_adv_start(BT_LE_ADV_CONN, advertising_data, ARRAY_SIZE(advertising_data), scan_data, ARRAY_SIZE(scan_data));
+	int rc = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, advertising_data, ARRAY_SIZE(advertising_data), scan_data, ARRAY_SIZE(scan_data));
 	if (rc) {
 		LOG_ERR("Advertising failed to start (rc %d)", rc);
 		return;

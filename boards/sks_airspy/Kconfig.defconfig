@@ -5,7 +5,10 @@
 
 if BOARD_SKS_AIRSPY
 
-config BT_CTLR
-	default BT
+# config BT_CTLR
+# 	default BT
+
+config HW_STACK_PROTECTION
+	default ARCH_HAS_STACK_PROTECTION
 
 endif # BOARD_SKS_AIRSPY

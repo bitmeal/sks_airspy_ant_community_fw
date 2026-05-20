@@ -269,7 +269,7 @@ static void ant_message_send(ant_tpms_profile_t * p_profile)
 
     sens_message_encode(p_profile, p_message_payload);
 
-    int err_code = NRF_EINVAL;
+    ant_err_t err_code;
 
     if (ant_request_controller_ack_needed(&request_controller))
     {

@@ -2,3 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 # SKS AIRSPY board configuration
+
+if BOARD_SKS_AIRSPY
+
+endif # BOARD_SKS_AIRSPY

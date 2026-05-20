@@ -7,11 +7,15 @@ type: mcu
 arch: arm
 toolchain:
   - zephyr
+  - gnuarmemb
 ram: 64
 flash: 512
 supported:
   - ble
   - gpio
-  - spi
+  # - spi
   - spi_bitbang
+  - counter
+  - nvs
+  - watchdog
 vendor: sks

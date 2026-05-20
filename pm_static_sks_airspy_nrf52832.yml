@@ -60,7 +60,7 @@ mcuboot_secondary:
   - mcuboot_primary
 
 
-storage:
+settings_storage:
   region: flash_primary
   placement:
     after:
