@@ -8,6 +8,11 @@ if BOARD_SKS_AIRSPY
 # config BT_CTLR
 # 	default BT
 
+# force compatibility with previously set values in pm_static.yml
+# allows OTA DFU of devices using MCUboot variants build from partition manager configuration
+config ROM_START_OFFSET 
+	default 0x400 if BOOTLOADER_MCUBOOT && USE_DT_CODE_PARTITION
+
 config HW_STACK_PROTECTION
 	default ARCH_HAS_STACK_PROTECTION
 

@@ -1,0 +1,25 @@
+/ {
+    chosen {
+        /delete-property/ zephyr,console;
+
+        /delete-property/ zephyr,code-partition;
+        zephyr,code-partition = &boot_partition;
+    };
+
+    aliases {
+        /delete-property/ wake-pin;
+    };
+
+    /delete-node/ wake_pin;
+    /delete-node/ spi_master;
+    /delete-node/ rtt0;
+};
+
+/* 3. Keep the drivers disabled as planned */
+&gpio0 {
+    status = "disabled";
+};
+
+&gpiote {
+    status = "disabled";
+};

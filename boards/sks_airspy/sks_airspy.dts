@@ -28,6 +28,20 @@
 		compatible = "wake-signal-pin";
 		gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
 	};
+
+	spi_master: spibb0 {
+		compatible = "zephyr,spi-bitbang";
+		status = "okay";
+		
+		#address-cells = <1>;
+		#size-cells = <0>;
+	
+		clk-gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
+		miso-gpios = <&gpio0 15 0>;
+
+		// interrupt pin
+		cs-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+	};
 	
 	aliases {
 		wake-pin = &wake_pin;
