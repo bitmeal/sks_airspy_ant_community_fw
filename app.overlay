@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: MPL-2.0
  */
 
-/ {
+ / {
     chosen {
         /delete-property/ zephyr,code-partition;
-        zephyr,code-partition = &boot_partition;
+        zephyr,code-partition = &slot0_partition;
     };
 };
 
 // Include flash partition table.
-#include "../fstab.dtsi"
+#include "fstab.dtsi"

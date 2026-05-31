@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2026 Arne Wendt (@bitmeal)
+ * SPDX-License-Identifier: MPL-2.0
+ */
+
+/ {
+	chosen {
+		/delete-property/ zephyr,console;
+		zephyr,console = &rtt0;
+
+		/delete-property/ zephyr,code-partition;
+        zephyr,code-partition = &slot0_partition;
+	};
+
+	rtt0: rtt_chan0 {
+		compatible = "segger,rtt-uart";
+		status = "okay";
+	};
+
+	wake_pin: wake_pin {
+		compatible = "wake-signal-pin";
+		gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+	};
+
+	spi_master: spibb0 {
+		compatible = "zephyr,spi-bitbang";
+		status = "okay";
+		
+		#address-cells = <1>;
+		#size-cells = <0>;
+	
+		clk-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
+		miso-gpios = <&gpio0 7 0>;
+
+		// interrupt pin
+		cs-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+	};
+
+	aliases {
+		wake-pin = &wake_pin;
+	};
+
+};
+
+&uicr {
+	nfct-pins-as-gpios;
+};
+
+// Include flash partition table.
+#include "../fstab.dtsi"

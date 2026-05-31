@@ -13,7 +13,6 @@ flash: 512
 supported:
   - ble
   - gpio
-  # - spi
   - spi_bitbang
   - counter
   - nvs

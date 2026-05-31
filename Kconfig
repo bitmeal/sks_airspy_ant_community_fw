@@ -1,0 +1,18 @@
+# Copyright (c) 2026 Arne Wendt (@bitmeal)
+# SPDX-License-Identifier: MPL-2.0
+
+config AIRSPY_DFU_COMPAT_PADDING
+    bool "0x400 pm static mcuboot padding"
+    default y
+    help
+        force compatibility with previously set values in pm_static.yml
+        allows OTA DFU of devices using MCUboot variants build from partition manager configuration
+
+if AIRSPY_DFU_COMPAT_PADDING
+
+configdefault ROM_START_OFFSET
+	default 0x400 if BOOTLOADER_MCUBOOT && USE_DT_CODE_PARTITION
+
+endif #AIRSPY_DFU_COMPAT_PADDING
+
+source "Kconfig.zephyr"
