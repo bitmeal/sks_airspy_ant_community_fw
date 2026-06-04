@@ -1,6 +1,108 @@
 # Copyright (c) 2026 Arne Wendt (@bitmeal)
 # SPDX-License-Identifier: MPL-2.0
 
+
+config AIRSPY_DEFAULTS
+    bool
+    default y
+    select HW_ID_LIBRARY
+    select PM_DEVICE
+    select POWEROFF
+    select ZBUS
+    select GPIO
+    select SPI
+    select SPI_BITBANG
+    # select SOC_NRF52832_ALLOW_SPIM_DESPITE_PAN_58
+    select NVS
+    select SETTINGS
+    select MPU_ALLOW_FLASH_WRITE
+
+
+if AIRSPY_DEFAULTS
+
+choice HW_ID_LIBRARY_SOURCE
+    default HW_ID_LIBRARY_SOURCE_DEVICE_ID
+endchoice
+
+choice SETTINGS_BACKEND
+    default SETTINGS_NVS
+endchoice
+
+config NCS_APPLICATION_BOOT_BANNER_STRING
+    default "AIRSPY Community"
+
+config RESET_ON_FATAL_ERROR
+    default n
+
+config BOARD_SERIAL_BACKEND_CDC_ACM
+    default n
+
+config SPI_NRFX
+    default n
+
+endif # AIRSPY_DEFAULTS
+
+# ---
+
+config AIRSPY_SIZE_OPTIMIZATIONS
+    bool
+    default y
+    select LTO
+    select ISR_TABLES_LOCAL_DECLARATION
+
+if AIRSPY_SIZE_OPTIMIZATIONS
+
+choice COMPILER_OPTIMIZATIONS
+    default SIZE_OPTIMIZATIONS
+endchoice
+
+config BT_USER_PHY_UPDATE
+    default n
+
+config BT_PHY_UPDATE
+    default n
+
+config THREAD_NAME
+    default n
+
+config THREAD_STACK_INFO
+    default n
+
+config NET_BUF_POOL_USAGE
+    default n
+
+config UART_USE_RUNTIME_CONFIGURE
+    default n
+
+config LOG_RUNTIME_FILTERING
+    default n
+    
+endif # AIRSPY_SIZE_OPTIMIZATIONS
+
+# ---
+
+config AIRSPY_ANT
+    bool
+    default y
+    select ANT
+    select ANT_EVALUATION_KEY
+    select ANT_CHANNEL_CONFIG
+    select ANT_KEY_MANAGER
+    select ANT_COMMON
+
+if AIRSPY_ANT
+
+config HEAP_MEM_POOL_SIZE
+    default 2048
+    # default 4096
+
+config ANT_TOTAL_CHANNELS_ALLOCATED
+    default 1
+
+endif # AIRSPY_ANT
+
+# ---
+
 config AIRSPY_DFU_COMPAT_PADDING
     bool "0x400 pm static mcuboot padding"
     default y
@@ -10,9 +112,126 @@ config AIRSPY_DFU_COMPAT_PADDING
 
 if AIRSPY_DFU_COMPAT_PADDING
 
-configdefault ROM_START_OFFSET
+config ROM_START_OFFSET
 	default 0x400 if BOOTLOADER_MCUBOOT && USE_DT_CODE_PARTITION
 
-endif #AIRSPY_DFU_COMPAT_PADDING
+endif # AIRSPY_DFU_COMPAT_PADDING
+
+# TODO: BT dependency
+
+config AIRSPY_DFU
+    bool
+    default y
+    select BOOTLOADER_MCUBOOT
+    select MPU_ALLOW_FLASH_WRITE
+    select MCUMGR
+    select FLASH
+    select STREAM_FLASH
+    select FLASH_MAP
+    select NET_BUF
+    select ZCBOR
+    select CRC
+    select IMG_MANAGER
+    select MCUMGR_GRP_IMG
+    select MCUMGR_GRP_OS
+    select MCUMGR_GRP_OS_MCUMGR_PARAMS
+    select BT_SMP
+    select MCUMGR_TRANSPORT_BT
+    # select MCUMGR_TRANSPORT_BT_PERM_RW
+    select MCUMGR_TRANSPORT_BT_CONN_PARAM_CONTROL
+    select MCUMGR_TRANSPORT_BT_REASSEMBLY
+    select MCUMGR_MGMT_NOTIFICATION_HOOKS
+    select MCUMGR_GRP_IMG_STATUS_HOOKS
+
+if AIRSPY_DFU
+
+config BT_L2CAP_TX_MTU
+    default 498
+
+config BT_BUF_ACL_RX_SIZE
+    default 502
+
+config BT_BUF_ACL_TX_SIZE
+    default 502
+
+config BT_CTLR_DATA_LENGTH_MAX
+    default 251
+
+# config MCUMGR_TRANSPORT_BT_PERM_RW_AUTHEN
+#     default n
+
+config MCUMGR_GRP_ZBASIC_STORAGE_ERASE
+    default n
+
+config MCUMGR_TRANSPORT_NETBUF_SIZE
+    default 2475
+
+config MCUMGR_TRANSPORT_WORKQUEUE_STACK_SIZE
+    default 4608
+
+config MAIN_STACK_SIZE
+    default 2176
+    # default 2048
+config SYSTEM_WORKQUEUE_STACK_SIZE
+    default 2304
+
+endif # AIRSPY_DFU
+
+# ---
+
+config AIRSPY_BT
+    bool
+    default y
+    select BT
+    select BT_DEVICE_NAME_DYNAMIC
+    select BT_PERIPHERAL
+
+if AIRSPY_BT
+
+config BT_DEVICE_NAME
+    default "AIRSPY Community"
+
+config BT_DEVICE_NAME_MAX
+    default 23
+
+config BT_DEVICE_APPEARANCE
+    # 0x0559 / 1369 Vehicle Tire Pressure Sensor
+    # 0x0480 / 1152 Generic Cycling
+    default 1152
+
+config BT_MAX_CONN
+    default 1
+
+config BT_CTLR_LE_PING
+    default n
+
+endif # AIRSPY_BT
+
+# ---
+# TODO: depends RTT
+# TODO: depends BT
+# TODO: enable log, or enable log by enabling individual backends?
+
+config AIRSPY_LOG
+    bool
+    default y
+    select LOG
+    select LOG_BACKEND_BLE
+    select LOG_BACKEND_RTT
+    select USE_SEGGER_RTT
+
+if AIRSPY_LOG
+
+choice LOG_MODE
+    default LOG_MODE_DEFERRED
+endchoice
+
+# NUS logging
+config LOG_PROCESS_THREAD_STACK_SIZE
+    default 2048
+
+endif # AIRSPY_LOG
+
+# ---
 
 source "Kconfig.zephyr"
