@@ -14,8 +14,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(sks_airspy_community)
 
 ## check if we are building with sysbuild
-test_sysbuild()
-
+test_sysbuild(REQUIRED)
 
 ### APP
 # app sources

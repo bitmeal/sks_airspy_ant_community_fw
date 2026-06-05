@@ -122,7 +122,7 @@ endif # AIRSPY_DFU_COMPAT_PADDING
 config AIRSPY_DFU
     bool
     default y
-    select BOOTLOADER_MCUBOOT
+    # select BOOTLOADER_MCUBOOT
     select MPU_ALLOW_FLASH_WRITE
     select MCUMGR
     select FLASH
