@@ -16,8 +16,9 @@ on:
   workflow_dispatch:
 
 env:
-  NRF_TOOLCHAIN_VERSION: v2.7.0
-  NRF_SDK_VERSION: v2.7.0
+  # NRF_TOOLCHAIN_VERSION: v2.7.0
+  # NRF_SDK_VERSION: v2.7.0
+  ANT_SDK_VERSION: v2.1.0
 
 jobs:
   build:
@@ -26,10 +27,10 @@ jobs:
       - name: Install Dependencies + West + NRF Util
         run: |
           sudo apt update
-          sudo apt install --no-install-recommends \
+          sudo apt install -y --no-install-recommends \
             curl \
             git \
-            python3 python3-pip \
+            python3 python3-pip
 
           pip3 install --break-system-packages west
 
@@ -37,68 +38,60 @@ jobs:
           chmod +x /usr/local/bin/nrfutil
           nrfutil install toolchain-manager
 
-      - name: Prepare Restore NCS
-        run: |
-          mkdir -p /home/runner/ncs/
+          nrfutil toolchain-manager config --set install-dir=/opt/sdk/
 
-      - name: Restore NCS
-        id: cache-ncs-restore
+          curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
+          chmod +x /usr/local/bin/yq
+
+      - name: Cache SDK
+        id: cachesdk
         uses: actions/cache/restore@v4
         with:
-          path: /home/runner/ncs/
-          key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
+          path: /opt/sdk/
+          key: sdk-${{ runner.os }}-${{ env.ANT_SDK_VERSION }}
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Fetch Toolchain + NRF & ANT SDK
-        if: steps.cache-ncs-restore.outputs.cache-hit != 'true'
+      - name: Setup SDK
+        if: steps.cachesdk.outputs.cache-hit != 'true'
+        working-directory: /opt/sdk/
         run: |
-          # install toolchain
-          nrfutil toolchain-manager install --ncs-version ${NRF_TOOLCHAIN_VERSION}
-
-          # install nrf sdk
-          mkdir -p /home/runner/ncs/sdks/
-          cd /home/runner/ncs/sdks/
-          west init -m https://github.com/nrfconnect/sdk-nrf --mr ${NRF_SDK_VERSION} ${NRF_SDK_VERSION}
-          cd /home/runner/ncs/sdks/${NRF_SDK_VERSION}/
-          west update
-
-          ## install ant SDK
           # allow access
           git config --global credential.helper cache
           git ls-remote https://SKS_AIRSPY_ANT_TOKEN:${{ secrets.SKS_AIRSPY_ANT_TOKEN }}@github.com/ant-nrfconnect/sdk-ant > /dev/null
-          # fetch ant SDK
-          west config manifest.group-filter +ant
-          west update
-          pushd /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant && git apply --whitespace=fix ${{ github.workspace }}/ant_sdk_nrf52832.patch && popd
-          west list ant
+          # fetch SDK
+          west init -m "https://github.com/ant-nrfconnect/sdk-ant" --mr ${ANT_SDK_VERSION} sdk-ant
+          pushd sdk-ant && west update && popd
 
+      - name: Setup Toolchain
+        if: steps.cachesdk.outputs.cache-hit != 'true'
+        working-directory: /opt/sdk/sdk-ant/
+        run: |
+          nrfutil toolchain-manager install --ncs-version $(yq '.manifest.projects.[] | select(.name = "nrf") | .revision' /opt/sdk/sdk-ant/ant/west.yml)
+          
           # finalize sdk install
           nrfutil toolchain-manager launch -- west zephyr-export
 
-      - name: Save NCS
-        if: steps.cache-ncs-restore.outputs.cache-hit != 'true'
-        id: cache-ncs-save
-        uses: actions/cache/save@v4
-        with:
-          path: /home/runner/ncs/
-          key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
+      - name: Finalize Setup
+        working-directory: /opt/sdk/sdk-ant/
+        run: |
+          nrfutil toolchain-manager launch -- west zephyr-export
+
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Build Application
         id: app-build
-        working-directory: /home/runner/ncs/sdks/${{ env.NRF_SDK_VERSION }}/
+        working-directory: /opt/sdk/sdk-ant/
         run: |
           echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.workspace }}/mcuboot.pem
-          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --no-sysbuild ${{ github.workspace }}
+          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --sysbuild ${{ github.workspace }}
 
       - name: Save Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: sks-airspy-community-firmware
           path: |
-            ${{ github.workspace }}/build/zephyr/merged.hex
-            ${{ github.workspace }}/build/zephyr/dfu_application.zip
+            ${{ github.workspace }}/build/merged.hex
+            ${{ github.workspace }}/build/dfu_application.zip
 
   release:
     runs-on: ubuntu-24.04
@@ -108,15 +101,15 @@ jobs:
       FILENAME_PREFIX: sascf
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      # TODO: do not rely on cache restoration, but use outputs for ANT SDK version
-      - name: Restore NCS
-        id: cache-ncs-restore
-        uses: actions/cache/restore@v4
-        with:
-          path: /home/runner/ncs/
-          key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
+      # # TODO: prebuild version info artifact
+      # - name: Cache SDK
+      #   id: cachesdk
+      #   uses: actions/cache/restore@v4
+      #   with:
+      #     path: /opt/sdk/
+      #     key: sdk-${{ runner.os }}-${{ env.ANT_SDK_VERSION }}
       
       - uses: actions/download-artifact@v4
         with:
@@ -136,13 +129,13 @@ jobs:
           set +o allexport
           echo "| APP | ${VERSION_MAJOR}.${VERSION_MINOR}.${PATCHLEVEL} |" >> release_artifacts/NOTES
 
-          # get ANT SDK version
-          ANT_SDK_VERSION=$(sed -n -E 's/.*ANT_VERSION_STRING\s+\"([[:digit:]\.]*)\".*$/\1/p;' /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant/include/ant_parameters.h)
+          # # get ANT SDK version
+          # ANT_SDK_VERSION=$(sed -n -E 's/.*ANT_VERSION_STRING\s+\"([[:digit:]\.]*)\".*$/\1/p;' /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant/include/ant_parameters.h)
           
-          # write SDKs and toolchain versions
-          echo "| nRF SDK | ${NRF_SDK_VERSION} |" >> release_artifacts/NOTES
-          echo "| ANT SDK | ${ANT_SDK_VERSION} |" >> release_artifacts/NOTES
-          echo "| Toolchain | ${NRF_TOOLCHAIN_VERSION} |" >> release_artifacts/NOTES          
+          # # write SDKs and toolchain versions
+          # echo "| nRF SDK | ${NRF_SDK_VERSION} |" >> release_artifacts/NOTES
+          # echo "| ANT SDK | ${ANT_SDK_VERSION} |" >> release_artifacts/NOTES
+          # echo "| Toolchain | ${NRF_TOOLCHAIN_VERSION} |" >> release_artifacts/NOTES          
 
       - name: Prepare Release Files
         run: |
