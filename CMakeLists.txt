@@ -4,10 +4,6 @@
 cmake_minimum_required(VERSION 3.20.0)
 
 ### Zephyr
-# include board definition
-list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR})
-
-## zephyr
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 ## configure project

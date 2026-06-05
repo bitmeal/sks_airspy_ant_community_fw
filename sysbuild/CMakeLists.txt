@@ -1,13 +1,15 @@
 # Copyright (c) 2026 Arne Wendt (@bitmeal)
 # SPDX-License-Identifier: MPL-2.0
 
+# include board definitions
+list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR}/../)
+
 find_package(Sysbuild REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(sysbuild LANGUAGES)
 
 ### artifacts
 # create merged.hex with sysbuild and without partition manager
-
 if(
     SB_CONFIG_BOOTLOADER_MCUBOOT AND
     NOT SB_CONFIG_PARTITION_MANAGER AND
