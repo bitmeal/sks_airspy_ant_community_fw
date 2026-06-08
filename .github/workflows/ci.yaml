@@ -19,12 +19,13 @@ env:
   # NRF_TOOLCHAIN_VERSION: v2.7.0
   # NRF_SDK_VERSION: v2.7.0
   ANT_SDK_VERSION: v2.1.0
+  SDK_LOCATION: /opt/sdk/
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - name: Install Dependencies + West + NRF Util
+      - name: Prepare Environment & Dependencies
         run: |
           sudo apt update
           sudo apt install -y --no-install-recommends \
@@ -38,21 +39,23 @@ jobs:
           chmod +x /usr/local/bin/nrfutil
           nrfutil install toolchain-manager
 
-          nrfutil toolchain-manager config --set install-dir=/opt/sdk/
+          nrfutil toolchain-manager config --set install-dir=${SDK_LOCATION}
 
           curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
           chmod +x /usr/local/bin/yq
+
+          mkdir -p ${SDK_LOCATION}
 
       - name: Cache SDK
         id: cachesdk
         uses: actions/cache/restore@v4
         with:
-          path: /opt/sdk/
+          path: ${{ env.SDK_LOCATION }}
           key: sdk-${{ runner.os }}-${{ env.ANT_SDK_VERSION }}
 
       - name: Setup SDK
         if: steps.cachesdk.outputs.cache-hit != 'true'
-        working-directory: /opt/sdk/
+        working-directory: ${{ env.SDK_LOCATION }}
         run: |
           # allow access
           git config --global credential.helper cache
@@ -63,15 +66,15 @@ jobs:
 
       - name: Setup Toolchain
         if: steps.cachesdk.outputs.cache-hit != 'true'
-        working-directory: /opt/sdk/sdk-ant/
+        working-directory: ${{ env.SDK_LOCATION }}/sdk-ant/
         run: |
-          nrfutil toolchain-manager install --ncs-version $(yq '.manifest.projects.[] | select(.name = "nrf") | .revision' /opt/sdk/sdk-ant/ant/west.yml)
+          nrfutil toolchain-manager install --ncs-version $(yq '.manifest.projects.[] | select(.name = "nrf") | .revision' ${SDK_LOCATION}/sdk-ant/ant/west.yml)
           
           # finalize sdk install
           nrfutil toolchain-manager launch -- west zephyr-export
 
       - name: Finalize Setup
-        working-directory: /opt/sdk/sdk-ant/
+        working-directory: ${{ env.SDK_LOCATION }}/sdk-ant/
         run: |
           nrfutil toolchain-manager launch -- west zephyr-export
 
@@ -80,7 +83,7 @@ jobs:
 
       - name: Build Application
         id: app-build
-        working-directory: /opt/sdk/sdk-ant/
+        working-directory: ${{ env.SDK_LOCATION }}/sdk-ant/
         run: |
           echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.workspace }}/mcuboot.pem
           nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --sysbuild ${{ github.workspace }}
