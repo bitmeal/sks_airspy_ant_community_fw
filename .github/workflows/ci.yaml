@@ -104,8 +104,8 @@ jobs:
         env:
           IMAGE_NAME: ${{ steps.app-build.outputs.IMAGE_NAME }}
         run: |
-          nrfutil toolchain-manager launch -- west build --build-dir ${{ github.workspace }}/build/ --sysbuild -t ram_report
-          nrfutil toolchain-manager launch -- west build --build-dir ${{ github.workspace }}/build/ --sysbuild -t rom_report
+          nrfutil toolchain-manager launch -- west build --build-dir ${{ github.workspace }}/build/${IMAGE_NAME}/ --sysbuild -t ram_report
+          nrfutil toolchain-manager launch -- west build --build-dir ${{ github.workspace }}/build/${IMAGE_NAME}/ --sysbuild -t rom_report
 
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/ram.json ${{ github.workspace }}/build/app_ram.json
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/rom.json ${{ github.workspace }}/build/app_rom.json
