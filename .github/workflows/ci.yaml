@@ -110,11 +110,11 @@ jobs:
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/ram.json ${{ github.workspace }}/build/app_ram.json
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/rom.json ${{ github.workspace }}/build/app_rom.json
 
-          cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr.elf ${{ github.workspace }}/build/app.elf
-          cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr.hex ${{ github.workspace }}/build/app.hex
-          cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr.signed.hex ${{ github.workspace }}/build/app.signed.hex
-          cp ${{ github.workspace }}/build/mcuboot/zephyr.elf ${{ github.workspace }}/build/mcuboot.elf
-          cp ${{ github.workspace }}/build/mcuboot/zephyr.hex ${{ github.workspace }}/build/mcuboot.hex
+          cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr/zephyr.elf ${{ github.workspace }}/build/app.elf
+          cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr/zephyr.hex ${{ github.workspace }}/build/app.hex
+          cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr/zephyr.signed.hex ${{ github.workspace }}/build/app.signed.hex
+          cp ${{ github.workspace }}/build/mcuboot/zephyr/zephyr.elf ${{ github.workspace }}/build/mcuboot.elf
+          cp ${{ github.workspace }}/build/mcuboot/zephyr/zephyr.hex ${{ github.workspace }}/build/mcuboot.hex
 
           set -o allexport
           source <(cat ${{ github.workspace }}/VERSION | tr -d ' ')
