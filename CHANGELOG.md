@@ -1,3 +1,8 @@
+<!--
+Copyright (c) 2026 Arne Wendt (@bitmeal)
+SPDX-License-Identifier: MPL-2.0
+/-->
+
 # Changelog
 * The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 * This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
@@ -5,6 +10,11 @@
 * Meaningful documentation starts with release v1.3.2
 
 ## [Unreleased]
+### Changed
+- Build process:
+  - ANT SDK v2.1.0
+  - NCS v3.2.4
+  - building with sysbuild
 
 ## [1.3.3] 2026-05-16
 ### Added

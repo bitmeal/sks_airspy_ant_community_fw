@@ -1,3 +1,8 @@
+<!--
+Copyright (c) 2026 Arne Wendt (@bitmeal)
+SPDX-License-Identifier: MPL-2.0
+/-->
+
 # SKS<sup>*[1](#disclaimer)*</sup> AIRSPY<sup>*[1](#disclaimer)*</sup> ANT+<sup>*[2](#disclaimer)*</sup> Community Firmware
 An alternative firmware for the SKS AIRSPY tire pressure sensor. Implementing a device profile compatible with the - not yet officially released - ANT+ TPMS (Tyre/Tire Pressure Monitoring System) device profile, as implemented by major cycling computer manufacturers.
 
