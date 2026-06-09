@@ -23,15 +23,15 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
       - name: Prepare Environment & Dependencies
         run: |
-          sudo apt update
-          sudo apt install -y --no-install-recommends \
-            curl \
-            git \
-            python3 python3-pip
+          # sudo apt update
+          # sudo apt install -y --no-install-recommends \
+          #   curl \
+          #   git \
+          #   python3 python3-pip
 
           pip3 install --break-system-packages west
 
@@ -41,8 +41,8 @@ jobs:
 
           nrfutil toolchain-manager config --set install-dir=${SDK_LOCATION}
 
-          curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
-          chmod +x /usr/local/bin/yq
+          # curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
+          # chmod +x /usr/local/bin/yq
 
           mkdir -p ${SDK_LOCATION}
 
@@ -116,14 +116,22 @@ jobs:
           cp ${{ github.workspace }}/build/mcuboot/zephyr/zephyr.elf ${{ github.workspace }}/build/mcuboot.elf
           cp ${{ github.workspace }}/build/mcuboot/zephyr/zephyr.hex ${{ github.workspace }}/build/mcuboot.hex
 
+          ## collect version numbers for reporting
+          touch ${{ github.workspace }}/build/report.yaml
+          # NCS
+          NCS_VERSION=$(yq '.manifest.projects.[] | select(.name == "nrf") | .revision' ${SDK_LOCATION}/sdk-ant/ant/west.yml) yq -i '.ncs_version = strenv(NCS_VERSION)' ${{ github.workspace }}/build/report.yaml
+          # ANT
+          yq -i '.ant_sdk_version = strenv(ANT_SDK_VERSION)' ${{ github.workspace }}/build/report.yaml
+          # Zephyr
+          set -o allexport
+          source <(cat ${SDK_LOCATION}/sdk-ant/zephyr/VERSION | tr -d ' ')
+          set +o allexport
+          yq -i '.zephyr_version = "v"+strenv(VERSION_MAJOR)+"."+strenv(VERSION_MINOR)+"."+strenv(PATCHLEVEL)' ${{ github.workspace }}/build/report.yaml
+          # App
           set -o allexport
           source <(cat ${{ github.workspace }}/VERSION | tr -d ' ')
           set +o allexport
-
-          touch ${{ github.workspace }}/build/report.yaml
-          NCS_VERSION=$(yq '.manifest.projects.[] | select(.name == "nrf") | .revision' ${SDK_LOCATION}/sdk-ant/ant/west.yml) yq -i '.ncs_version = strenv(NCS_VERSION)' ${{ github.workspace }}/build/report.yaml
-          yq -i '.ncs_version = strenv(ANT_SDK_VERSION)' ${{ github.workspace }}/build/report.yaml
-          yq -i '.app_version = strenv(VERSION_MAJOR)+"."+strenv(VERSION_MINOR)+"."+strenv(PATCHLEVEL)' ${{ github.workspace }}/build/report.yaml
+          yq -i '.app_version = "v"+strenv(VERSION_MAJOR)+"."+strenv(VERSION_MINOR)+"."+strenv(PATCHLEVEL)' ${{ github.workspace }}/build/report.yaml
 
       - name: Save Artifacts
         uses: actions/upload-artifact@v7
@@ -143,7 +151,7 @@ jobs:
 
 
   release:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     env:
       VERSION_TAG_NAME: ${{ github.ref_name }}
@@ -171,25 +179,16 @@ jobs:
 
           echo "|Release | ${VERSION_TAG_NAME}|" >> release_artifacts/NOTES
           echo "|---|---|" >> release_artifacts/NOTES
-
-          # read and write VERSION file version info
-          set -o allexport
-          source <(cat VERSION | tr -d ' ')
-          set +o allexport
-          echo "| APP | ${VERSION_MAJOR}.${VERSION_MINOR}.${PATCHLEVEL} |" >> release_artifacts/NOTES
-
-          # # get ANT SDK version
-          # ANT_SDK_VERSION=$(sed -n -E 's/.*ANT_VERSION_STRING\s+\"([[:digit:]\.]*)\".*$/\1/p;' /home/runner/ncs/sdks/${NRF_SDK_VERSION}/ant/include/ant_parameters.h)
-          
-          # # write SDKs and toolchain versions
-          # echo "| nRF SDK | ${NRF_SDK_VERSION} |" >> release_artifacts/NOTES
-          # echo "| ANT SDK | ${ANT_SDK_VERSION} |" >> release_artifacts/NOTES
-          # echo "| Toolchain | ${NRF_TOOLCHAIN_VERSION} |" >> release_artifacts/NOTES          
+          echo "| APP | $(yq '.app_version' release_artifacts/report.yaml) |" >> release_artifacts/NOTES
+          echo "| nRF SDK | $(yq '.ncs_version' release_artifacts/report.yaml) |" >> release_artifacts/NOTES
+          echo "| ANT SDK | $(yq '.ant_sdk_version' release_artifacts/report.yaml) |" >> release_artifacts/NOTES
+          echo "| Zephyr | $(yq '.zephyr_version' release_artifacts/report.yaml) |" >> release_artifacts/NOTES
+          echo "| Toolchain | $(yq '.ncs_version' release_artifacts/report.yaml) |" >> release_artifacts/NOTES          
 
       - name: Prepare Release Files
         run: |
-          mv release_artifacts/merged.hex release_artifacts/${FILENAME_PREFIX}-${VERSION_TAG_NAME}-$(git describe --abbrev=7 --always).hex
-          mv release_artifacts/dfu_application.zip release_artifacts/${FILENAME_PREFIX}_ota_dfu-${VERSION_TAG_NAME}-$(git describe --abbrev=7 --always).zip
+          cp release_artifacts/merged.hex release_artifacts/${FILENAME_PREFIX}-${VERSION_TAG_NAME}-$(git describe --abbrev=7 --always).hex
+          cp release_artifacts/dfu_application.zip release_artifacts/${FILENAME_PREFIX}_ota_dfu-${VERSION_TAG_NAME}-$(git describe --abbrev=7 --always).zip
 
       - name: Release
         env:
