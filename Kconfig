@@ -14,6 +14,7 @@ config AIRSPY_DEFAULTS
     select SPI_BITBANG
     # select SOC_NRF52832_ALLOW_SPIM_DESPITE_PAN_58
     select NVS
+    select CRC
     select SETTINGS
     select MPU_ALLOW_FLASH_WRITE
 
@@ -130,14 +131,11 @@ config AIRSPY_DFU
     select FLASH_MAP
     select NET_BUF
     select ZCBOR
-    select CRC
     select IMG_MANAGER
     select MCUMGR_GRP_IMG
     select MCUMGR_GRP_OS
     select MCUMGR_GRP_OS_MCUMGR_PARAMS
-    select BT_SMP
     select MCUMGR_TRANSPORT_BT
-    # select MCUMGR_TRANSPORT_BT_PERM_RW
     select MCUMGR_TRANSPORT_BT_CONN_PARAM_CONTROL
     select MCUMGR_TRANSPORT_BT_REASSEMBLY
     select MCUMGR_MGMT_NOTIFICATION_HOOKS

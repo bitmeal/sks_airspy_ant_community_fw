@@ -121,20 +121,6 @@ static struct bt_data scan_data[] = {
 		(CONFIG_BT_DEVICE_APPEARANCE >> 8) & 0xff),
 };
 
-
-static void auth_cancel(struct bt_conn *conn)
-{
-	char addr[BT_ADDR_LE_STR_LEN];
-
-	bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
-
-	LOG_DBG("Pairing cancelled: %s", addr);
-}
-
-static struct bt_conn_auth_cb auth_cb_display = {
-	.cancel = auth_cancel,
-};
-
 static void advertise(struct k_work *work)
 {
 	int rc = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, advertising_data, ARRAY_SIZE(advertising_data), scan_data, ARRAY_SIZE(scan_data));
@@ -190,8 +176,6 @@ static void bt_ready(int err)
 		return;
 	}
 
-	bt_conn_auth_cb_register(&auth_cb_display);
-
 	// construct dynamic device name
 	uint16_t device_id;
 	if(load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id)) == EXIT_SUCCESS)
@@ -246,7 +230,6 @@ void start_bluetooth_services(void)
 
 static int shutdown_bluetooth(void)
 {
-	// TODO(bitmeal): possibly check for updater connection?
 	int rc;
 	
 	rc = bt_le_adv_stop();
@@ -254,12 +237,6 @@ static int shutdown_bluetooth(void)
 		LOG_ERR("Failed to stop bluetooth advertising: %d", rc);
 		return rc;
 	}
-
-	// rc = smp_bt_unregister();
-	// if (rc != 0) {
-	// 	LOG_ERR("Failed to unregister McuMgr SMP service: %d", rc);
-	// 	return rc;
-	// }
 
 	rc = bt_disable();
 	if (rc != 0) {
