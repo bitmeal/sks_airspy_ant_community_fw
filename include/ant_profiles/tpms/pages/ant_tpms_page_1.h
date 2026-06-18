@@ -30,17 +30,21 @@ typedef struct
 {
     ant_tpms_role_t role;       ///< Sensor role (front/rear)
     ant_tpms_alarm_t alarms;    ///< High/Low pressure alarms
+    uint8_t type;               ///< Sensor type coding
     uint16_t pressure;          ///< Pressure type; in 0.1 bar or hPa.
+    uint8_t _padding;           ///< Only used in encoding; default: 0xff; may use: 0x00
 } ant_tpms_page1_data_t;
 
 /** @brief Initialize page 1.
  */
-#define DEFAULT_ANT_TPMS_page1()                                \
-    (ant_tpms_page1_data_t)                                     \
-    {                                                           \
-        .role       = ANT_TPMS_ROLE_NONE,                       \
-        .alarms     = ANT_TPMS_ALARM_NONE,                      \
-        .pressure   = 0xffff,                                   \
+#define DEFAULT_ANT_TPMS_page1()            \
+    (ant_tpms_page1_data_t)                 \
+    {                                       \
+        .role       = ANT_TPMS_ROLE_NONE,   \
+        .alarms     = ANT_TPMS_ALARM_NONE,  \
+        .type       = 0x03,                 \
+        .pressure   = 0xffff,               \
+        ._padding   = 0xff,                 \
     }
 
 /** @brief Function for encoding page 1.

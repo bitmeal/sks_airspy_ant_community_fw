@@ -33,8 +33,9 @@ Page used to periodically transmit current tire pressure, alarms and role (F/R) 
 |Byte|Description|Length|Value|Unit|
 |---|---|---|---|---|
 |0| Page number | 1 Byte |`0x01`|-|
-|1| Role (Front/Rear) | 1 Byte |`0x00`: *unknown role*; `0x01`: Front; `0x02`: Rear|-|
-|2| Alarms | 1 Byte | high/low pressure alarm bitfield; `b1`/`set` being OK (no alarm); `0x01`: low OK; `0x02`: high OK; (`0x01 \| 0x02 = 0x03`: all OK)|-|
+|1 [4:8]| Alarm (High/Low) | 4 Bits |high/low pressure alarm bitfield; `0x1`: high pressure alarm; `0x2`: low pressure alarm|-|
+|1 [0:4]| Role (Front/Rear) | 4 Bits |`0x0`: *unknown role*; `0x1`: Front; `0x2`: Rear|-|
+|2| Type/ID | 1 Byte |***observation***: static value; `0x03`: Quark; `0x05`: AIRMAX|-|
 |3| - | 1 Byte |`0xFF`|-|
 |4| - | 1 Byte |`0xFF`|-|
 |5| - | 1 Byte |`0xFF`|-|

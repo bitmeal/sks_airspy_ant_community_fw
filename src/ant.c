@@ -143,24 +143,20 @@ void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
   // clamp under 75 hPa
   tpms.page_1.pressure = (uint16_t)(pressure_compensated <= 75 ? 0 : pressure_compensated);
   
+  // reset (set all) alarms as baseline before check
+  tpms.page_1.alarms = ANT_TPMS_ALARM_NONE;
+  
   if ( tpms.page_16.alarm_low_pressure != 0xffff && tpms.page_16.alarm_high_pressure != 0xffff)
   {
-    // reset (set all) alarms as baseline before check
-    tpms.page_1.alarms = ANT_TPMS_ALARM_ALL;
-    if (tpms.page_16.alarm_low_pressure <= tpms.page_1.pressure)
+    if (tpms.page_1.pressure <= tpms.page_16.alarm_low_pressure)
     {
-      tpms.page_1.alarms |= ANT_TPMS_ALARM_LOW_OK;
+      tpms.page_1.alarms |= ANT_TPMS_ALARM_LOW;
     }
 
-    if (tpms.page_1.pressure <= tpms.page_16.alarm_high_pressure)
+    if (tpms.page_16.alarm_high_pressure <= tpms.page_1.pressure)
     {
-      tpms.page_1.alarms |= ANT_TPMS_ALARM_HIGH_OK;
+      tpms.page_1.alarms |= ANT_TPMS_ALARM_HIGH;
     }
-  }
-  else
-  {
-    // ignore and do not send alarms
-    tpms.page_1.alarms = ANT_TPMS_ALARM_NONE;
   }
 
   // page 82: battery state and uptime
@@ -203,11 +199,11 @@ static int profile_setup(void)
     // TODO: set role and alert values below
 
   	uint16_t device_id;
-    rc = load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
-    if(rc)
+    rc = settings_load_one(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
+    if(rc < 0)
     {
       LOG_ERR("failed reading %s to set BT name", DEVICE_ID_SETTINGS_KEY);
-      return rc;
+      return EXIT_FAILURE;
     }
 
   tpms_channel_tpms_sens_config = (ant_channel_config_t) {
@@ -232,7 +228,7 @@ static int profile_setup(void)
 
   ant_tpms_role_t role_init = ANT_TPMS_ROLE_NONE;
   ant_tpms_role_t role;
-  load_immediate_value_init_default(ANT_TPMS_CONFIG_ROLE_SETTINGS_KEY, &role, sizeof(role),
+  settings_load_one_init_default(ANT_TPMS_CONFIG_ROLE_SETTINGS_KEY, &role, sizeof(role),
                                       &role_init, sizeof(role_init));
 
   tpms.page_1.role = role;
@@ -241,12 +237,12 @@ static int profile_setup(void)
 
   uint16_t alarm_thres_init = 0xffff;
   uint16_t alarm_thres;
-  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY, (void*)&alarm_thres, sizeof(alarm_thres),
+  settings_load_one_init_default(ANT_TPMS_CONFIG_ALARM_LOW_SETTINGS_KEY, (void*)&alarm_thres, sizeof(alarm_thres),
                                       (void*)&alarm_thres_init, sizeof(alarm_thres_init));
 
   tpms.page_16.alarm_low_pressure = alarm_thres;
 
-  load_immediate_value_init_default(ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY, (void*)&alarm_thres, sizeof(alarm_thres),
+  settings_load_one_init_default(ANT_TPMS_CONFIG_ALARM_HIGH_SETTINGS_KEY, (void*)&alarm_thres, sizeof(alarm_thres),
                                       (void*)&alarm_thres_init, sizeof(alarm_thres_init));
 
   tpms.page_16.alarm_high_pressure = alarm_thres;

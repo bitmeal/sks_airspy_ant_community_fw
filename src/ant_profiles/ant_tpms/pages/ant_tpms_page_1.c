@@ -22,8 +22,11 @@ LOG_MODULE_REGISTER(ant_tpms_page_1, LOG_LEVEL_WRN);
 /** @brief tire pressure page 1 data layout structure. */
 typedef struct
 {
-    uint8_t role; // ant_tpms_role_t
-    uint8_t alarms;
+    // byte 1; low nibble
+    uint8_t role : 4;   // ant_tpms_role_t
+    // byte 1; high nibble
+    uint8_t alarms : 4; // ant_tpms_alarm_t
+    uint8_t type;
     uint8_t _reserved[3];
     uint8_t pressure[2];
 } ant_tpms_page1_data_layout_t;
@@ -31,9 +34,10 @@ typedef struct
 
 static void page1_data_log(ant_tpms_page1_data_t const * p_page_data)
 {
-    LOG_INF("Role: %#x; Alarms: %#x; Pressure [hPa]: %u",
+    LOG_INF("Role: %#x; Alarms: %#x; Type: %#x; Pressure [hPa]: %u",
         p_page_data->role,
         p_page_data->alarms,
+        p_page_data->type,
         p_page_data->pressure);
 }
 
@@ -47,7 +51,8 @@ void ant_tpms_page_1_encode(uint8_t                     * p_page_buffer,
 
     p_outcoming_data->role = p_page_data->role;
     p_outcoming_data->alarms = p_page_data->alarms;
-    memset(p_outcoming_data->_reserved, 0xFF, sizeof(p_outcoming_data->_reserved));
+    p_outcoming_data->type = p_page_data->type;
+    memset(p_outcoming_data->_reserved, p_page_data->_padding, sizeof(p_outcoming_data->_reserved));
     uint16_encode(p_page_data->pressure, p_outcoming_data->pressure);
 }
 
@@ -60,6 +65,7 @@ void ant_tpms_page_1_decode(uint8_t const         * p_page_buffer,
 
     p_page_data->role = p_incoming_data->role;
     p_page_data->alarms = p_incoming_data->alarms;
+    p_page_data->type = p_incoming_data->type;
     p_page_data->pressure = uint16_decode(p_incoming_data->pressure);
 
     page1_data_log(p_page_data);

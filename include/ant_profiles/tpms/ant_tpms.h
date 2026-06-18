@@ -194,6 +194,8 @@ struct ant_tpms_profile_s
    @{ */
 #define TPMS_PROFILE_role                   page_1.role
 #define TPMS_PROFILE_alarms                 page_1.alarms
+#define TPMS_PROFILE_type                   page_1.type
+#define TPMS_PROFILE__padding               page_1._padding
 
 #define TPMS_PROFILE_config_command         page_16.command
 #define TPMS_PROFILE_config_role            page_16.role

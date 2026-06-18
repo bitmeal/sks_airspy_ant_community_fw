@@ -178,7 +178,7 @@ static void bt_ready(int err)
 
 	// construct dynamic device name
 	uint16_t device_id;
-	if(load_immediate_value(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id)) == EXIT_SUCCESS)
+	if(settings_load_one(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id)) > 0)
 	{
 		snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05u", CONFIG_BT_DEVICE_NAME, device_id);
 		LOG_INF("BT name: %s", bt_name);

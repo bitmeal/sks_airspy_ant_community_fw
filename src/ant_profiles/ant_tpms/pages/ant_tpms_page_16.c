@@ -22,7 +22,9 @@ LOG_MODULE_REGISTER(ant_tpms_page_16, LOG_LEVEL_WRN);
 /** @brief tire pressure page 16 data layout structure. */
 typedef struct
 {
+    // byte 1; low nibble
     ant_tpms_role_t role :4;
+    // byte 1; high nibble
     uint8_t command : 4;
     uint8_t ambient_pressure[2];
     uint8_t alarm_low_pressure[2];

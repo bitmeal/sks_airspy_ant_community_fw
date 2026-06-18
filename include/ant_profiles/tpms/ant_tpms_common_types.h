@@ -40,10 +40,9 @@ typedef enum
  */
 typedef enum
 {
-    ANT_TPMS_ALARM_ALL      = 0x00, ///< ALL Alarms on; TODO(bitmeal): check, this is guesswork
-    ANT_TPMS_ALARM_LOW_OK   = 0x01, ///< Lower limit OK, no alarm; TODO(bitmeal): check, this is guesswork
-    ANT_TPMS_ALARM_HIGH_OK  = 0x02, ///< Upper limit OK, no alarm; TODO(bitmeal): check, this is guesswork
-    ANT_TPMS_ALARM_NONE     = 0x03, ///< ALL OK, no alarm; TODO(bitmeal): check, this is guesswork
+    ANT_TPMS_ALARM_NONE = 0x00, ///< no alarm
+    ANT_TPMS_ALARM_LOW  = 0x02, ///< low pressure alarm
+    ANT_TPMS_ALARM_HIGH = 0x01, ///< high pressure alarm
 } ant_tpms_alarm_t;
 
 /**

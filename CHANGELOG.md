@@ -15,9 +15,18 @@ SPDX-License-Identifier: MPL-2.0
 - Upgrade NCS and toolchain to v3.2.4
 - building with sysbuild
 - partition configuration from device tree
-- minimized number of overlay configuration files 
+- minimized number of overlay configuration files
+- Updated ANT+ TPMS specification
+- Updated ANT+ display compatibility list
+- Changed wakeup pin to P0.19 on nRF52840 MDK USB Dongle development board
+- Disable CONFIG_WARN_EXPERIMENTAL
+
+### Added
+- ANT+ TPMS Type/ID field
+- ANT+ TPMS Configurable Padding
 
 ### Fixed
+- ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble
 - Fix duplicate logging outputs on RTT
 
 ### Removed

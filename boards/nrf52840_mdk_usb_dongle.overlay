@@ -19,7 +19,7 @@
 
 	wake_pin: wake_pin {
 		compatible = "wake-signal-pin";
-		gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
+		gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
 	};
 
 	spi_master: spibb0 {

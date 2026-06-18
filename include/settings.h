@@ -16,7 +16,7 @@
 
 int start_settings_subsys();
 
-int load_immediate_value(const char *name, void *dest, size_t len);
-int load_immediate_value_init_default(const char *name, void *dest, size_t len, void *init, size_t len_init);
+// int load_immediate_value(const char *name, void *dest, size_t len);
+ssize_t settings_load_one_init_default(const char *name, void *dest, size_t len, void *init, size_t len_init);
 
 #endif // INCLUDE_SETTINGS_H__
