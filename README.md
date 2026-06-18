@@ -26,23 +26,15 @@ You may want this, if you like some more gadgets on you bike, own a bike compute
 
 *OTA DFU and logging over BLE services are only available to connect to **within 30 seconds** after a cold-boot (removing and re-installing battery).*
 
-
-### Hardware compatibility
-Please report other hardware configurations, board revisions, etc. you find out in the wild.
-
-| Product | Board (rev.) | SoC | |
-|---|---|---|---|
-| AIRSPY | TPMS-10-2 | nRF52832 | ✅ |
-
-
 ### Tested ANT+ Displays (Devices):
-Compatibility listed here describes what info is shown by the device.
-| Device | Tire Pressure | Battery | Software Info | Manufacturer Info | Alarms | Configuration | Comments |
+Table shows displayed data and supported functions for tested ANT+ displays (bike computers, data fields, software). Configuration refers to the capability of storing settings on the sensor from the device. Legend: ✅ Supported; ❌ Unsupported; Role defined by: 📱 Device/Display, 🛞 Sensor. Configuration "Amb.P.Com." refers to ambient pressure compensation support, as a periodically transmitted, non permanent, compensation value sent by the display device.
+| Device | Tire Pressure | Pressure Alarms | Role (F/R) | Battery | Info: Version/Device | Configuration Role/Alarms/Amb.P.Com. | Comments |
 |---|---|---|---|---|---|---|---|
-| Wahoo ELEMNT Bolt | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | |
-| Wahoo ELEMNT Bolt 3 | ✅ | ❌ | ✅ | ❌ | ❌ | ❌ | |
-| Hammerhead Karoo 3 | ✅ | ❔ | ❔ | ❔ | ✅ | ✅ | |
-| [IpSensorMan](http://www.iforpowell.com/cms/index.php?page=ipantman)| ✅ | ✅ | ❌ | ✅ | ❌ | ❌ | [Garmin USB ANT Stick](https://www.garmin.com/en-US/p/10997) on Android 13 |
+| Wahoo ELEMNT Bolt | ✅ | ❌ | 📱 | ❌ | ✅/❌ | ❌/❌/❌ | |
+| Wahoo ELEMNT Bolt 3 | ✅ | ❌ | 📱 | ❌ | ✅/❌ | ❌/❌/❌ | |
+| Hammerhead Karoo 3 | ✅ | ✅ | 🛞 | ✅ | ✅/✅ | ✅/✅/✅ | Sensor can be configured by Device |
+| [TubeWitch](https://tubewitch.com/)| ✅ | ✅ | 🛞/📱 | ❌ | ❌/❌ | ❌/❌/❌ | preliminary; needs TubeWitch Labs Sensor Compatibility Mode |
+| [IpSensorMan](http://www.iforpowell.com/cms/index.php?page=ipantman)| ✅ | ❌ | - | ✅ | ❌/✅ | ❌/❌/❌ | [Garmin USB ANT Stick](https://www.garmin.com/en-US/p/10997) on Android 13 |
 
 
 ## Usage
@@ -53,13 +45,20 @@ The stock firmware provides wireless update capabilities. Sadly, we cannot use i
 
 *If you are more into biking than into tech, now is a good time to call that one friend.*
 
+### Hardware compatibility
+Please report other hardware configurations, board revisions, etc. you find out in the wild.
+
+| Product | Board (rev.) | SoC | Compatible |
+|---|---|---|---|
+| AIRSPY | TPMS-10-2 | nRF52832 | ✅ |
+
 
 ### Warnings
 > ⚠ The installation requires you to open up the hardware. All warranty will most likely be lost in this process. You may brick the device in the process. Proceed at own risk!
 
-> ⚠ To revert to the original firmware, you have to jump some hoops; [read here first](./doc/INSTALL.md)! Consider reverting to original firmware as impossible! Proceed at own risk!
+> ⚠ To revert to the original firmware, you have to jump some hoops; [read here first](./doc/INSTALL.md)! Consider reverting to original firmware as **impossible**! Proceed at own risk!
 
-> ℹ The ID of the sensor not match the laser engraving on the bottom after flashing. You can change the ID after flashing using the nRF Connect application.
+> ℹ The ID of the sensor will not match the laser engraving on the bottom after flashing. You can change the ID after flashing using the nRF Connect application.
 
 ### SWD Access
 Tools you need:

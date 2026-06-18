@@ -11,10 +11,17 @@ SPDX-License-Identifier: MPL-2.0
 
 ## [Unreleased]
 ### Changed
-- Build process:
-  - ANT SDK v2.1.0
-  - NCS v3.2.4
-  - building with sysbuild
+- Upgrade ANT SDK to v2.1.0
+- Upgrade NCS and toolchain to v3.2.4
+- building with sysbuild
+- partition configuration from device tree
+- minimized number of overlay configuration files 
+
+### Fixed
+- Fix duplicate logging outputs on RTT
+
+### Removed
+- custom (development) board definition for the nRF52840 MDK USB Dongle
 
 ## [1.3.3] 2026-05-16
 ### Added
