@@ -57,6 +57,15 @@ choice COMPILER_OPTIMIZATIONS
     default SIZE_OPTIMIZATIONS
 endchoice
 
+# config CONSOLE
+#     default n
+
+# config UART_CONSOLE
+#     default n
+
+# config UART_USE_RUNTIME_CONFIGURE
+#     default n
+
 config BT_USER_PHY_UPDATE
     default n
 
@@ -70,9 +79,6 @@ config THREAD_STACK_INFO
     default n
 
 config NET_BUF_POOL_USAGE
-    default n
-
-config UART_USE_RUNTIME_CONFIGURE
     default n
 
 config LOG_RUNTIME_FILTERING
@@ -224,9 +230,13 @@ choice LOG_MODE
     default LOG_MODE_DEFERRED
 endchoice
 
-# NUS logging
+# NUS logging requirement
 config LOG_PROCESS_THREAD_STACK_SIZE
     default 2048
+
+# disable duplicate log messages on RTT
+config LOG_BACKEND_UART
+    default n
 
 endif # AIRSPY_LOG
 
