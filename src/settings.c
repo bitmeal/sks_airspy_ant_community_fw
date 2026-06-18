@@ -80,11 +80,11 @@ LOG_MODULE_REGISTER(app_settings, LOG_LEVEL_INF);
  * 
  */
 
-ssize_t settings_load_one_init_default(const char *name, void *dest, size_t len, void *init, size_t len_init)
+uint8_t settings_load_one_init_default(const char *name, void *dest, size_t len, void *init, size_t len_init)
 {
     int rc;
         
-    while(settings_load_one(name, dest, len) < 0)
+    while(settings_load_one(name, dest, len) <= 0)
     {
     	LOG_WRN("setting %s not existent; initializing to given default", name);
 
@@ -102,17 +102,16 @@ ssize_t settings_load_one_init_default(const char *name, void *dest, size_t len,
     // final load (again)
     rc = settings_load_one(name, dest, len);
 
-    if (rc == 0)
+    if (rc > 0)
     {
     	LOG_DBG("loaded %s", name);
+	    return EXIT_SUCCESS;
 	}
     else
     {
 		LOG_ERR("failed loading %s; (rc %d)", name, rc);
         return rc;
 	}
-
-    return EXIT_SUCCESS;
 }
 
 static int initialize_settings_defaults_DEVICE_ID()

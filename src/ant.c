@@ -190,17 +190,8 @@ void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
 
 static int profile_setup(void)
 {
-    int rc;
-
-    // TODO: load all config from persistent storage
-    // - role
-    // - alert high/low pressure
-    // - runtime changes will be commited to the data pages directly!
-    // TODO: set role and alert values below
-
   	uint16_t device_id;
-    rc = settings_load_one(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
-    if(rc < 0)
+    if(settings_load_one(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id)) <= 0)
     {
       LOG_ERR("failed reading %s to set BT name", DEVICE_ID_SETTINGS_KEY);
       return EXIT_FAILURE;
