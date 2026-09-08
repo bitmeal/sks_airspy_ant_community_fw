@@ -6,6 +6,8 @@
 #ifndef INCLUDE_APP_ANT_H__
 #define INCLUDE_APP_ANT_H__
 
+#include <stdint.h>
+
 #include <zephyr/zbus/zbus.h>
 
 #define ANT_TPMS_CONFIG_ROLE_SETTINGS_KEY "role"
@@ -15,5 +17,7 @@
 int start_ant_device(void);
 
 void ant_sensor_data_handler_cb(const struct zbus_channel *chan);
+
+uint32_t ant_seconds_since_display_activity(void);
 
 #endif // INCLUDE_APP_ANT_H__
