@@ -94,7 +94,7 @@ jobs:
         working-directory: /home/runner/ncs/sdks/${{ env.NRF_SDK_VERSION }}/
         run: |
           echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.workspace }}/mcuboot.pem
-          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --no-sysbuild ${{ github.workspace }}
+          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --no-sysbuild ${{ github.workspace }} -- -DEXTRA_CONF_FILE=debug.conf
 
       - name: Save Artifacts
         uses: actions/upload-artifact@v4
