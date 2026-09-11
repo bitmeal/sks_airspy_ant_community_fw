@@ -12,6 +12,7 @@
 
 #include <zephyr/pm/device.h>
 #include <zephyr/sys/poweroff.h>
+#include <zephyr/drivers/hwinfo.h>
 
 #include <zephyr/mgmt/mcumgr/mgmt/mgmt.h>
 #include <zephyr/mgmt/mcumgr/mgmt/callbacks.h>
@@ -42,6 +43,11 @@ static const struct gpio_dt_spec wake_signal = GPIO_DT_SPEC_GET(DT_ALIAS(wake_pi
 
 #define SUPERVISION_CYCLE_TIME_MS 1000
 #define SYS_POWEROFF_DELAY 500
+// Number of seconds we should keep transmitting after a display (like a Karoo)
+// actively communicated with
+#define DISPLAY_ACTIVITY_KEEPALIVE_S 120
+// Force on time after bootup, regardless of the wake signal
+#define COLD_BOOT_MINIMUM_ON_TIME_S 600
 
 static void poweroff(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(poweroff_work, poweroff);
@@ -70,10 +76,52 @@ struct mgmt_callback dfu_pending_reg = {
     .event_id = MGMT_EVT_OP_IMG_MGMT_DFU_PENDING,
 };
 
+static bool keep_awake(void)
+{
+	int val = gpio_pin_get_dt(&wake_signal);
+	static int wake_signal_last = -1;
+
+	if (val != wake_signal_last)
+	{
+		LOG_INF("Wake signal changed: %d -> %d (uptime %us)",
+			    wake_signal_last, val, k_uptime_seconds());
+	}
+	wake_signal_last = val;
+
+	if (val != 0)
+	{
+		return true;
+	}
+
+	if (retained.boots <= 1 && k_uptime_seconds() < COLD_BOOT_MINIMUM_ON_TIME_S)
+	{
+		return true;
+	}
+
+	if (bt_connection_active())
+	{
+		return true;
+	}
+
+	if (ant_seconds_since_display_activity() < DISPLAY_ACTIVITY_KEEPALIVE_S)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 static void poweroff(struct k_work *work)
 {
 	// spis_suspend();
-	
+
+	if (keep_awake())
+	{
+		LOG_INF("Aborting power off; wake signal or display activity present");
+		k_work_schedule(&supervision_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
+		return;
+	}
+
 	int ret = gpio_pin_interrupt_configure_dt(&wake_signal, GPIO_INT_LEVEL_ACTIVE);
 
 	if (ret != 0)
@@ -101,9 +149,7 @@ static void poweroff(struct k_work *work)
 
 static void supervise(struct k_work *work)
 {
-	int val = gpio_pin_get_dt(&wake_signal);
-
-	if (val == 0)
+	if (!keep_awake())
 	{
 		LOG_INF("Will power off in %dms", SYS_POWEROFF_DELAY);
 		k_work_schedule(&poweroff_work, K_MSEC(SYS_POWEROFF_DELAY));
@@ -123,6 +169,24 @@ int main(void)
 	//  */
 	// LOG_INF("build time: " __DATE__ " " __TIME__);
 	
+	///////////////////////////////////////////
+	// log reset cause to distinguish System OFF wake, brown-out, crash and
+	// clean power-on when diagnosing unexpected shutdowns (issue #10);
+	// on nRF52 a bare power-on reset sets no bits at all
+	uint32_t reset_cause = 0;
+	if (hwinfo_get_reset_cause(&reset_cause) == 0)
+	{
+		LOG_INF("Reset cause: %#x%s%s%s%s%s%s%s", reset_cause,
+			(reset_cause == 0) ? " POWER-ON" : "",
+			(reset_cause & RESET_PIN) ? " PIN" : "",
+			(reset_cause & RESET_SOFTWARE) ? " SOFTWARE" : "",
+			(reset_cause & RESET_WATCHDOG) ? " WATCHDOG" : "",
+			(reset_cause & RESET_DEBUG) ? " DEBUG" : "",
+			(reset_cause & RESET_LOW_POWER_WAKE) ? " SYS-OFF-WAKE" : "",
+			(reset_cause & RESET_CPU_LOCKUP) ? " CPU-LOCKUP" : "");
+		hwinfo_clear_reset_cause();
+	}
+
 	///////////////////////////////////////////
 	LOG_INF("reading BOOT state...");
 

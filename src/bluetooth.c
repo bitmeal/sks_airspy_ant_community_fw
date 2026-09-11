@@ -15,6 +15,7 @@
 #include "settings.h"
 
 #include <zephyr/sys/reboot.h>
+#include <zephyr/sys/atomic.h>
 
 
 #include <zephyr/logging/log.h>
@@ -37,6 +38,13 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.connected = connected,
 	.disconnected = disconnected,
 };
+
+static atomic_t active_connections = ATOMIC_INIT(0);
+
+bool bt_connection_active(void)
+{
+	return atomic_get(&active_connections) > 0;
+}
 
 // BEGIN config service
 
@@ -155,6 +163,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 	} else {
 		LOG_INF("Bluetooth Connected");
 		LOG_INF("Canceling Bluetooth disable task; staying alive");
+		atomic_inc(&active_connections);
 		k_work_cancel_delayable(&disable_bt_work);
 	}
 }
@@ -162,6 +171,7 @@ static void connected(struct bt_conn *conn, uint8_t err)
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
 	LOG_INF("Bluetooth Disconnected (reason %#02x)", reason);
+	atomic_dec(&active_connections);
 	k_work_submit(&advertise_work);
 
 	LOG_INF("Scheduling Bluetooth shutdown in %dms", BT_DISABLE_DELAY);

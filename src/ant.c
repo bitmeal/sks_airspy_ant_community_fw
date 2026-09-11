@@ -4,6 +4,7 @@
  */
 
 #include <zephyr/kernel.h>
+#include <zephyr/sys/atomic.h>
 
 #include "app_version.h"
 
@@ -48,9 +49,29 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
   }
 }
 
+// number of seconds since the last active display interaction
+static atomic_t last_display_activity_s = ATOMIC_INIT(-1);
+
 static void ant_evt_handler(ant_evt_t *p_ant_evt)
 {
+  if (p_ant_evt->channel == tpms.channel_number && p_ant_evt->event == EVENT_RX)
+  {
+    atomic_set(&last_display_activity_s, (atomic_val_t)k_uptime_seconds());
+  }
+
   ant_tpms_sens_evt_handler(p_ant_evt, &tpms);
+}
+
+uint32_t ant_seconds_since_display_activity(void)
+{
+  atomic_val_t last = atomic_get(&last_display_activity_s);
+
+  if (last < 0)
+  {
+    return UINT32_MAX;
+  }
+
+  return k_uptime_seconds() - (uint32_t)last;
 }
 
 static void ant_tpms_config_handler(ant_tpms_profile_t *p_profile, ant_tpms_page16_data_t *p_page16) {
