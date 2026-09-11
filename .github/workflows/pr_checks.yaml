@@ -1,0 +1,30 @@
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    name: Check PR Security and Notify
+    if: github.event_name == 'pull_request_target'
+    permissions:
+      pull-requests: read
+    steps:
+      - name: get changed files that allow user code to be executed
+        id: changed-files
+        uses: tj-actions/changed-files@v47.0.6
+        with:
+          # dead simple heuristic
+          files: |
+            .github/**
+            **/*.cmake
+            **/CMakeLists.txt
+      - name: comment on PR if files matched
+        uses: mshick/add-pr-comment@v3
+        if: steps.changed-files.outputs.any_changed == 'true'
+        with:
+          message: |
+            ⚠️ WARNING
+            This PR contains modifications to workflow configuration or build system files:
+            ${{ steps.changed-files.outputs.all_changed_files }}
