@@ -9,7 +9,7 @@ jobs:
     name: Check PR Security and Notify
     if: github.event_name == 'pull_request_target'
     permissions:
-      pull-requests: read
+      pull-requests: write
     steps:
       - name: get changed files that allow user code to be executed
         id: changed-files
