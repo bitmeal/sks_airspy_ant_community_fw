@@ -103,6 +103,8 @@ jobs:
           path: |
             ${{ github.workspace }}/build/zephyr/merged.hex
             ${{ github.workspace }}/build/zephyr/dfu_application.zip
+            ${{ github.workspace }}/build/zephyr/zephyr.elf
+            ${{ github.workspace }}/build/zephyr/zephyr.map
 
   release:
     runs-on: ubuntu-24.04
