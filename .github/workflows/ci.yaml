@@ -6,8 +6,9 @@ on:
       - "*"
     tags:
       - v*
-  pull_request:
-    # prevent secret leaks by enabling: "Require approval for all external contributors" in repository settings "Actions">"General"
+  # will run in PR target scope with secret access
+  # require approval by treating PR builds as deployment with protection rule
+  pull_request_target:
     types:
       - opened
       - synchronize
@@ -22,6 +23,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    environment: ${{ github.event_name == 'pull_request_target' && 'pull_request_workflow' || null }}
     steps:
       - name: Install Dependencies + West + NRF Util
         run: |
@@ -50,7 +52,9 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
       - name: Fetch Toolchain + NRF & ANT SDK
         if: steps.cache-ncs-restore.outputs.cache-hit != 'true'
         run: |
