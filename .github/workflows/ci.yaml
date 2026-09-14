@@ -12,8 +12,6 @@ on:
     types:
       - opened
       - synchronize
-    branches:
-      - master
   workflow_dispatch:
 
 env:
@@ -50,13 +48,9 @@ jobs:
           path: /home/runner/ncs/
           key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.ref }}
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      # no pulling ANT SDK from pull requests, only restoration from cache; cannot leak non-existent tokens
       - name: Fetch Toolchain + NRF & ANT SDK
-        if: steps.cache-ncs-restore.outputs.cache-hit != 'true'
+        if: steps.cache-ncs-restore.outputs.cache-hit != 'true' && github.event_name != 'pull_request_target'
         run: |
           # install toolchain
           nrfutil toolchain-manager install --ncs-version ${NRF_TOOLCHAIN_VERSION}
@@ -81,14 +75,22 @@ jobs:
           # finalize sdk install
           nrfutil toolchain-manager launch -- west zephyr-export
 
+      # no saving from pull requests to prevent cache poisoning (though PR is only checked out afterwards)
       - name: Save NCS
-        if: steps.cache-ncs-restore.outputs.cache-hit != 'true'
+        if: steps.cache-ncs-restore.outputs.cache-hit != 'true' && github.event_name != 'pull_request_target'
         id: cache-ncs-save
         uses: actions/cache/save@v4
         with:
           path: /home/runner/ncs/
           key: ncs-${{ runner.os }}-${{ env.NRF_TOOLCHAIN_VERSION }}-${{ env.NRF_SDK_VERSION }}
 
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          allow-unsafe-pr-checkout: true
+          
       - name: Build Application
         id: app-build
         working-directory: /home/runner/ncs/sdks/${{ env.NRF_SDK_VERSION }}/
@@ -108,7 +110,7 @@ jobs:
 
   release:
     runs-on: ubuntu-24.04
-    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    if: ${{ startsWith(github.ref, 'refs/tags/v') && github.event_name != 'pull_request_target'}}
     env:
       VERSION_TAG_NAME: ${{ github.ref_name }}
       FILENAME_PREFIX: sascf

@@ -25,6 +25,8 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         with:
           message: |
-            ⚠️ WARNING
+            ### ⚠️ WARNING
             This PR contains modifications to workflow configuration or build system files:
+            ```
             ${{ steps.changed-files.outputs.all_changed_files }}
+            ```
