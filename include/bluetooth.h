@@ -6,6 +6,8 @@
 #ifndef INCLUDE_BLUETOOTH_H__
 #define INCLUDE_BLUETOOTH_H__
 
+#include <stdbool.h>
+
 #include <zephyr/bluetooth/uuid.h>
 
 // config GATT service
@@ -19,5 +21,7 @@
 
 
 void start_bluetooth_services(void);
+
+bool bt_connection_active(void);
 
 #endif // INCLUDE_BLUETOOTH_H__
