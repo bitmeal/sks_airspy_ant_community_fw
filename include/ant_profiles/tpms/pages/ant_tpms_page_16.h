@@ -30,6 +30,7 @@ extern "C" {
  * p ^= 1013.25 hPa (rounded to full hPa)
  */
 #define ANT_TPMS_AMBIENT_DEFAULT 1013
+#define ANT_TPMS_ALARM_INIT 0xffff
 
 
 /** @brief TPMS Configuration command flags
@@ -62,8 +63,8 @@ typedef struct
         .command = ANT_TPMS_CONFIG_EMPTY_RESET,                 \
         .role = ANT_TPMS_ROLE_NONE,                             \
         .ambient_pressure = ANT_TPMS_AMBIENT_DEFAULT,           \
-        .alarm_low_pressure = 0xffff,                           \
-        .alarm_high_pressure = 0xffff,                          \
+        .alarm_low_pressure = ANT_TPMS_ALARM_INIT,              \
+        .alarm_high_pressure = ANT_TPMS_ALARM_INIT,             \
     }
 
 /** @brief Function for encoding page 16.

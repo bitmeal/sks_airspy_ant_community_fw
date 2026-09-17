@@ -7,7 +7,10 @@
 #define INCLUDE_ZBUS_COM_H__
 
 #include <zephyr/zbus/zbus.h>
+#include "settings.h"
+
 
 ZBUS_CHAN_DECLARE(sensor_data_chan);
+ZBUS_CHAN_DECLARE(config_update_notification_chan);
 
 #endif // INCLUDE_ZBUS_COM_H__

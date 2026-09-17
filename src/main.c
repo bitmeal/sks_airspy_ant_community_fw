@@ -147,7 +147,7 @@ int main(void)
 	start_settings_subsys();
 
 	///////////////////////////////////////////
-	if( retained.boots <= 1)
+	if( retained.boots <= 1 || app_config.device.bt_timeout_ms == 0)
 	{
 		LOG_INF("starting bluetooth services...");
 

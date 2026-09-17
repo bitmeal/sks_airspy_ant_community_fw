@@ -6,6 +6,17 @@
 #include "zbus_com.h"
 #include "sensor.h"
 
+ZBUS_CHAN_DEFINE(config_update_notification_chan,
+		 config_update_source_t,
+
+		 NULL, // no validator
+		 NULL, // no user data
+		 ZBUS_OBSERVERS( \
+			ant_config_update_notification_handler, \
+			ble_config_update_notification_handler),
+		 ZBUS_MSG_INIT( CONFIG_UPDATE_SOURCE_EMPTY )
+);
+
 ZBUS_CHAN_DEFINE(sensor_data_chan,
 		 struct sensor_readings_t,
 
@@ -16,4 +27,9 @@ ZBUS_CHAN_DEFINE(sensor_data_chan,
 );
 
 #include "ant.h"
+#include "bluetooth.h"
+
 ZBUS_LISTENER_DEFINE(ant_sensor_data_handler, ant_sensor_data_handler_cb);
+
+ZBUS_LISTENER_DEFINE(ant_config_update_notification_handler, ant_config_update_notification_handler_cb);
+ZBUS_LISTENER_DEFINE(ble_config_update_notification_handler, ble_config_update_notification_handler_cb);

@@ -11,130 +11,99 @@
 #include <stdlib.h>
 #include <zephyr/settings/settings.h>
 
+#include "zbus_com.h"
+
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app_settings, LOG_LEVEL_INF);
 
+app_config_t app_config;
 
-/*
- * START: based on settings sample: zephyr/samples/subsys/settings
- * 
- */
-
-// struct direct_immediate_value {
-// 	size_t len;
-// 	void *dest;
-// 	uint8_t fetched;
-// };
-
-// static int direct_loader_immediate_value(const char *name, size_t len,
-// 					 settings_read_cb read_cb, void *cb_arg,
-// 					 void *param)
-// {
-// 	const char *next;
-// 	size_t name_len;
-// 	int rc;
-// 	struct direct_immediate_value *one_value =
-// 					(struct direct_immediate_value *)param;
-
-// 	name_len = settings_name_next(name, &next);
-
-// 	if (name_len == 0) {
-// 		if (len == one_value->len) {
-// 			rc = read_cb(cb_arg, one_value->dest, len);
-// 			if (rc >= 0) {
-// 				one_value->fetched = 1;
-// 				LOG_DBG("immediate load: OK");
-// 				return 0;
-// 			}
-
-// 			LOG_ERR("immediate load failed; (rc %d)", rc);
-// 			return rc;
-// 		}
-// 		return -EINVAL;
-// 	}
-
-// 	/* other keys aren't served by the callback
-// 	 * Return success in order to skip them
-// 	 * and keep storage processing.
-// 	 */
-// 	return 0;
-// }
-
-// int load_immediate_value(const char *name, void *dest, size_t len)
-// {
-// 	int rc;
-// 	struct direct_immediate_value div;
-
-// 	div.fetched = 0;
-// 	div.len = len;
-// 	div.dest = dest;
-
-// 	rc = settings_load_subtree_direct(name, direct_loader_immediate_value,
-// 					  (void *)&div);
-// 	if (rc == 0) {
-// 		if (!div.fetched) {
-// 			rc = -ENOENT;
-// 		}
-// 	}
-
-// 	return rc;
-// }
-
-/*
- * END: based on settings sample: zephyr/samples/subsys/settings
- * 
- */
-
-uint8_t settings_load_one_init_default(const char *name, void *dest, size_t len, void *init, size_t len_init)
+// load default configuration for current configuration version
+void init_app_config_default()
 {
-    int rc;
-        
-    while(settings_load_one(name, dest, len) <= 0)
-    {
-    	LOG_WRN("setting %s not existent; initializing to given default", name);
-
-        rc = settings_save_one(name, init, len_init);
-        if (rc)
-        {
-    		LOG_WRN("failed writing default value for %s; (rc %d)", name, rc);
-        }
-        else
-        {
-    		LOG_INF("initialized %s", name);
-        }
-    };
-
-    // final load (again)
-    rc = settings_load_one(name, dest, len);
-
-    if (rc > 0)
-    {
-    	LOG_DBG("loaded %s", name);
-	    return EXIT_SUCCESS;
-	}
-    else
-    {
-		LOG_ERR("failed loading %s; (rc %d)", name, rc);
-        return rc;
-	}
+	app_config = (app_config_t) {
+		.tpms = (tpms_config_t) {
+			.role								= TPMS_CONFIG_ROLE_DEFAULT,
+			.ambient_compensation 				= TPMS_CONFIG_AMBIENT_COMPENSATION_DEFAULT,
+			.ambient_compensation_dynamic		= TPMS_CONFIG_AMBIENT_COMPENSATION_DEFAULT,
+			.ambient_compensation_is_dynamic	= false,
+			.alarm_low 							= TPMS_CONFIG_ALARM_DEFAULT,
+			.alarm_high 						= TPMS_CONFIG_ALARM_DEFAULT,
+			.type								= TPMS_CONFIG_TYPE_DEFAULT,
+			.padding							= TPMS_CONFIG_PADDING_DEFAULT,
+		},
+		.device = (device_config_t) {
+			.id						= get_hwid_16bit(),
+			.bt_timeout_ms			= DEVICE_CONFIG_BT_TIMEOUT_DEFAULT,
+		},
+	};
 }
 
-static int initialize_settings_defaults_DEVICE_ID()
-{    
-    uint16_t device_id;
-	uint16_t device_id_init = get_hwid_16bit();
-    
-	return settings_load_one_init_default(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id), &device_id_init, sizeof(device_id_init));
+int settings_load_one_log_err(const char *name, void *dest, size_t len)
+{
+	int rc = settings_load_one(name, dest, len);
+
+	if ( rc <= 0 )
+	{
+		LOG_ERR("failed loading: %s", name);
+	}
+
+	return rc;
 }
 
-static int initialize_settings_defaults()
+int settings_save_one_log_err(const char *name, void *dest, size_t len)
 {
-    int rc;
+	int rc = settings_save_one(name, dest, len);
 
-    rc = initialize_settings_defaults_DEVICE_ID();
-    if( rc ){ return rc; }
+	if ( rc )
+	{
+		LOG_ERR("failed saving: %s", name);
+	}
 
-    return EXIT_SUCCESS;
+	return rc;
+}
+
+uint8_t app_config_version = APP_CONFIG_VERSION;
+int commit_settings(config_update_source_t source)
+{
+	LOG_INF("committing settings to persistent storage");
+	log_settings();
+	
+	int rc = EXIT_SUCCESS;
+
+	rc |= settings_save_one_log_err("ver", &app_config_version, sizeof(uint8_t));
+
+	rc |= settings_save_one_log_err("dev/id", &app_config.device.id, sizeof(app_config.device.id));
+	rc |= settings_save_one_log_err("dev/bttmo", &app_config.device.bt_timeout_ms, sizeof(app_config.device.bt_timeout_ms));
+
+	rc |= settings_save_one_log_err("tpms/role", &app_config.tpms.role, sizeof(app_config.tpms.role));
+	rc |= settings_save_one_log_err("tpms/ambcomp", &app_config.tpms.ambient_compensation, sizeof(app_config.tpms.ambient_compensation));
+	rc |= settings_save_one_log_err("tpms/alm/low", &app_config.tpms.alarm_low, sizeof(app_config.tpms.alarm_low));
+	rc |= settings_save_one_log_err("tpms/alm/high", &app_config.tpms.alarm_high, sizeof(app_config.tpms.alarm_high));
+	rc |= settings_save_one_log_err("tpms/type", &app_config.tpms.type, sizeof(app_config.tpms.type));
+	rc |= settings_save_one_log_err("tpms/padding", &app_config.tpms.padding, sizeof(app_config.tpms.padding));
+
+	
+	LOG_INF("notifying settings change");
+	if (source != CONFIG_UPDATE_SOURCE_EMPTY)
+	{
+		rc |= zbus_chan_pub(&config_update_notification_chan, &source, K_MSEC(10));
+	}
+
+	return rc == EXIT_SUCCESS ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+void log_settings()
+{
+	LOG_INF("dev/id: %d", app_config.device.id);
+	LOG_INF("dev/bttmo: %lld", app_config.device.bt_timeout_ms);
+
+	LOG_INF("tpms/role: %#x", app_config.tpms.role);
+	LOG_INF("tpms/ambcomp: %d", app_config.tpms.ambient_compensation);
+	LOG_INF("tpms/alm/low: %d", app_config.tpms.alarm_low);
+	LOG_INF("tpms/alm/high: %d", app_config.tpms.alarm_high);
+	LOG_INF("tpms/type: %#x", app_config.tpms.type);
+	LOG_INF("tpms/padding: %#x", app_config.tpms.padding);
 }
 
 int start_settings_subsys()
@@ -147,8 +116,56 @@ int start_settings_subsys()
 		return rc;
 	}
 
-    // first-boot (after upgrade/changes) initialization of all shared and required settings!
-    rc = initialize_settings_defaults();
+	// populate runtim config copy
+	init_app_config_default();
+
+	// migrate settings version and overlay/load from storage
+	uint8_t version = 0;
+	if ( settings_load_one_log_err("ver", &version, sizeof(version)) <= 0 )
+	{
+		// no versioned storage; just try loading
+		LOG_WRN("no versioned storage; trying our best");
+
+		settings_load_one_log_err("id", &app_config.device.id, sizeof(app_config.device.id));
+		settings_load_one_log_err("role", &app_config.tpms.role, sizeof(app_config.tpms.role));
+		settings_load_one_log_err("alL", &app_config.tpms.alarm_low, sizeof(app_config.tpms.alarm_low));
+		settings_load_one_log_err("alH", &app_config.tpms.alarm_high, sizeof(app_config.tpms.alarm_high));
+	}
+	else
+	{
+		// got a settings version number
+		switch(version)
+		{
+			// case <OLD_VERSION_NUMBER_X>:
+			// 		...
+			//		break;
+
+			// latest; default load
+			case APP_CONFIG_VERSION:
+				LOG_INF("reading settings version: %d", APP_CONFIG_VERSION);
+
+				settings_load_one_log_err("dev/id", &app_config.device.id, sizeof(app_config.device.id));
+				settings_load_one_log_err("dev/bttmo", &app_config.device.bt_timeout_ms, sizeof(app_config.device.bt_timeout_ms));
+
+				settings_load_one_log_err("tpms/role", &app_config.tpms.role, sizeof(app_config.tpms.role));
+				settings_load_one_log_err("tpms/ambcomp", &app_config.tpms.ambient_compensation, sizeof(app_config.tpms.ambient_compensation));
+				settings_load_one_log_err("tpms/alm/low", &app_config.tpms.alarm_low, sizeof(app_config.tpms.alarm_low));
+				settings_load_one_log_err("tpms/alm/high", &app_config.tpms.alarm_high, sizeof(app_config.tpms.alarm_high));
+				settings_load_one_log_err("tpms/type", &app_config.tpms.type, sizeof(app_config.tpms.type));
+				settings_load_one_log_err("tpms/padding", &app_config.tpms.padding, sizeof(app_config.tpms.padding));
+
+				break;
+		}
+	}
+
+	log_settings();
+
+	// write back the settings we built, in case of init or migration (not of current version)
+	if ( version != APP_CONFIG_VERSION)
+	{
+		// TODO: check and handle return code
+		commit_settings(CONFIG_UPDATE_SOURCE_EMPTY);
+	}
 
     return rc;
 }

@@ -13,6 +13,7 @@
 
 #include "bluetooth.h"
 #include "settings.h"
+#include "zbus_com.h"
 
 #include <zephyr/sys/reboot.h>
 
@@ -20,7 +21,6 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt, LOG_LEVEL_INF);
 
-#define BT_DISABLE_DELAY 30000
 #define BT_DISABLE_RESCHEDULE 500
 
 static int shutdown_bluetooth(void);
@@ -40,17 +40,6 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 
 // BEGIN config service
 
-static void reboot_work_wrapper(struct k_work *work)
-{
-	sys_reboot(SYS_REBOOT_COLD);
-}
-
-#define REBOOT_DELAY_MS 250
-K_WORK_DELAYABLE_DEFINE(reboot_work, reboot_work_wrapper);
-
-
-#define DEVICE_ID_SIZE 2
-
 static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
 			  const struct bt_gatt_attr *attr,
 			  const void *buf,
@@ -60,26 +49,15 @@ static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
 {
     LOG_DBG("Received BT data, handle %d, conn %p", attr->handle, (void *)conn);
 
-	if ( len && len <= DEVICE_ID_SIZE)
+	if ( len && len <= sizeof(app_config.device.id))
 	{
 		uint16_t device_id = 0x0000;
 		memcpy(&device_id, buf, len);
 
-		int rc;
-		rc = settings_save_one(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id));
-        if (rc)
-        {
-    		LOG_WRN("failed writing setting for %s; (rc %d)", DEVICE_ID_SETTINGS_KEY, rc);
-        }
-        else
-        {
-    		LOG_INF("set  %s: %d", DEVICE_ID_SETTINGS_KEY, device_id);
-    		LOG_INF("scheduling reboot");
-
-			// schedule reboot
-			k_work_schedule(&reboot_work, K_MSEC(REBOOT_DELAY_MS));
-        }
-
+    	LOG_INF("seting new device ID: %d", device_id);
+		
+		app_config.device.id = device_id;
+		commit_settings(CONFIG_UPDATE_SOURCE_ANT);
 	}
 
 	// we processed the whole message; signal to stack
@@ -123,6 +101,15 @@ static struct bt_data scan_data[] = {
 
 static void advertise(struct k_work *work)
 {
+	// construct dynamic device name
+	snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05u", CONFIG_BT_DEVICE_NAME, app_config.device.id);
+	LOG_INF("BT name: %s", bt_name);
+
+	// update scan response data with name
+	scan_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
+
+	bt_set_name(bt_name);
+
 	int rc = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, advertising_data, ARRAY_SIZE(advertising_data), scan_data, ARRAY_SIZE(scan_data));
 	if (rc) {
 		LOG_ERR("Advertising failed to start (rc %d)", rc);
@@ -133,6 +120,14 @@ static void advertise(struct k_work *work)
 		LOG_INF("Advertising successfully started with DFU service");
 	}
 }
+
+void ble_config_update_notification_handler_cb(const struct zbus_channel *chan)
+{
+	const config_update_source_t *msg_source = zbus_chan_const_msg(chan);
+
+	LOG_INF("Updating BLE configuration");
+}
+
 
 static void connected(struct bt_conn *conn, uint8_t err)
 {
@@ -148,10 +143,14 @@ static void connected(struct bt_conn *conn, uint8_t err)
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
 	LOG_INF("Bluetooth Disconnected (reason %#02x)", reason);
+	LOG_INF("Restarting BLE advertising");
 	k_work_submit(&advertise_work);
 
-	LOG_INF("Scheduling Bluetooth shutdown in %dms", BT_DISABLE_DELAY);
-	k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_DELAY));
+	if(app_config.device.bt_timeout_ms != 0)
+	{
+		LOG_INF("Scheduling Bluetooth shutdown in %lldms", app_config.device.bt_timeout_ms);
+		k_work_schedule(&disable_bt_work, K_MSEC(app_config.device.bt_timeout_ms));
+	}
 }
 
 static void disable_bt(struct k_work *work)
@@ -160,7 +159,7 @@ static void disable_bt(struct k_work *work)
 	rc = shutdown_bluetooth();
 	if(rc != 0)
 	{
-		LOG_ERR("Failed disabling Bluetooth after %dms. Rescheduling for %dms", BT_DISABLE_DELAY, BT_DISABLE_RESCHEDULE);
+		LOG_ERR("Failed disabling Bluetooth. Rescheduling for %dms", BT_DISABLE_RESCHEDULE);
 		k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_RESCHEDULE));
 	}
 	else
@@ -176,28 +175,15 @@ static void bt_ready(int err)
 		return;
 	}
 
-	// construct dynamic device name
-	uint16_t device_id;
-	if(settings_load_one(DEVICE_ID_SETTINGS_KEY, &device_id, sizeof(device_id)) > 0)
-	{
-		snprintf(bt_name, CONFIG_BT_DEVICE_NAME_MAX, "%s %05u", CONFIG_BT_DEVICE_NAME, device_id);
-		LOG_INF("BT name: %s", bt_name);
-
-		// update scan response data with name
-		scan_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
-
-		bt_set_name(bt_name);
-	} else {
-		LOG_ERR("failed reading %s to set BT name", DEVICE_ID_SETTINGS_KEY);
-		return;
-	}
-
 	k_work_submit(&advertise_work);
 
 	LOG_INF("Bluetooth enabled");
 
-	LOG_INF("Scheduling Bluetooth shutdown in %dms", BT_DISABLE_DELAY);
-	k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_DELAY));
+	if(app_config.device.bt_timeout_ms != 0)
+	{
+		LOG_INF("Scheduling Bluetooth shutdown in %lldms", app_config.device.bt_timeout_ms);
+		k_work_schedule(&disable_bt_work, K_MSEC(app_config.device.bt_timeout_ms));
+	}
 }
 
 #if CONFIG_LOG_BACKEND_BLE

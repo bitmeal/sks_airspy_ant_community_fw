@@ -7,6 +7,7 @@
 #define INCLUDE_BLUETOOTH_H__
 
 #include <zephyr/bluetooth/uuid.h>
+#include <zephyr/zbus/zbus.h>
 
 // config GATT service
 #define BT_CFG_SRV_UUID_STR "2079cd72-8955-487c-bfbf-0bf85b255f3c"
@@ -19,5 +20,7 @@
 
 
 void start_bluetooth_services(void);
+
+void ble_config_update_notification_handler_cb(const struct zbus_channel *chan);
 
 #endif // INCLUDE_BLUETOOTH_H__

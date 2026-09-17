@@ -48,14 +48,14 @@ endif # AIRSPY_DEFAULTS
 config AIRSPY_SIZE_OPTIMIZATIONS
     bool
     default y
-    select LTO
-    select ISR_TABLES_LOCAL_DECLARATION
+    # select LTO
+    # select ISR_TABLES_LOCAL_DECLARATION
 
 if AIRSPY_SIZE_OPTIMIZATIONS
 
-choice COMPILER_OPTIMIZATIONS
-    default SIZE_OPTIMIZATIONS
-endchoice
+# choice COMPILER_OPTIMIZATIONS
+#     default SIZE_OPTIMIZATIONS
+# endchoice
 
 # config CONSOLE
 #     default n
@@ -72,11 +72,11 @@ config BT_USER_PHY_UPDATE
 config BT_PHY_UPDATE
     default n
 
-config THREAD_NAME
-    default n
+# config THREAD_NAME
+#     default n
 
-config THREAD_STACK_INFO
-    default n
+# config THREAD_STACK_INFO
+#     default n
 
 config NET_BUF_POOL_USAGE
     default n
