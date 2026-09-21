@@ -53,18 +53,9 @@ config AIRSPY_SIZE_OPTIMIZATIONS
 
 if AIRSPY_SIZE_OPTIMIZATIONS
 
-# choice COMPILER_OPTIMIZATIONS
-#     default SIZE_OPTIMIZATIONS
-# endchoice
-
-# config CONSOLE
-#     default n
-
-# config UART_CONSOLE
-#     default n
-
-# config UART_USE_RUNTIME_CONFIGURE
-#     default n
+choice COMPILER_OPTIMIZATIONS
+    default SIZE_OPTIMIZATIONS
+endchoice
 
 config BT_USER_PHY_UPDATE
     default n
@@ -72,11 +63,11 @@ config BT_USER_PHY_UPDATE
 config BT_PHY_UPDATE
     default n
 
-# config THREAD_NAME
-#     default n
+config THREAD_NAME
+    default n
 
-# config THREAD_STACK_INFO
-#     default n
+config THREAD_STACK_INFO
+    default n
 
 config NET_BUF_POOL_USAGE
     default n
@@ -89,7 +80,7 @@ endif # AIRSPY_SIZE_OPTIMIZATIONS
 # ---
 
 config AIRSPY_ANT
-    bool
+    bool "enable ANT communiction; disable for debugging or development if no ANT SDK is available"
     default y
     select ANT
     select ANT_EVALUATION_KEY

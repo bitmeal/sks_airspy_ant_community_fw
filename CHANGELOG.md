@@ -20,10 +20,19 @@ SPDX-License-Identifier: MPL-2.0
 - Updated ANT+ display compatibility list
 - Changed wakeup pin to P0.19 on nRF52840 MDK USB Dongle development board
 - Disable CONFIG_WARN_EXPERIMENTAL
+- rebuilt settings system using newer zephyr provided read methods
+- move most kconfig to Kconfig file from `prj.conf` fragment
+- add Kconfig option to build without ANT for debugging and development
+- CI: update actions to new SDK and sysbuild
+- changing ANT ID does not require reboot anymore
 
 ### Added
 - ANT+ TPMS Type/ID field
 - ANT+ TPMS Configurable Padding
+- introduced versioned settings storage
+- new persistent settings: bluetooth disable timeout, static ambient pressure compensation, TPMS profile ID type and padding byte
+- CI: include memory reports
+- a blackmagic probe west runner with debugserver support in `extra\zephyr\scripts\west_commands\runners\blackmagicprobe.py`
 
 ### Fixed
 - ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble

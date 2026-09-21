@@ -57,7 +57,7 @@ static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
     	LOG_INF("seting new device ID: %d", device_id);
 		
 		app_config.device.id = device_id;
-		commit_settings(CONFIG_UPDATE_SOURCE_ANT);
+		commit_settings(CONFIG_UPDATE_SOURCE_BLE);
 	}
 
 	// we processed the whole message; signal to stack

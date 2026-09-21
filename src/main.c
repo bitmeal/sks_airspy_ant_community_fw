@@ -23,7 +23,9 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #include "settings.h"
 
 #include "bluetooth.h"
+#if CONFIG_AIRSPY_ANT
 #include "ant.h"
+#endif
 #include "spi.h"
 
 
@@ -159,11 +161,12 @@ int main(void)
 		LOG_INF("will not start bluetooth");
 	}
 	///////////////////////////////////////////
+#if CONFIG_AIRSPY_ANT
 	LOG_INF("starting ANT+ device...");
 
 	start_ant_device();
 	LOG_INF("OK ANT+ device");
-
+#endif
 	///////////////////////////////////////////
 	LOG_INF("starting GPIO and power management...");
 
