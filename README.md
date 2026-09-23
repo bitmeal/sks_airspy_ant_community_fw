@@ -127,11 +127,42 @@ If you already have a version of this firmware on your sensors, you can update w
 More info about the internal workings of the sensor and another part of the story of this project can be found in [`./doc/HARDWARE_PROTO.md`](./doc/HARDWARE_PROTO.md).
 
 ## Developing & Debugging
-For development you need the nRF SDK, matching toolchain, the [ANT SDK](https://www.thisisant.com/APIassets/ANTnRFConnectDoc/) (need to register and [become an ANT adopter](https://www.thisisant.com/my-ant/join-adopter) for this). Additionally, for the current version of the ANT SDK (*1.3.0*) you need to [patch the SDKs](./ant_sdk_nrf52832.patch) `Kconfig` to allow builds for the nRF52832 SoC. You will need to generate your own signing key as well. As the images are signed, you will not be able to use the OTA DFU functionality to flash your own build.
+For development you need to setup the [ANT for nRF Connect SDK](https://github.com/ant-nrfconnect/sdk-ant) by [following the instructions here](https://ant-nrfconnect.github.io/doc/getting_started.html). The currently used version of the ANT SDK is [*2.1.0*](https://github.com/ant-nrfconnect/sdk-ant/releases/tag/v2.1.0). In the nRF Connect extension for VS Code, select SDK `3rd Party (nRF Connect SDK v3.2.4)*` and matching toolchain.
 
-For development on your bench, a RTT console is provided over SWD. Memory location is unknown, as the Black Magic probe did pick it up automatically.
+> SDK is openly accessible as of CW30 2026 🎉
 
+### Signing
+By default, the project builds with an SDK default (or random) signing key: You will not be able to use the OTA DFU functionality to flash your own build on a previously flashed build from the release page here, as the signing keys differ!
+
+To use your own key, either add `-DSB_CONFIG_BOOT_SIGNATURE_KEY_FILE=\"\${APP_DIR}/mcuboot.pem\"` and `-DSB_CONFIG_BOOT_SIGNATURE_TYPE_RSA=y` to *Extra CMake Arguments* in the nRF Connect Build Configuration dialog, or pass `-DSB_CONFIG_BOOT_SIGNATURE_KEY_FILE="\"\${APP_DIR}//mcuboot.pem\"" -DSB_CONFIG_BOOT_SIGNATURE_TYPE_RSA=y` to west. Adjust to your own key location and type, where key type may possibly be omitted!
+
+### Debugging
+The target has not enough flash to use a full debug build. A debug project configuration, enabling most needed symbols is provided in `debug.conf`. Add it as *Extra Kconfig fragement* in the nRF Connect Build Configuration dialog, or with west by passing `-DEXTRA_CONF_FILE="debug.conf"`.
+
+For development on your bench, an RTT console is provided over SWD. Memory location is unknown, as my Black Magic probe did pick it up automatically.
 For debugging in operation, logging over BLE - using Nordic UART Service in [nRF Toolbox](https://www.nordicsemi.com/Products/Development-tools/nRF-Toolbox) mobile app - is provided. As with updating, connect to the console **within 30 seconds** after a cold-boot (remove and re-install battery).
+
+For debugging with a blackmagic probe, an updated west runner with debugserver support is provided in `extra\zephyr\scripts\west_commands\runners\blackmagicprobe.py`. Copy it to your zephyr SDK at the same location to use it. Use with the nRF Connect debugger from VS Code with e.g.:
+```json
+// launch.json
+// BMDP west runner; debugserver example
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "nrf-connect",
+            "request": "launch",
+            "name": "Debug with BMDP",
+            // "flash": false,
+            "gdbServer": {
+                "path": "west",
+                "args": "debugserver --rtt --build-dir ${activeConfig} --dev-id ${snr} --gdb-port ${port}"
+            },
+            "setupCommands": [{ "text": "set mem inaccessible-by-default off" }]
+        },
+    ]
+}
+```
 
 
 ## License

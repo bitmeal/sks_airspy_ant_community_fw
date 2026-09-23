@@ -10,17 +10,13 @@ on:
     tags:
       - v*
   pull_request_target:
-    # prevent secret leaks by enabling: "Require approval for all external contributors" in repository settings "Actions">"General"
+    # configure: "Require approval for all external contributors" in repository settings "Actions">"General"
     types:
       - opened
       - synchronize
-    branches:
-      - master
   workflow_dispatch:
 
 env:
-  # NRF_TOOLCHAIN_VERSION: v2.7.0
-  # NRF_SDK_VERSION: v2.7.0
   ANT_SDK_VERSION: v2.1.0
   SDK_LOCATION: /opt/sdk/
 
@@ -30,12 +26,6 @@ jobs:
     steps:
       - name: Prepare Environment & Dependencies
         run: |
-          # sudo apt update
-          # sudo apt install -y --no-install-recommends \
-          #   curl \
-          #   git \
-          #   python3 python3-pip
-
           pip3 install --break-system-packages west
 
           curl https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil -o /usr/local/bin/nrfutil
@@ -43,9 +33,6 @@ jobs:
           nrfutil install toolchain-manager
 
           nrfutil toolchain-manager config --set install-dir=${SDK_LOCATION}
-
-          # curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -o /usr/local/bin/yq
-          # chmod +x /usr/local/bin/yq
 
           mkdir -p ${SDK_LOCATION}
 
@@ -60,10 +47,6 @@ jobs:
         if: steps.cachesdk.outputs.cache-hit != 'true'
         working-directory: ${{ env.SDK_LOCATION }}
         run: |
-          # allow access
-          git config --global credential.helper cache
-          git ls-remote https://SKS_AIRSPY_ANT_TOKEN:${{ secrets.SKS_AIRSPY_ANT_TOKEN }}@github.com/ant-nrfconnect/sdk-ant > /dev/null
-          # fetch SDK
           west init -m "https://github.com/ant-nrfconnect/sdk-ant" --mr ${ANT_SDK_VERSION} sdk-ant
           pushd sdk-ant && west update && popd
 
@@ -89,7 +72,6 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ env.SDK_LOCATION }}
-          # key: sdk-${{ runner.os }}-${{ env.ANT_SDK_VERSION }}
           key: ${{ steps.cachesdk.outputs.cache-primary-key }}
 
       - name: Build Application
@@ -97,7 +79,7 @@ jobs:
         working-directory: ${{ env.SDK_LOCATION }}/sdk-ant/
         run: |
           echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.workspace }}/mcuboot.pem
-          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --sysbuild ${{ github.workspace }}
+          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --sysbuild ${{ github.workspace }} -- ${{ github.event_name != 'pull_request' && '-DSB_CONFIG_BOOT_SIGNATURE_KEY_FILE="${{ github.workspace }}/mcuboot.pem" -DSB_CONFIG_BOOT_SIGNATURE_TYPE_RSA=y' || '' }}
           echo "IMAGE_NAME=$(yq '.cmake.images.[] | select(.type == "MAIN") | .name' ${{ github.workspace }}/build/build_info.yml)" >> $GITHUB_OUTPUT
 
       - name: Compile Artifacts
@@ -114,6 +96,7 @@ jobs:
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/rom.json ${{ github.workspace }}/build/app_rom.json
 
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr/zephyr.elf ${{ github.workspace }}/build/app.elf
+          cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr/zephyr.map ${{ github.workspace }}/build/app.map
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr/zephyr.hex ${{ github.workspace }}/build/app.hex
           cp ${{ github.workspace }}/build/${IMAGE_NAME}/zephyr/zephyr.signed.hex ${{ github.workspace }}/build/app.signed.hex
           cp ${{ github.workspace }}/build/mcuboot/zephyr/zephyr.elf ${{ github.workspace }}/build/mcuboot.elf
@@ -146,6 +129,7 @@ jobs:
             ${{ github.workspace }}/build/app_ram.json
             ${{ github.workspace }}/build/app_rom.json
             ${{ github.workspace }}/build/app.elf
+            ${{ github.workspace }}/build/app.map
             ${{ github.workspace }}/build/app.hex
             ${{ github.workspace }}/build/app.signed.hex
             ${{ github.workspace }}/build/mcuboot.elf
@@ -158,19 +142,11 @@ jobs:
     if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     env:
       VERSION_TAG_NAME: ${{ github.ref_name }}
-      FILENAME_PREFIX: sascf
+      FILENAME_PREFIX: arispy_community_fw
     needs: build
     steps:
       - uses: actions/checkout@v6
 
-      # # TODO: prebuild version info artifact
-      # - name: Cache SDK
-      #   id: cachesdk
-      #   uses: actions/cache/restore@v4
-      #   with:
-      #     path: /opt/sdk/
-      #     key: sdk-${{ runner.os }}-${{ env.ANT_SDK_VERSION }}
-      
       - uses: actions/download-artifact@v8
         with:
           name: sks-airspy-community-firmware

@@ -24,6 +24,7 @@ SPDX-License-Identifier: MPL-2.0
 - move most kconfig to Kconfig file from `prj.conf` fragment
 - add Kconfig option to build without ANT for debugging and development
 - CI: update actions to new SDK and sysbuild
+- CI: remove reliance on login token and login procedure, as ANT SDK is openly accessible now
 - changing ANT ID does not require reboot anymore
 
 ### Added
@@ -40,6 +41,7 @@ SPDX-License-Identifier: MPL-2.0
 
 ### Removed
 - custom (development) board definition for the nRF52840 MDK USB Dongle
+- CI: removed signing of images built from PRs with official/repo key; ANT SDK is openly accessibly now
 
 ## [1.3.3] 2026-05-16
 ### Added
