@@ -4,9 +4,10 @@
 # include board definitions
 list(APPEND BOARD_ROOT ${CMAKE_CURRENT_LIST_DIR}/../)
 
+### Sysbuild
 find_package(Sysbuild REQUIRED HINTS $ENV{ZEPHYR_BASE})
-
 project(sysbuild LANGUAGES)
+
 
 ### artifacts
 # create merged.hex with sysbuild and without partition manager
@@ -46,3 +47,36 @@ if(
         ${APPLICATION_BINARY_DIR}/merged.hex
     )
 endif()
+
+### runners
+# we cannot modify runners when using existing boards (for debugging); patch without using zephyr provisions
+#   - patch all runners.yaml to include blackmagicprobe with "--rtt" argument
+#   - patch all runners.yaml to to use blackmagicprobe as default runner
+function(patch_runners)
+    message(STATUS "patching runners...")
+
+    set(APP_RUNNERS_YAML "${CMAKE_BINARY_DIR}/${DEFAULT_IMAGE}/zephyr/runners.yaml")
+    set(MCUBOOT_RUNNERS_YAML "${CMAKE_BINARY_DIR}/mcuboot/zephyr/runners.yaml")
+    set(PATCH_SCRIPT )
+
+    message(STATUS "patching: ${APP_RUNNERS_YAML}")
+    execute_process(
+        COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/patch_runners.py" 
+                ${APP_RUNNERS_YAML} "blackmagicprobe" "--rtt"
+        RESULT_VARIABLE patch_result
+    )
+    if(NOT patch_result EQUAL 0)
+        message(FATAL_ERROR "Failed patching ${APP_RUNNERS_YAML}")
+    endif()
+
+    message(STATUS "patching: ${MCUBOOT_RUNNERS_YAML}")
+    execute_process(
+        COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/patch_runners.py" 
+                ${MCUBOOT_RUNNERS_YAML} "blackmagicprobe" "--rtt"
+        RESULT_VARIABLE patch_result
+    )
+    if(NOT patch_result EQUAL 0)
+        message(FATAL_ERROR "Failed patching ${MCUBOOT_RUNNERS_YAML}")
+    endif()
+endfunction()
+cmake_language(DEFER CALL patch_runners)

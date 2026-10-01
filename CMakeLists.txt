@@ -3,25 +3,6 @@
 
 cmake_minimum_required(VERSION 3.20.0)
 
-### runner configuration and injection for all boards
-# board_set_runner(FLASH blackmagicprobe)
-set(BOARD_FLASH_RUNNER blackmagicprobe)
-# board_set_runner(DEBUG blackmagicprobe)
-set(BOARD_DEBUG_RUNNER blackmagicprobe)
-
-macro(app_set_runner_args)
-    if(NOT EXECUTED_APP_SET_RUNNER_ARGS__SKS_AIRSPY_COMMUNITY)
-        # set guard in current scope to prevent recursion
-        set(EXECUTED_APP_SET_RUNNER_ARGS__SKS_AIRSPY_COMMUNITY TRUE)
-        # set guard in parent scope to prevent multiple additions to runners.yaml
-        set(EXECUTED_APP_SET_RUNNER_ARGS__SKS_AIRSPY_COMMUNITY TRUE PARENT_SCOPE)
-
-        # add BMP runner
-        board_runner_args(blackmagicprobe "--rtt")
-        include(${ZEPHYR_BASE}/boards/common/blackmagicprobe.board.cmake)
-    endif()
-endmacro()
-
 ### Zephyr
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
