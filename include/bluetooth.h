@@ -19,7 +19,7 @@
 #define BT_CFG_SRV_DEVID_CHRX_UUID BT_UUID_DECLARE_128(BT_CFG_SRV_DEVID_CHRX_UUID_ENC)
 
 
-void start_bluetooth_services(void);
+void init_bluetooth(void);
 
 void ble_config_update_notification_handler_cb(const struct zbus_channel *chan);
 

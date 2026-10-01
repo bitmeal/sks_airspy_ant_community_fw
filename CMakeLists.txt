@@ -17,7 +17,7 @@ macro(app_set_runner_args)
         set(EXECUTED_APP_SET_RUNNER_ARGS__SKS_AIRSPY_COMMUNITY TRUE PARENT_SCOPE)
 
         # add BMP runner
-        # board_runner_args(blackmagicprobe "")
+        board_runner_args(blackmagicprobe "--rtt")
         include(${ZEPHYR_BASE}/boards/common/blackmagicprobe.board.cmake)
     endif()
 endmacro()
@@ -36,6 +36,7 @@ test_sysbuild(REQUIRED)
 # app sources
 target_sources(app PRIVATE src/main.c)
 target_sources(app PRIVATE src/common.c)
+target_sources(app PRIVATE src/resource_manager.c)
 target_sources(app PRIVATE src/settings.c)
 target_sources(app PRIVATE src/bluetooth.c)
 target_sources(app PRIVATE src/retained.c)

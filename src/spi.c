@@ -30,11 +30,8 @@ const struct device *spim_dev;
 static const struct gpio_dt_spec int_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, cs_gpios);
 
 static const struct spi_config spim_cfg = {
-	// .frequency = 125000,
 	.frequency = 10000,
-	.operation =	SPI_WORD_SET(8) |
-					// SPI_TRANSFER_MSB |
-					SPI_OP_MODE_MASTER,
+	.operation =	SPI_WORD_SET(8) | SPI_OP_MODE_MASTER,
 	.slave = 0,
 	.cs = NULL
 };
@@ -53,7 +50,7 @@ void int_cb_handler(const struct device *dev, struct gpio_callback *cb,
 	k_work_schedule(&spim_receive_work, K_MSEC(SPIM_INT_TRANSFER_DELAY_MS));
 }
 
-int spim_init(void)
+int init_spim(void)
 {
 	int ret;
 
@@ -61,7 +58,7 @@ int spim_init(void)
 
 	if (spim_dev == NULL)
 	{
-		LOG_ERR("Could not get %s device", spim_dev->name);
+		LOG_ERR("Could not get SPIBB device");
 		return EXIT_FAILURE;
 	}
 
@@ -78,7 +75,7 @@ int spim_init(void)
 		return EXIT_FAILURE;
 	}
 
-	ret = gpio_pin_configure_dt(&int_gpio, GPIO_INPUT);
+	ret = gpio_pin_configure_dt(&int_gpio, GPIO_INPUT | int_gpio.dt_flags);
 	if (ret != 0)
 	{
 		LOG_ERR("Error %d: failed to configure %s pin %d",

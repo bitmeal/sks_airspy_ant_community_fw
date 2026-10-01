@@ -27,6 +27,7 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #include "ant.h"
 #endif
 #include "spi.h"
+#include "resource_manager.h"
 
 
 // TODO(bitmeal): check DT nodes on compile time
@@ -40,10 +41,10 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 // static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios,
 // 							      {0});
 
-static const struct gpio_dt_spec wake_signal = GPIO_DT_SPEC_GET(DT_ALIAS(wake_pin), gpios);
-
 #define SUPERVISION_CYCLE_TIME_MS 1000
 #define SYS_POWEROFF_DELAY 500
+
+static const struct gpio_dt_spec wake_signal = GPIO_DT_SPEC_GET(DT_ALIAS(wake_pin), gpios);
 
 static void poweroff(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(poweroff_work, poweroff);
@@ -51,6 +52,8 @@ K_WORK_DELAYABLE_DEFINE(poweroff_work, poweroff);
 static void supervise(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(supervision_work, supervise);
 
+static void end_bt_keepalive(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(end_bt_keepalive_work, end_bt_keepalive);
 
 enum mgmt_cb_return dfu_pending_cb(uint32_t event, enum mgmt_cb_return _prev_status,
                                 int32_t *_rc, uint16_t *_group, bool *_abort_more,
@@ -101,19 +104,37 @@ static void poweroff(struct k_work *work)
 	}
 }
 
+bool wake_pin_uses_resources = false;
 static void supervise(struct k_work *work)
 {
 	int val = gpio_pin_get_dt(&wake_signal);
 
-	if (val == 0)
+	if (val == 1 && !wake_pin_uses_resources)
 	{
-		LOG_INF("Will power off in %dms", SYS_POWEROFF_DELAY);
+		LOG_INF("Wake pin is ON; requesting resource use");
+		res_mgr_use(&res_mgr_ANT);
+		wake_pin_uses_resources = true;
+	}
+	else if (val == 0 && wake_pin_uses_resources)
+	{
+		LOG_INF("Wake pin is OFF; freeing resource use");
+		res_mgr_free(&res_mgr_ANT);
+		wake_pin_uses_resources = false;
+	}
+
+
+	// TODO: handle app_config.device.bt_timeout_ms == 0
+	if (!res_mgr_in_use(&res_mgr_ANT) && !res_mgr_in_use(&res_mgr_BT))
+	{
+		LOG_INF("No resources in use; will power off in %dms", SYS_POWEROFF_DELAY);
 		k_work_schedule(&poweroff_work, K_MSEC(SYS_POWEROFF_DELAY));
 	}
-	else
-	{
-		k_work_schedule(&supervision_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
-	}
+	else k_work_schedule(&supervision_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
+}
+
+static void end_bt_keepalive(struct k_work *work)
+{
+	res_mgr_free(&res_mgr_BT);
 }
 
 int main(void)
@@ -141,32 +162,29 @@ int main(void)
 	LOG_INF("Boot: %u; Uptime: %llus", retained.boots, retained.uptime_sum);
 
 	///////////////////////////////////////////
-	LOG_INF("registering management callbacks...");
-	mgmt_callback_register(&dfu_pending_reg);
-
-	///////////////////////////////////////////
 	LOG_INF("initializing settings storage...");
 	start_settings_subsys();
 
 	///////////////////////////////////////////
-	if( retained.boots <= 1 || app_config.device.bt_timeout_ms == 0)
+	LOG_INF("initializing bluetooth...");
+	init_bluetooth();
+	
+	if (retained.boots <= 1 || app_config.device.bt_timeout_ms == 0)
 	{
-		LOG_INF("starting bluetooth services...");
+		LOG_INF("using resource: BT");
+		res_mgr_use(&res_mgr_BT);
+		k_work_schedule(&end_bt_keepalive_work, K_MSEC(app_config.device.bt_timeout_ms));
+	}
 
-		start_bluetooth_services();
-		LOG_INF("OK bluetooth advertising");
-	}
-	else
-	{
-		LOG_INF("will not start bluetooth");
-	}
+	LOG_INF("registering SMP callbacks...");
+	mgmt_callback_register(&dfu_pending_reg);
+
 	///////////////////////////////////////////
 #if CONFIG_AIRSPY_ANT
 	LOG_INF("starting ANT+ device...");
-
-	start_ant_device();
-	LOG_INF("OK ANT+ device");
+	init_ant();
 #endif
+
 	///////////////////////////////////////////
 	LOG_INF("starting GPIO and power management...");
 
@@ -187,7 +205,7 @@ int main(void)
 
 	///////////////////////////////////////////
 	LOG_INF("starting SPI sensor interface...");
-	spim_init();
+	init_spim();
 
 	///////////////////////////////////////////
 	LOG_INF("Scheduling application supervision");

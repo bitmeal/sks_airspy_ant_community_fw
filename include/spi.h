@@ -6,6 +6,6 @@
 #ifndef INCLUDE_SPI_H__
 #define INCLUDE_SPI_H__
 
-int spim_init(void);
+int init_spim(void);
 
 #endif // INCLUDE_SPI_H__

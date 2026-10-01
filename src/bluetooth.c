@@ -14,22 +14,25 @@
 #include "bluetooth.h"
 #include "settings.h"
 #include "zbus_com.h"
-
-#include <zephyr/sys/reboot.h>
+#include "resource_manager.h"
 
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(bt, LOG_LEVEL_INF);
 
-#define BT_DISABLE_RESCHEDULE 500
+#define BT_RECONNECT_WINDOW_MS 5000
 
 static int shutdown_bluetooth(void);
 
+static void free_res_mgr_bt_use(struct k_work *work)
+{
+	LOG_INF("freeing 1 BT usage; likely closing reconnect window");
+	res_mgr_free(&res_mgr_BT);
+}
+K_WORK_DELAYABLE_DEFINE(free_res_mgr_bt_use_work, free_res_mgr_bt_use);
+
 static void advertise(struct k_work *work);
 K_WORK_DEFINE(advertise_work, advertise);
-
-static void disable_bt(struct k_work *work);
-K_WORK_DELAYABLE_DEFINE(disable_bt_work, disable_bt);
 
 static void connected(struct bt_conn *conn, uint8_t err);
 static void disconnected(struct bt_conn *conn, uint8_t reason);
@@ -135,39 +138,20 @@ static void connected(struct bt_conn *conn, uint8_t err)
 		LOG_ERR("Bluetooth Connection failed (err %#02x)", err);
 	} else {
 		LOG_INF("Bluetooth Connected");
-		LOG_INF("Canceling Bluetooth disable task; staying alive");
-		k_work_cancel_delayable(&disable_bt_work);
+		res_mgr_use(&res_mgr_BT);
 	}
 }
 
 static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
 	LOG_INF("Bluetooth Disconnected (reason %#02x)", reason);
+	k_work_schedule(&free_res_mgr_bt_use_work, K_MSEC(BT_RECONNECT_WINDOW_MS));
+
 	LOG_INF("Restarting BLE advertising");
 	k_work_submit(&advertise_work);
-
-	if(app_config.device.bt_timeout_ms != 0)
-	{
-		LOG_INF("Scheduling Bluetooth shutdown in %lldms", app_config.device.bt_timeout_ms);
-		k_work_schedule(&disable_bt_work, K_MSEC(app_config.device.bt_timeout_ms));
-	}
 }
 
-static void disable_bt(struct k_work *work)
-{
-	int rc;
-	rc = shutdown_bluetooth();
-	if(rc != 0)
-	{
-		LOG_ERR("Failed disabling Bluetooth. Rescheduling for %dms", BT_DISABLE_RESCHEDULE);
-		k_work_schedule(&disable_bt_work, K_MSEC(BT_DISABLE_RESCHEDULE));
-	}
-	else
-	{
-		LOG_INF("Bluetooth shutdown OK");
-	}
-}
-
+bool bt_running = false;
 static void bt_ready(int err)
 {
 	if (err != 0) {
@@ -175,15 +159,10 @@ static void bt_ready(int err)
 		return;
 	}
 
+	bt_running = true;
 	k_work_submit(&advertise_work);
 
-	LOG_INF("Bluetooth enabled");
-
-	if(app_config.device.bt_timeout_ms != 0)
-	{
-		LOG_INF("Scheduling Bluetooth shutdown in %lldms", app_config.device.bt_timeout_ms);
-		k_work_schedule(&disable_bt_work, K_MSEC(app_config.device.bt_timeout_ms));
-	}
+	LOG_INF("Bluetooth started");
 }
 
 #if CONFIG_LOG_BACKEND_BLE
@@ -199,7 +178,7 @@ void logging_backend_ble_hook(bool status, void *ctx)
 }
 #endif
 
-void start_bluetooth_services(void)
+void start_bluetooth(void)
 {
 	int rc;
 
@@ -230,5 +209,37 @@ static int shutdown_bluetooth(void)
 		return rc;
 	}
 
+	bt_running = false;
 	return rc;
+}
+
+#define SUPERVISION_INIT_DELAY_MS 100
+#define SUPERVISION_CYCLE_TIME_MS 1000
+
+static void supervise_bt(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(supervise_bt_work, supervise_bt);
+
+static void supervise_bt(struct k_work *work)
+{
+    if (!bt_running && res_mgr_in_use(&res_mgr_BT))
+    // START
+    {
+        LOG_INF("BT usage requested; starting BT");
+        start_bluetooth();
+        // bt_running = true; // set fromm bt_ready() callback
+    }
+    else if (bt_running && !res_mgr_in_use(&res_mgr_BT))
+    // STOP
+    {
+        LOG_INF("no more BT usage requested; stopping BT");
+        shutdown_bluetooth();
+        // bt_running = false; // set fromm shutdown_bluetooth()
+    }
+
+    k_work_schedule(&supervise_bt_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
+}
+
+void init_bluetooth(void)
+{
+	k_work_schedule(&supervise_bt_work, K_MSEC(SUPERVISION_INIT_DELAY_MS));
 }

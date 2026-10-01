@@ -23,14 +23,15 @@ LOG_MODULE_REGISTER(ant, LOG_LEVEL_INF);
 #include "settings.h"
 #include "zbus_com.h"
 #include "sensor.h"
+#include "resource_manager.h"
 
-static int profile_start(void);
-static int profile_setup(void);
+static int ant_profile_start(void);
+static int ant_profile_setup(void);
 
 static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t event);
 static void ant_tpms_config_handler(ant_tpms_profile_t *p_profile, ant_tpms_page16_data_t *p_page16);
-static void ant_stack_restart_work_wrapper(struct k_work *work);
-K_WORK_DEFINE(restart_ant_work, ant_stack_restart_work_wrapper);
+static void ant_profile_stop_work_wrapper(struct k_work *work);
+K_WORK_DEFINE(restart_ant_work, ant_profile_stop_work_wrapper);
 
 TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_config_handler, ant_tpms_evt_handler);
 TPMS_SENS_CHANNEL_CONFIG_DEF(tpms, 0, 5, 0, 0);
@@ -55,12 +56,21 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
   }
 }
 
+bool ant_running = false;
 static void ant_evt_handler(ant_evt_t *p_ant_evt)
 {
   ant_tpms_sens_evt_handler(p_ant_evt, &tpms);
   
   if (p_ant_evt->event == EVENT_CHANNEL_CLOSED) {
-    profile_start();
+    if (res_mgr_in_use(&res_mgr_ANT))
+    {
+      LOG_INF("Restarting ANT profile and channel");
+      ant_profile_start();
+    }
+    else
+    {
+        ant_running = false;
+    }
   }
 }
 
@@ -206,7 +216,7 @@ void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
   tpms.page_82.battery_status = battery_state;
 }
 
-static int profile_setup(void)
+static int ant_profile_setup(void)
 {
   int err = ant_tpms_sens_init(&tpms,
     TPMS_SENS_CHANNEL_CONFIG(tpms),
@@ -219,9 +229,9 @@ static int profile_setup(void)
   return err;
 }
 
-static int profile_start(void)
+static int ant_profile_start(void)
 {
-  LOG_INF("starting TPMS sensor");
+  LOG_INF("Starting ANT TPMS sensor profile and opening channel");
 
   int err = ant_channel_id_set((TPMS_SENS_CHANNEL_CONFIG(tpms))->channel_number,
                             app_config.device.id,
@@ -253,9 +263,9 @@ static int profile_start(void)
   return err;
 }
 
-int ant_stack_restart(void)
+int ant_profile_stop(void)
 {
-  LOG_INF("Restarting ANT Stack");
+  LOG_INF("Stopping ANT TPMS profile and closing channel");
   
   int err;
   
@@ -265,15 +275,13 @@ int ant_stack_restart(void)
     return err;
   }
 
-  LOG_INF("Closed ANT channel; will restart on receiving channel close event");
-
   return EXIT_SUCCESS;
 }
 
 
-static void ant_stack_restart_work_wrapper(struct k_work *work)
+static void ant_profile_stop_work_wrapper(struct k_work *work)
 {
-	ant_stack_restart();
+	ant_profile_stop();
 }
 
 
@@ -300,27 +308,58 @@ static int ant_stack_setup(void)
   return err;
 }
 
-int start_ant_device(void)
+#define SUPERVISION_INIT_DELAY_MS 100
+#define SUPERVISION_CYCLE_TIME_MS 1000
+
+static void supervise_ant(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(supervise_ant_work, supervise_ant);
+
+static void supervise_ant(struct k_work *work)
 {
-  LOG_INF("ANT+ TPMS device starting...");
+    if (!ant_running && res_mgr_in_use(&res_mgr_ANT))
+    // START
+    {
+        LOG_INF("ANT usage requested; starting ANT+ profile and channel");
+        int err = ant_profile_start();
+        if (err) {
+          LOG_ERR("failed starting ANT+ profile and channel (rc %d)", err);
+        }
+        else {
+          ant_running = true;
+        }
+    }
+    else if (ant_running && !res_mgr_in_use(&res_mgr_ANT))
+    // STOP
+    {
+        LOG_INF("no more ANT usage requested; stopping ANT+ profile and channel");
+        int err = ant_profile_stop();
+        if (err) {
+          LOG_ERR("failed stopping ANT+ profile and channel (rc %d)", err);
+        }
+        
+        // ant_running = false; // set from ant event callback
+    }
 
-  int err = ant_stack_setup();
-  if (err) {
-    LOG_ERR("ANT stack setup failed (rc %d)", err);
-    return err;
-  }
+    k_work_schedule(&supervise_ant_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
+}
 
-  err = profile_setup();
-  if (err) {
-    LOG_ERR("ANT+ profile setup failed (rc %d)", err);
-    return err;
-  }
+int init_ant(void)
+{
+    LOG_INF("ANT+ TPMS device starting...");
 
-  err = profile_start();
-  if (err) {
-    LOG_ERR("starting ANT+ sensor failed (rc %d)", err);
-    return err;
-  }
+    int err = ant_stack_setup();
+    if (err) {
+      LOG_ERR("ANT stack setup failed (rc %d)", err);
+      return err;
+    }
 
-  return 0;
+    err = ant_profile_setup();
+    if (err) {
+      LOG_ERR("ANT+ profile setup failed (rc %d)", err);
+      return err;
+    }
+
+    k_work_schedule(&supervise_ant_work, K_MSEC(SUPERVISION_INIT_DELAY_MS));
+
+    return 0;
 }

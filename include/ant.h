@@ -9,7 +9,7 @@
 #include <zephyr/zbus/zbus.h>
 
 
-int start_ant_device(void);
+int init_ant(void);
 
 void ant_sensor_data_handler_cb(const struct zbus_channel *chan);
 void ant_config_update_notification_handler_cb(const struct zbus_channel *chan);
