@@ -29,7 +29,7 @@ SPDX-License-Identifier: MPL-2.0
 - resource management: subsystems have to control their own lifetime after initialization
 - patching `runners.yaml` to include `blackmagicprobe` using python script from sysbuild cmake as build targets in ALL
 - control system lifetime by last SPI receive instead of WAKE line
-- select SPI interrupt polarity at runtime
+- select SPI interrupt polarity at runtime; deduce from wake signal; reading with enabled pull-down and disabling to save energy afterwards
 - invalidate sensor readings (0xFF/0xFFFF) when no data from FXTH, but e.g. BT connected
 
 ### Added

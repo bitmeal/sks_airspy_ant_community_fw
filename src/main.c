@@ -156,20 +156,14 @@ int main(void)
 #endif
 
 	///////////////////////////////////////////
-	LOG_INF("starting GPIO and power management...");
-
-	if (!gpio_is_ready_dt(&wake_signal))
+	LOG_INF("configuring GPIOs for setup...");
+	if (
+		!gpio_is_ready_dt(&wake_signal) ||
+		// configure with PULL_DOWN for initial sensing
+		gpio_pin_configure_dt(&wake_signal, GPIO_INPUT | GPIO_PULL_DOWN | wake_signal.dt_flags) != 0
+	)
 	{
-		LOG_ERR("Error: wake signal device %s is not ready\n",
-				wake_signal.port->name);
-		return EXIT_FAILURE;
-	}
-
-	ret = gpio_pin_configure_dt(&wake_signal, GPIO_INPUT);
-	if (ret != 0)
-	{
-		LOG_ERR("Error %d: failed to configure %s pin %d\n",
-			   ret, wake_signal.port->name, wake_signal.pin);
+		LOG_ERR("Error: could not configure wake pin, or not ready!");
 		return EXIT_FAILURE;
 	}
 
@@ -179,6 +173,11 @@ int main(void)
 	init_spim(spi_int_polarity);
 
 	///////////////////////////////////////////
+	LOG_INF("configuring GPIOs for runtime...");
+	if (gpio_pin_configure_dt(&wake_signal, GPIO_INPUT | wake_signal.dt_flags) != 0)
+	{
+		LOG_WRN("Warning: could not reconfigure wake pin without pull resistor");
+	}
 	// wait for subsystems to start operation
 	k_sleep(K_MSEC(2000));
 	// supervise system

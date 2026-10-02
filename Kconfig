@@ -12,7 +12,6 @@ config AIRSPY_DEFAULTS
     select GPIO
     select SPI
     select SPI_BITBANG
-    # select SOC_NRF52832_ALLOW_SPIM_DESPITE_PAN_58
     select NVS
     select CRC
     select SETTINGS
@@ -48,8 +47,6 @@ endif # AIRSPY_DEFAULTS
 config AIRSPY_SIZE_OPTIMIZATIONS
     bool
     default y
-    # select LTO
-    # select ISR_TABLES_LOCAL_DECLARATION
 
 if AIRSPY_SIZE_OPTIMIZATIONS
 
@@ -61,12 +58,6 @@ config BT_USER_PHY_UPDATE
     default n
 
 config BT_PHY_UPDATE
-    default n
-
-config THREAD_NAME
-    default n
-
-config THREAD_STACK_INFO
     default n
 
 config NET_BUF_POOL_USAGE
@@ -120,7 +111,6 @@ endif # AIRSPY_DFU_COMPAT_PADDING
 config AIRSPY_DFU
     bool
     default y
-    # select BOOTLOADER_MCUBOOT
     select MPU_ALLOW_FLASH_WRITE
     select MCUMGR
     select FLASH
@@ -151,9 +141,6 @@ config BT_BUF_ACL_TX_SIZE
 
 config BT_CTLR_DATA_LENGTH_MAX
     default 251
-
-# config MCUMGR_TRANSPORT_BT_PERM_RW_AUTHEN
-#     default n
 
 config MCUMGR_GRP_ZBASIC_STORAGE_ERASE
     default n

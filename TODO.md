@@ -11,7 +11,7 @@
 
 ## Internals
 - [x] Resource manager for consumption by supervisor
-- [ ] async zbus listeners
+- [ ] ~~async zbus listeners~~
 - [x] Shared state store: https://www.zephyrproject.org/common-multithreading-problems-and-their-fixes-part-4/
 - [ ] Update retention system to DT based backend
   - https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/boards/nordic/system_off

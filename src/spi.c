@@ -132,11 +132,13 @@ int init_spim(gpio_flags_t polarity)
 		return EXIT_FAILURE;
 	}
 
-	ret = gpio_pin_interrupt_configure_dt(&int_gpio, polarity);
-	if (ret != 0)
+	gpio_init_callback(&int_cb_data, int_cb_handler, BIT(int_gpio.pin));
+	if (
+		gpio_pin_interrupt_configure_dt(&int_gpio, polarity) ||
+		gpio_add_callback(int_gpio.port, &int_cb_data)
+	)
 	{
-		LOG_ERR("Error %d: failed to configure interrupt on %s pin %d\n",
-			ret, int_gpio.port->name, int_gpio.pin);
+		LOG_ERR("Error: failed to configure interrupt and callback on SPI interrupt pin");
 		return EXIT_FAILURE;
 	}
 
@@ -152,16 +154,6 @@ int init_spim(gpio_flags_t polarity)
 
 		default: break;
 	}
-
-	gpio_init_callback(&int_cb_data, int_cb_handler, BIT(int_gpio.pin));
-	ret = gpio_add_callback(int_gpio.port, &int_cb_data);
-	if (ret != 0)
-	{
-		LOG_ERR("Error %d: failed to configure callback for interrupt on %s pin %d\n",
-			ret, int_gpio.port->name, int_gpio.pin);
-		return EXIT_FAILURE;
-	}
-
 	LOG_DBG("SPI device %s OK", spim_dev->name);
 
 	return EXIT_SUCCESS;
