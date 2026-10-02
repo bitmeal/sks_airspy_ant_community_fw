@@ -66,12 +66,9 @@ struct mgmt_callback dfu_pending_reg = {
 
 static void poweroff(struct k_work *work)
 {
-	int ret = gpio_pin_interrupt_configure_dt(&wake_signal, GPIO_INT_LEVEL_ACTIVE);
-
-	if (ret != 0)
+	if (gpio_pin_interrupt_configure_dt(&wake_signal, GPIO_INT_LEVEL_ACTIVE) != 0)
 	{
-		LOG_ERR("Error %d: failed to configure interrupt on %s pin %d\n",
-			ret, wake_signal.port->name, wake_signal.pin);
+		LOG_ERR("Error: failed to configure interrupt on wake line! Backing off for retry...");
 
 		k_work_schedule(&supervision_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
 	}
@@ -80,9 +77,7 @@ static void poweroff(struct k_work *work)
 		LOG_INF("Set up wake signal at %s pin %d\n", wake_signal.port->name, wake_signal.pin);
 
 		// update/write retained memory
-		retained.off_count += 1;
 		retained_update();
-
 		LOG_INF("Powering OFF NOW");
 		sys_poweroff();
 
@@ -109,8 +104,6 @@ static void end_bt_keepalive(struct k_work *work)
 
 int main(void)
 {
-	int ret;
-
 	// /* using __TIME__ ensure that a new binary will be built on every
 	//  * compile which is convenient when testing firmware upgrade.
 	//  */
@@ -119,13 +112,8 @@ int main(void)
 	///////////////////////////////////////////
 	LOG_INF("reading BOOT state...");
 
-	bool retained_ok = retained_validate();
-	if( !retained_ok )
-	{
-		LOG_WRN("Retained data is INVALID; initializing");
-	}
-
-	/* Increment for this boot attempt and update. */
+	retained_init();
+    retained.uptime_latest = 0;
 	retained.boots += 1;
 	retained_update();
 

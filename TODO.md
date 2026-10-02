@@ -13,7 +13,7 @@
 - [x] Resource manager for consumption by supervisor
 - [ ] ~~async zbus listeners~~
 - [x] Shared state store: https://www.zephyrproject.org/common-multithreading-problems-and-their-fixes-part-4/
-- [ ] Update retention system to DT based backend
+- [x] Update retention system to DT based backend
   - https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/boards/nordic/system_off
   - https://docs.zephyrproject.org/latest/services/storage/retention/index.html
 - [ ] Settings configuration BLE service; multiple characteristics vs CBOR encoded commands?

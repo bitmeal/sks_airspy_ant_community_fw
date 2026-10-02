@@ -16,6 +16,9 @@ config AIRSPY_DEFAULTS
     select CRC
     select SETTINGS
     select MPU_ALLOW_FLASH_WRITE
+    select RETENTION
+    select RETAINED_MEM
+    select RETAINED_MEM_ZEPHYR_RAM
 
 
 if AIRSPY_DEFAULTS
