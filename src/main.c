@@ -30,17 +30,6 @@ LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 #include "resource_manager.h"
 
 
-// TODO(bitmeal): check DT nodes on compile time
-// #if !DT_NODE_EXISTS(DT_NODELABEL(wake_pin))
-// #error "DT nodes not properly configured."
-// #endif
-// #define SW0_NODE	DT_ALIAS(sw0)
-// #if !DT_NODE_HAS_STATUS(SW0_NODE, okay)
-// #error "Unsupported board: sw0 devicetree alias is not defined"
-// #endif
-// static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios,
-// 							      {0});
-
 #define SUPERVISION_CYCLE_TIME_MS 1000
 #define SYS_POWEROFF_DELAY 500
 
@@ -77,8 +66,6 @@ struct mgmt_callback dfu_pending_reg = {
 
 static void poweroff(struct k_work *work)
 {
-	// spis_suspend();
-	
 	int ret = gpio_pin_interrupt_configure_dt(&wake_signal, GPIO_INT_LEVEL_ACTIVE);
 
 	if (ret != 0)
@@ -92,14 +79,14 @@ static void poweroff(struct k_work *work)
 	{
 		LOG_INF("Set up wake signal at %s pin %d\n", wake_signal.port->name, wake_signal.pin);
 
-		/* Update the retained state */
+		// update/write retained memory
 		retained.off_count += 1;
 		retained_update();
 
 		LOG_INF("Powering OFF NOW");
 		sys_poweroff();
 
-		// infinite loop for emulated power off
+		// infinite loop for emulated power off when debugging
 		while(true){ continue; }
 	}
 }
@@ -107,23 +94,6 @@ static void poweroff(struct k_work *work)
 bool wake_pin_uses_resources = false;
 static void supervise(struct k_work *work)
 {
-	int val = gpio_pin_get_dt(&wake_signal);
-
-	if (val == 1 && !wake_pin_uses_resources)
-	{
-		LOG_INF("Wake pin is ON; requesting resource use");
-		res_mgr_use(&res_mgr_ANT);
-		wake_pin_uses_resources = true;
-	}
-	else if (val == 0 && wake_pin_uses_resources)
-	{
-		LOG_INF("Wake pin is OFF; freeing resource use");
-		res_mgr_free(&res_mgr_ANT);
-		wake_pin_uses_resources = false;
-	}
-
-
-	// TODO: handle app_config.device.bt_timeout_ms == 0
 	if (!res_mgr_in_use(&res_mgr_ANT) && !res_mgr_in_use(&res_mgr_BT))
 	{
 		LOG_INF("No resources in use; will power off in %dms", SYS_POWEROFF_DELAY);
@@ -205,12 +175,16 @@ int main(void)
 
 	///////////////////////////////////////////
 	LOG_INF("starting SPI sensor interface...");
-	init_spim();
+	gpio_flags_t spi_int_polarity = gpio_pin_get_dt(&wake_signal) ? GPIO_INT_EDGE_TO_INACTIVE : GPIO_INT_EDGE_TO_ACTIVE;
+	init_spim(spi_int_polarity);
 
 	///////////////////////////////////////////
+	// wait for subsystems to start operation
+	k_sleep(K_MSEC(2000));
+	// supervise system
 	LOG_INF("Scheduling application supervision");
 	k_work_schedule(&supervision_work, K_MSEC(SUPERVISION_CYCLE_TIME_MS));
-	
 
+	///////////////////////////////////////////
 	return EXIT_SUCCESS;
 }

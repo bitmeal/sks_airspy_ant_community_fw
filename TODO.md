@@ -10,7 +10,7 @@
 - [ ] ~~building from PR~~
 
 ## Internals
-- [ ] Resource manager for consumption by supervisor
+- [x] Resource manager for consumption by supervisor
 - [ ] async zbus listeners
 - [x] Shared state store: https://www.zephyrproject.org/common-multithreading-problems-and-their-fixes-part-4/
 - [ ] Update retention system to DT based backend
@@ -21,6 +21,8 @@
   - [x] ANT SDK is open: remove login and secret
   - [x] inject SB config for signing with  `mcuboot.pem` in CI;
   - [x] revert building from PR to PR context without signing
+- [x] discard: 00 00 00 00 00 00 SPI receive
+- [x] publish invalid (0xFFFF) sensor reading marker on SPI timeout
 
 ## User-facing
 - [ ] Configuration web application using Web Bluetooth

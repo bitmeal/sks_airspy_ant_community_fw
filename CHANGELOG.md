@@ -26,6 +26,11 @@ SPDX-License-Identifier: MPL-2.0
 - CI: update actions to new SDK and sysbuild
 - CI: remove reliance on login token and login procedure, as ANT SDK is openly accessible now
 - changing ANT ID does not require reboot anymore
+- resource management: subsystems have to control their own lifetime after initialization
+- patching `runners.yaml` to include `blackmagicprobe` using python script from sysbuild cmake as build targets in ALL
+- control system lifetime by last SPI receive instead of WAKE line
+- select SPI interrupt polarity at runtime
+- invalidate sensor readings (0xFF/0xFFFF) when no data from FXTH, but e.g. BT connected
 
 ### Added
 - ANT+ TPMS Type/ID field
@@ -34,10 +39,12 @@ SPDX-License-Identifier: MPL-2.0
 - new persistent settings: bluetooth disable timeout, static ambient pressure compensation, TPMS profile ID type and padding byte
 - CI: include memory reports
 - a blackmagic probe west runner with debugserver support in `extra\zephyr\scripts\west_commands\runners\blackmagicprobe.py`
+- resource management implementation: subsystems can register uses and control device and subsystem lifetime
 
 ### Fixed
 - ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble
 - Fix duplicate logging outputs on RTT
+- ignore all zero reads from SPI
 
 ### Removed
 - custom (development) board definition for the nRF52840 MDK USB Dongle

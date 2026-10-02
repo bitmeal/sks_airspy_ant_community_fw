@@ -39,8 +39,9 @@
 		clk-gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
 		miso-gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
 
-		// interrupt pin
-		cs-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
+		// interrupt pin:
+		// depending on model, active high or low! configured at runtime
+		cs-gpios = <&gpio0 22 GPIO_ACTIVE_HIGH>;
 	};
 
 	aliases {

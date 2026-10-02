@@ -6,6 +6,8 @@
 #ifndef INCLUDE_SPI_H__
 #define INCLUDE_SPI_H__
 
-int init_spim(void);
+#include <zephyr/drivers/gpio.h>
+
+int init_spim(gpio_flags_t polarity);
 
 #endif // INCLUDE_SPI_H__
