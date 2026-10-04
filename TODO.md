@@ -4,14 +4,14 @@
 - [ ] flashing `merged.hex`
 
 ## Documentation
-- [ ] ~~building without ANT~~
-- [ ] ANT SDK is open
-- [ ] building with/without `mcuboot.pem` signing key
-- [ ] ~~building from PR~~
+- [x] ~~building without ANT~~
+- [x] ANT SDK is open
+- [x] building with/without `mcuboot.pem` signing key
+- [x] ~~building from PR~~
 
 ## Internals
 - [x] Resource manager for consumption by supervisor
-- [ ] ~~async zbus listeners~~
+- [x] ~~async zbus listeners~~
 - [x] Shared state store: https://www.zephyrproject.org/common-multithreading-problems-and-their-fixes-part-4/
 - [x] Update retention system to DT based backend
   - https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/boards/nordic/system_off

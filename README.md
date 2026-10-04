@@ -142,27 +142,7 @@ The target has not enough flash to use a full debug build. A debug project confi
 For development on your bench, an RTT console is provided over SWD. Memory location is unknown, as my Black Magic probe did pick it up automatically.
 For debugging in operation, logging over BLE - using Nordic UART Service in [nRF Toolbox](https://www.nordicsemi.com/Products/Development-tools/nRF-Toolbox) mobile app - is provided. As with updating, connect to the console **within 30 seconds** after a cold-boot (remove and re-install battery).
 
-For debugging with a blackmagic probe, an updated west runner with debugserver support is provided in `extra\zephyr\scripts\west_commands\runners\blackmagicprobe.py`. Copy it to your zephyr SDK at the same location to use it. Use with the nRF Connect debugger from VS Code with e.g.:
-```json
-// launch.json
-// BMDP west runner; debugserver example
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "nrf-connect",
-            "request": "launch",
-            "name": "Debug with BMDP",
-            // "flash": false,
-            "gdbServer": {
-                "path": "west",
-                "args": "debugserver --rtt --build-dir ${activeConfig} --dev-id ${snr} --gdb-port ${port}"
-            },
-            "setupCommands": [{ "text": "set mem inaccessible-by-default off" }]
-        },
-    ]
-}
-```
+For debugging with a blackmagic probe, an updated west runner with debugserver support is provided in `extra\zephyr\scripts\west_commands\runners\blackmagicprobe.py`. Copy it to your zephyr SDK at the same location to use it. blackmagic probe is patched into all builds as default runner. With an up to date nRF Connect extension for VS Code, just klick debug from the extensions sidebar to start.
 
 
 ## License

@@ -59,6 +59,10 @@ static void spim_receive(struct k_work *work)
 	if (!ant_use_active)
 	{
 		res_mgr_use(&res_mgr_ANT);
+		if (app_config.device.bt_timeout_ms == 0)
+		{
+			res_mgr_use(&res_mgr_BT);
+		}
 		ant_use_active = true;
 		LOG_INF("SPI interrupt received: requesting ANT resource use, scheduling resource free in %dms", SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS);
 	}
@@ -68,17 +72,15 @@ static void spim_receive(struct k_work *work)
 
 	
 	//// read sensor
-	int err;
 	struct sensor_readings_t sensor_data;
 
 	static uint8_t rx_buffer[SENSOR_BUFFER_SIZE];
 	struct spi_buf rx_buf = {.buf = rx_buffer, .len = sizeof(rx_buffer),};
 	const struct spi_buf_set rx = {.buffers = &rx_buf, .count = 1};
 
-	err = spi_read(spim_dev, &spim_cfg, &rx);
-	if (err < 0)
+	if (spi_read(spim_dev, &spim_cfg, &rx) < 0)
 	{
-		LOG_ERR("SPI error: %d", err);
+		LOG_ERR("Failed reading from SPI");
 	}
 	else
 	{
@@ -89,8 +91,7 @@ static void spim_receive(struct k_work *work)
 			return;
 		}
 
-		err = decode_sensor_buffer(rx_buffer, &sensor_data);
-		if (err == SENSOR_ERROR_CHK)
+		if (decode_sensor_buffer(rx_buffer, &sensor_data) == SENSOR_ERROR_CHK)
 		{
 			LOG_WRN("SPI sensor data checksum error! buff: %x; decoder: %x", rx_buffer[5], sensor_data.checksum);
 			return;
@@ -113,6 +114,10 @@ static void end_spim_ant_use(struct k_work *work)
 	LOG_INF("No SPI transmission for %dms; freeing ANT resource use", SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS);
 	ant_use_active = false;
 	res_mgr_free(&res_mgr_ANT);
+	if (app_config.device.bt_timeout_ms == 0)
+	{
+		res_mgr_free(&res_mgr_BT);
+	}
 
 	LOG_INF("No SPI transmission for %dms; invalidating sensor reading state", SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS);
 	zbus_chan_pub(&sensor_data_chan, &invalid_sensor_data_c, K_MSEC(250));
@@ -120,15 +125,11 @@ static void end_spim_ant_use(struct k_work *work)
 
 int init_spim(gpio_flags_t polarity)
 {
-	int ret;
-
 	spim_dev = DEVICE_DT_GET(SPI_MASTER_NODE);
 
-	ret = gpio_pin_configure_dt(&int_gpio, GPIO_INPUT | int_gpio.dt_flags);
-	if (ret != 0)
+	if (gpio_pin_configure_dt(&int_gpio, GPIO_INPUT | int_gpio.dt_flags) != 0)
 	{
-		LOG_ERR("Error %d: failed to configure %s pin %d",
-			   ret, int_gpio.port->name, int_gpio.pin);
+		LOG_ERR("Error: failed to configure SPI interrupt pin");
 		return EXIT_FAILURE;
 	}
 
@@ -144,11 +145,13 @@ int init_spim(gpio_flags_t polarity)
 
 	switch(polarity)
 	{
-		case GPIO_INT_EDGE_TO_INACTIVE:
+		// case GPIO_INT_EDGE_TO_INACTIVE:
+		case GPIO_INT_EDGE_FALLING:
 			LOG_INF("SPIM interrupt configured as /INT; classic");
 			break;
 
-		case GPIO_INT_EDGE_TO_ACTIVE:
+		// case GPIO_INT_EDGE_TO_ACTIVE:
+		case GPIO_INT_EDGE_RISING:
 			LOG_INF("SPIM interrupt configured as INT; TL, new");
 			break;
 
