@@ -8,6 +8,6 @@
 
 #include <zephyr/drivers/gpio.h>
 
-int init_spim(gpio_flags_t polarity);
+int init_spim();
 
 #endif // INCLUDE_SPI_H__

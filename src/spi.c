@@ -7,6 +7,7 @@
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/spi.h>
+#include <zephyr/drivers/pinctrl.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
@@ -30,6 +31,8 @@ LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
 
 const struct device *spim_dev;
 static const struct gpio_dt_spec int_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, cs_gpios);
+static const struct gpio_dt_spec clk_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, clk_gpios);
+static const struct gpio_dt_spec miso_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, miso_gpios);
 
 static const struct spi_config spim_cfg = {
 	.frequency = 10000,
@@ -37,11 +40,14 @@ static const struct spi_config spim_cfg = {
 	.slave = 0,
 };
 
+// start with polarity: falling edge trigger
+gpio_flags_t polarity = GPIO_INT_EDGE_FALLING;
+
 static void spim_receive(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(spim_receive_work, spim_receive);
 
-static void end_spim_ant_use(struct k_work *work);
-K_WORK_DELAYABLE_DEFINE(end_spim_ant_use_work, end_spim_ant_use);
+static void end_spim_lifetime(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(end_spim_lifetime_work, end_spim_lifetime);
 
 static struct gpio_callback int_cb_data;
 void int_cb_handler(const struct device *dev, struct gpio_callback *cb,
@@ -52,25 +58,49 @@ void int_cb_handler(const struct device *dev, struct gpio_callback *cb,
 	k_work_schedule(&spim_receive_work, K_MSEC(SPI_MASTER_INT_TRANSFER_DELAY_MS));
 }
 
-static bool ant_use_active = false;
+static bool spim_lifetime_active = false;
 static void spim_receive(struct k_work *work)
 {
 	//// handle lifetime
-	if (!ant_use_active)
+	if (!spim_lifetime_active)
 	{
 		res_mgr_use(&res_mgr_ANT);
 		if (app_config.device.bt_timeout_ms == 0)
 		{
 			res_mgr_use(&res_mgr_BT);
 		}
-		ant_use_active = true;
+		spim_lifetime_active = true;
 		LOG_INF("SPI interrupt received: requesting ANT resource use, scheduling resource free in %dms", SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS);
 	}
 
 	// extend deadline to free use
-	k_work_reschedule(&end_spim_ant_use_work, K_MSEC(SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS));
+	k_work_reschedule(&end_spim_lifetime_work, K_MSEC(SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS));
 
 	
+	switch(polarity)
+	{
+		// case GPIO_INT_EDGE_TO_INACTIVE:
+		case GPIO_INT_EDGE_FALLING:
+			LOG_INF("SPIM interrupt configured as /INT; classic");
+			break;
+
+		// case GPIO_INT_EDGE_TO_ACTIVE:
+		case GPIO_INT_EDGE_RISING:
+			LOG_INF("SPIM interrupt configured as INT; TL, new");
+			break;
+
+		default: break;
+	}
+
+	//// enable pins
+	if (
+		// gpio_pin_configure_dt(&clk_gpio, GPIO_OUTPUT_INACTIVE) ||
+		gpio_pin_configure_dt(&miso_gpio, GPIO_INPUT)
+	)
+	{
+		LOG_ERR("Failed enabling CLK and MISO pin for SPI transmission!");
+	}
+
 	//// read sensor
 	struct sensor_readings_t sensor_data;
 
@@ -87,21 +117,37 @@ static void spim_receive(struct k_work *work)
 		// ALL ZERO? test first byte by value; test remainder all 
 		if ( (rx_buffer[0] == 0) && (memcmp(rx_buffer, rx_buffer + 1, sizeof(rx_buffer) - 1) == 0) )
 		{
-			LOG_WRN("SPI buffer empty; all 0x00");
-			return;
+			LOG_WRN("SPI buffer empty (all 0x00); reconfiguring polarity");
+			polarity = (polarity == GPIO_INT_EDGE_FALLING ? GPIO_INT_EDGE_RISING : GPIO_INT_EDGE_FALLING);
+			// delay polarity change to not trigger on interrupt signal level change on transmission end
+			k_sleep(K_MSEC(1));
+			if ( gpio_pin_interrupt_configure_dt(&int_gpio, polarity) )
+			{
+				LOG_ERR("Error: failed to reconfigure SPI interrupt polarity");
+			}
 		}
-
-		if (decode_sensor_buffer(rx_buffer, &sensor_data) == SENSOR_ERROR_CHK)
+		else if (decode_sensor_buffer(rx_buffer, &sensor_data) == SENSOR_ERROR_CHK)
 		{
 			LOG_WRN("SPI sensor data checksum error! buff: %x; decoder: %x", rx_buffer[5], sensor_data.checksum);
-			return;
 		}
-		
-		LOG_HEXDUMP_DBG(rx_buffer, sizeof(rx_buffer), "SPI rx:");
-		LOG_INF("P[hPa]: %u; T[C]: %d; V[mV]: %u", sensor_data.pressure_hpa, sensor_data.temperature_c, sensor_data.voltage_mv);
+		else
+		{
+			LOG_HEXDUMP_DBG(rx_buffer, sizeof(rx_buffer), "SPI rx:");
+			LOG_INF("P[hPa]: %u; T[C]: %d; V[mV]: %u", sensor_data.pressure_hpa, sensor_data.temperature_c, sensor_data.voltage_mv);
 
-		zbus_chan_pub(&sensor_data_chan, &sensor_data, K_MSEC(250));
+			zbus_chan_pub(&sensor_data_chan, &sensor_data, K_MSEC(250));
+		}
 	}
+
+	//// disable pins to save power
+	if (
+		// gpio_pin_configure_dt(&clk_gpio, GPIO_DISCONNECTED) ||
+		gpio_pin_configure_dt(&miso_gpio, GPIO_DISCONNECTED)
+	)
+	{
+		LOG_WRN("Failed disabling CLK and MISO pin to save power");
+	}
+
 }
 
 static const struct sensor_readings_t invalid_sensor_data_c = {
@@ -109,10 +155,10 @@ static const struct sensor_readings_t invalid_sensor_data_c = {
 	.temperature_c = 0xFF,
 	.voltage_mv = 0xFFFF,
 };
-static void end_spim_ant_use(struct k_work *work)
+static void end_spim_lifetime(struct k_work *work)
 {
 	LOG_INF("No SPI transmission for %dms; freeing ANT resource use", SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS);
-	ant_use_active = false;
+	spim_lifetime_active = false;
 	res_mgr_free(&res_mgr_ANT);
 	if (app_config.device.bt_timeout_ms == 0)
 	{
@@ -123,7 +169,7 @@ static void end_spim_ant_use(struct k_work *work)
 	zbus_chan_pub(&sensor_data_chan, &invalid_sensor_data_c, K_MSEC(250));
 }
 
-int init_spim(gpio_flags_t polarity)
+int init_spim()
 {
 	spim_dev = DEVICE_DT_GET(SPI_MASTER_NODE);
 
@@ -143,20 +189,6 @@ int init_spim(gpio_flags_t polarity)
 		return EXIT_FAILURE;
 	}
 
-	switch(polarity)
-	{
-		// case GPIO_INT_EDGE_TO_INACTIVE:
-		case GPIO_INT_EDGE_FALLING:
-			LOG_INF("SPIM interrupt configured as /INT; classic");
-			break;
-
-		// case GPIO_INT_EDGE_TO_ACTIVE:
-		case GPIO_INT_EDGE_RISING:
-			LOG_INF("SPIM interrupt configured as INT; TL, new");
-			break;
-
-		default: break;
-	}
 	LOG_DBG("SPI device %s OK", spim_dev->name);
 
 	return EXIT_SUCCESS;

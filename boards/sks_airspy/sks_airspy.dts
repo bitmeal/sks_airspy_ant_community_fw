@@ -23,23 +23,7 @@
 		status = "okay";
 	};
 
-	// wake_pin: wake_pin {
-	// 	compatible = "wake-signal-pin";
-	// 	// don't configure pull-up or down on this pin! we will dynamically configure at runtime
-	// 	gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
-	// };
-
-	gpio_keys {
-		compatible = "gpio-keys";
-
-		wake_pin: wake_pin_0 {
-			// don't configure pull-up or down on this pin! we will dynamically configure at runtime
-			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
-			label = "Wake Signal Pin";
-		};
-	};
-
-    	spi_master: spibb0 {
+	spi_master: spibb0 {
 		compatible = "zephyr,spi-bitbang";
 		status = "okay";
 
@@ -78,7 +62,6 @@
 	};
 
 	aliases {
-		wake-pin = &wake_pin;
 		retainedmemdevice = &retainedmem0;
 		retained-part0= &retention0;
 	};

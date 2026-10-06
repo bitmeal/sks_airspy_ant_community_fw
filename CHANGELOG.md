@@ -29,23 +29,26 @@ SPDX-License-Identifier: MPL-2.0
 - resource management: subsystems have to control their own lifetime after initialization
 - patching `runners.yaml` to include `blackmagicprobe` using python script from sysbuild cmake as build targets in ALL
 - control system lifetime by last SPI receive instead of WAKE line
-- select SPI interrupt polarity at runtime; deduce from wake signal; reading with enabled pull-down and disabling to save energy afterwards
-- invalidate sensor readings (0xFF/0xFFFF) when no data from FXTH, but e.g. BT connected
+- select SPI interrupt polarity at runtime; deduce from successful non-zero read
 - change retention to use zephyr retention system and drivers
+- previous wake-signal/line unused now
+- devices do not enter SYSTEM OFF anymore; enables future periodic tasks/uses like trackers
 
 ### Added
 - ANT+ TPMS Type/ID field
-- ANT+ TPMS Configurable Padding
+- ANT+ TPMS compile-time Configurable Padding
 - introduced versioned settings storage
 - new persistent settings: bluetooth disable timeout, static ambient pressure compensation, TPMS profile ID type and padding byte
 - CI: include memory reports
 - a blackmagic probe west runner with debugserver support in `extra\zephyr\scripts\west_commands\runners\blackmagicprobe.py`
 - resource management implementation: subsystems can register uses and control device and subsystem lifetime
+- AIRSPY TL (and/or just newer revision) compatibility; with a fraction of the power consummption
 
 ### Fixed
 - ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble
 - Fix duplicate logging outputs on RTT
 - ignore all zero reads from SPI
+- invalidate sensor readings (0xFF/0xFFFF) when no data from FXTH, but e.g. BT connected
 
 ### Removed
 - custom (development) board definition for the nRF52840 MDK USB Dongle
