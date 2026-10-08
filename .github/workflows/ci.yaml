@@ -77,9 +77,12 @@ jobs:
       - name: Build Application
         id: app-build
         working-directory: ${{ env.SDK_LOCATION }}/sdk-ant/
+        env:
+          KEY_PATH: "${{ github.workspace }}/mcuboot.pem"
+          EXTRA_ARGS: '-DSB_CONFIG_BOOT_SIGNATURE_KEY_FILE="${{ github.workspace }}/mcuboot.pem" -DSB_CONFIG_BOOT_SIGNATURE_TYPE_RSA=y'
         run: |
-          echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.workspace }}/mcuboot.pem
-          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir ${{ github.workspace }}/build/ --sysbuild ${{ github.workspace }} -- ${{ github.event_name != 'pull_request' && '-DSB_CONFIG_BOOT_SIGNATURE_KEY_FILE="${{ github.workspace }}/mcuboot.pem" -DSB_CONFIG_BOOT_SIGNATURE_TYPE_RSA=y' || '' }}
+          echo "${{ secrets.MCUBOOT_SIGNING_KEY }}" > ${{ github.event_name != 'pull_request' && '$KEY_PATH' || '/dev/null' }}
+          nrfutil toolchain-manager launch -- west build --board sks_airspy --build-dir "${{ github.workspace }}/build/" --sysbuild "${{ github.workspace }}" -- ${{ github.event_name != 'pull_request' && '$EXTRA_ARGS' || '' }}
           echo "IMAGE_NAME=$(yq '.cmake.images.[] | select(.type == "MAIN") | .name' ${{ github.workspace }}/build/build_info.yml)" >> $GITHUB_OUTPUT
 
       - name: Compile Artifacts

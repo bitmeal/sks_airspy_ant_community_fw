@@ -1,7 +1,7 @@
 # TODO
 ## Testing
-- [ ] DFU from 1.3.3 and pre 1.3.3
-- [ ] flashing `merged.hex`
+- [x] DFU from 1.3.3 and pre 1.3.3
+- [x] flashing `merged.hex`
 
 ## Documentation
 - [x] ~~building without ANT~~
@@ -16,7 +16,11 @@
 - [x] Update retention system to DT based backend
   - https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/boards/nordic/system_off
   - https://docs.zephyrproject.org/latest/services/storage/retention/index.html
-- [ ] Settings configuration BLE service; multiple characteristics vs CBOR encoded commands?
+- [ ] BLE Settings configuration
+  - [ ] add SMP settings mangement group
+  - [ ] add SMP OS group
+- [ ] BLE Sensor data view: custom SMP group or BLE characteristics?
+- [ ] 
 - [x] CI
   - [x] ANT SDK is open: remove login and secret
   - [x] inject SB config for signing with  `mcuboot.pem` in CI;
