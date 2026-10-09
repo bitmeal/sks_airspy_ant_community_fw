@@ -5,21 +5,11 @@
 
 / {
 	chosen {
-		/delete-property/ zephyr,console;
-		zephyr,console = &rtt0;
+		// /delete-property/ zephyr,console;
+		// zephyr,console = &rtt0;
 
-		/delete-property/ zephyr,code-partition;
-        zephyr,code-partition = &slot0_partition;
-	};
-
-	rtt0: rtt_chan0 {
-		compatible = "segger,rtt-uart";
-		status = "okay";
-	};
-
-	wake_pin: wake_pin {
-		compatible = "wake-signal-pin";
-		gpios = <&gpio0 19 GPIO_ACTIVE_HIGH>;
+		// /delete-property/ zephyr,code-partition;
+        	// zephyr,code-partition = &slot0_partition;
 	};
 
 	spi_master: spibb0 {
@@ -32,8 +22,9 @@
 		clk-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>;
 		miso-gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>;
 
-		// interrupt pin
-		cs-gpios = <&gpio0 8 GPIO_ACTIVE_LOW>;
+		// interrupt pin:
+		// depending on model, active high or low! configured at runtime
+		cs-gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>;
 	};
 
 	sram0@2003F000 {
@@ -61,9 +52,8 @@
 
 
 	aliases {
-		wake-pin = &wake_pin;
 		retainedmemdevice = &retainedmem0;
-		retained-part0= &retention0;
+		retained-part0 = &retention0;
 	};
 
 };

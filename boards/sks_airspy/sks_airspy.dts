@@ -13,14 +13,8 @@
 	compatible = "sks_airspy";
 
 	chosen {
-		zephyr,console = &rtt0;
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
-	};
-
-	rtt0: rtt_chan0 {
-		compatible = "segger,rtt-uart";
-		status = "okay";
 	};
 
 	spi_master: spibb0 {
@@ -63,7 +57,7 @@
 
 	aliases {
 		retainedmemdevice = &retainedmem0;
-		retained-part0= &retention0;
+		retained-part0 = &retention0;
 	};
 };
 

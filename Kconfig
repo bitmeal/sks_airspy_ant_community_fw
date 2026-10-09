@@ -8,14 +8,17 @@ config AIRSPY_DEFAULTS
     select HW_ID_LIBRARY
     select PM_DEVICE
     select PM_DEVICE_RUNTIME
-    select POWEROFF
+    # select POWEROFF
     select ZBUS
     select GPIO
     select SPI
     select SPI_BITBANG
+    select RTC
+    select RTC_EMUL
     select NVS
     select CRC
     select SETTINGS
+    select SETTINGS_RUNTIME
     select MPU_ALLOW_FLASH_WRITE
     select RETENTION
     select RETAINED_MEM
@@ -123,14 +126,27 @@ config AIRSPY_DFU
     select NET_BUF
     select ZCBOR
     select IMG_MANAGER
+    select MCUMGR
+    select MCUMGR_MGMT_NOTIFICATION_HOOKS
     select MCUMGR_GRP_IMG
+    select MCUMGR_GRP_IMG_STATUS_HOOKS
+    select MCUMGR_GRP_IMG_SLOT_INFO
     select MCUMGR_GRP_OS
     select MCUMGR_GRP_OS_MCUMGR_PARAMS
+    select MCUMGR_GRP_OS_ECHO
+    select MCUMGR_GRP_OS_INFO
+    select MCUMGR_GRP_OS_DATETIME
+    select MCUMGR_GRP_OS_DATETIME_MS
+    select MCUMGR_GRP_OS_BOOTLOADER_INFO
+    # select MCUMGR_GRP_OS_INFO_BUILD_DATE_TIME
+    select MCUMGR_GRP_ENUM
+    select MCUMGR_GRP_ENUM_DETAILS
+    select MCUMGR_GRP_ENUM_DETAILS_NAME
+    select MCUMGR_GRP_SETTINGS
+    select MCUMGR_GRP_SETTINGS_ACCESS_HOOK
     select MCUMGR_TRANSPORT_BT
     select MCUMGR_TRANSPORT_BT_CONN_PARAM_CONTROL
     select MCUMGR_TRANSPORT_BT_REASSEMBLY
-    select MCUMGR_MGMT_NOTIFICATION_HOOKS
-    select MCUMGR_GRP_IMG_STATUS_HOOKS
 
 if AIRSPY_DFU
 
@@ -155,6 +171,10 @@ config MCUMGR_TRANSPORT_NETBUF_SIZE
 config MCUMGR_TRANSPORT_WORKQUEUE_STACK_SIZE
     default 4608
 
+# set high to transfer signature keys as settings
+config MCUMGR_GRP_SETTINGS_VALUE_LEN
+    default 512
+
 config MAIN_STACK_SIZE
     default 2176
     # default 2048
@@ -171,6 +191,13 @@ config AIRSPY_BT
     select BT
     select BT_DEVICE_NAME_DYNAMIC
     select BT_PERIPHERAL
+    select BT_DIS
+    select BT_DIS_MODEL_NUMBER
+    select BT_DIS_MANUF_NAME
+    # select BT_DIS_SERIAL_NUMBER
+    select BT_DIS_FW_REV
+    # select BT_DIS_HW_REV
+    select BT_DIS_SW_REV
 
 if AIRSPY_BT
 
@@ -184,6 +211,27 @@ config BT_DEVICE_APPEARANCE
     # 0x0559 / 1369 Vehicle Tire Pressure Sensor
     # 0x0480 / 1152 Generic Cycling
     default 1152
+
+config BT_DIS_PNP
+    default n
+
+config BT_DIS_MODEL_NUMBER_STR
+    default "Airspy"
+
+config BT_DIS_MANUF_NAME_STR
+    default "SKS"
+
+# config BT_DIS_SERIAL_NUMBER_STR
+#     default "Zephyr Serial"
+
+config BT_DIS_FW_REV_STR
+    default "Zephyr"
+
+# config BT_DIS_HW_REV_STR
+#     default "Zephyr Hardware"
+
+config BT_DIS_SW_REV_STR
+    default "Community"
 
 config BT_MAX_CONN
     default 1

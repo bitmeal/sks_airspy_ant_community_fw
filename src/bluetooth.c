@@ -90,10 +90,9 @@ static const struct bt_data advertising_data[] = {
 		      0xd3, 0x4c, 0xb7, 0x1d, 0x1d, 0xdc, 0x53, 0x8d),
 };
 
-// struct bt_data scan_response_data[1];
 char bt_name[CONFIG_BT_DEVICE_NAME_MAX + 1];
 
-static struct bt_data scan_data[] = {
+static struct bt_data scan_response_data[] = {
 	// Device Name; has to be updated and set at runtime!
 	BT_DATA(BT_DATA_NAME_COMPLETE, NULL, 0),
 	// Appearance
@@ -109,11 +108,11 @@ static void advertise(struct k_work *work)
 	LOG_INF("BT name: %s", bt_name);
 
 	// update scan response data with name
-	scan_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
+	scan_response_data[0] = (struct bt_data) BT_DATA(BT_DATA_NAME_COMPLETE, bt_name, strlen(bt_name));
 
 	bt_set_name(bt_name);
 
-	int rc = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, advertising_data, ARRAY_SIZE(advertising_data), scan_data, ARRAY_SIZE(scan_data));
+	int rc = bt_le_adv_start(BT_LE_ADV_CONN_FAST_1, advertising_data, ARRAY_SIZE(advertising_data), scan_response_data, ARRAY_SIZE(scan_response_data));
 	if (rc) {
 		LOG_ERR("Advertising failed to start (rc %d)", rc);
 		return;

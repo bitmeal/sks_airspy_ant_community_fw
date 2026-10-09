@@ -7,7 +7,24 @@
     chosen {
         /delete-property/ zephyr,code-partition;
         zephyr,code-partition = &slot0_partition;
+
+        /delete-property/ zephyr,console;
+		zephyr,console = &rtt0;
     };
+
+	rtt0: rtt_chan0 {
+		compatible = "segger,rtt-uart";
+		status = "okay";
+	};
+
+    rtc_emul: rtc-emul {
+		compatible = "zephyr,rtc-emul";
+		alarms-count = < 1 >;
+	};
+
+	aliases {
+		rtc = &rtc_emul;
+	};
 };
 
 // Include flash partition table.
