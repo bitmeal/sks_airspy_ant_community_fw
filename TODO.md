@@ -8,6 +8,7 @@
 - [x] ANT SDK is open
 - [x] building with/without `mcuboot.pem` signing key
 - [x] ~~building from PR~~
+- [ ] ID configuration using SMP
 
 ## Internals
 - [x] Resource manager for consumption by supervisor
@@ -21,7 +22,7 @@
   - [x] add SMP OS group
   - [x] add SMP enum group
   - [x] adapt settings
-- [ ] BT ESS Environmental Sensing Service for Tire pressure
+- [x] BT ESS Environmental Sensing Service for Tire pressure
 - [x] BT BAS Battery Service
 - [x] CI
   - [x] ANT SDK is open: remove login and secret

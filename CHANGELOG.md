@@ -4,10 +4,10 @@ SPDX-License-Identifier: MPL-2.0
 /-->
 
 # Changelog
-* The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-* This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
-* Only publicly released versions (and work in progress) will be tracked
-* Meaningful documentation starts with release v1.3.2
+- The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
+- This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+- Only publicly released versions (and work in progress) will be tracked
+- Meaningful documentation starts with release v1.3.2
 
 ## [Unreleased]
 ### Changed
@@ -31,8 +31,9 @@ SPDX-License-Identifier: MPL-2.0
 - control system lifetime by last SPI receive instead of WAKE line
 - select SPI interrupt polarity at runtime; deduce from successful non-zero read
 - change retention to use zephyr retention system and drivers
-- previous wake-signal/line unused now
+- wake up device from SPI interrupt line; previous wake-signal/line unused now
 - devices do not enter SYSTEM OFF anymore; enables future periodic tasks/uses like trackers
+- device ID is configurable with an SMP client with support for the settings command group (custom bluetooth service removed)
 
 ### Added
 - ANT+ TPMS Type/ID field
@@ -50,6 +51,7 @@ SPDX-License-Identifier: MPL-2.0
 - SPI polarity (new/old/TL boards) configurable through SMP
 - send ANT page 16 on configuration change from BT
 - Bluetooth battery service (BAS)
+- Bluetooth environmental sensing service (ESS) with pressure and temperature
 
 ### Fixed
 - ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble
@@ -61,6 +63,7 @@ SPDX-License-Identifier: MPL-2.0
 ### Removed
 - custom (development) board definition for the nRF52840 MDK USB Dongle
 - CI: removed signing of images built from PRs with official/repo key; ANT SDK is openly accessibly now
+- custom device ID setting bluetooth service
 
 ## [1.3.3] 2026-05-16
 ### Added

@@ -6,6 +6,7 @@
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
+#include <zephyr/bluetooth/uuid.h>
 #include <zephyr/bluetooth/services/bas.h>
 
 #include <zephyr/mgmt/mcumgr/transport/smp_bt.h>
@@ -43,43 +44,83 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
 	.disconnected = disconnected,
 };
 
-// BEGIN config service
+// ESS BEGIN
+static int16_t ess_val_pressure_hpa = 0xFF;
+static int8_t ess_val_temperature_c = 0xFF;
+static bool ess_pressure_notifications_active = false;
+static bool ess_temperature_notifications_active = false;
 
-static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
-			  const struct bt_gatt_attr *attr,
-			  const void *buf,
-			  uint16_t len,
-			  uint16_t offset,
-			  uint8_t flags)
-{
-    LOG_DBG("Received BT data, handle %d, conn %p", attr->handle, (void *)conn);
+static void ess_pressure_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value);
+static ssize_t ess_pressure_read(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset);
+void ess_pressure_update(int16_t pressure);
+static void ess_temperature_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value);
+static ssize_t ess_temperature_read(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset);
+void ess_temperature_update(int8_t temperature);
 
-	if ( len && len <= sizeof(app_config.device.id))
-	{
-		uint16_t device_id = 0x0000;
-		memcpy(&device_id, buf, len);
-
-    	LOG_INF("seting new device ID: %d", device_id);
-		
-		app_config.device.id = device_id;
-		settings_commit_notify(CONFIG_UPDATE_SOURCE_BLE);
-	}
-
-	// we processed the whole message; signal to stack
-    return len;
-}
-
-
-BT_GATT_SERVICE_DEFINE(
-	cfg_srv,
-	BT_GATT_PRIMARY_SERVICE(BT_CFG_SRV_UUID),
-    BT_GATT_CHARACTERISTIC(BT_CFG_SRV_DEVID_CHRX_UUID,
-                    BT_GATT_CHRC_WRITE_WITHOUT_RESP,
-                    BT_GATT_PERM_WRITE,
-                    NULL, cfg_srv_devid_chrx_on_write_cb, NULL),
+BT_GATT_SERVICE_DEFINE(ess_svc,
+	BT_GATT_PRIMARY_SERVICE(BT_UUID_ESS),
+    BT_GATT_CHARACTERISTIC(BT_UUID_PRESSURE,
+                           BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+                           BT_GATT_PERM_READ,
+                           ess_pressure_read, NULL, NULL),
+    BT_GATT_CCC(ess_pressure_ccc_cfg_changed, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
+    BT_GATT_CHARACTERISTIC(BT_UUID_TEMPERATURE,
+                           BT_GATT_CHRC_READ | BT_GATT_CHRC_NOTIFY,
+                           BT_GATT_PERM_READ,
+                           ess_temperature_read, NULL, NULL),
+    BT_GATT_CCC(ess_temperature_ccc_cfg_changed, BT_GATT_PERM_READ | BT_GATT_PERM_WRITE),
 );
 
-// END config service
+static void ess_pressure_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
+{
+    ess_pressure_notifications_active = (value == BT_GATT_CCC_NOTIFY);
+}
+
+static ssize_t ess_pressure_read(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset)
+{
+    if (ess_val_pressure_hpa == 0xFF)
+	{
+		return BT_GATT_ERR(BT_ATT_ERR_UNLIKELY);
+	}
+	return bt_gatt_attr_read(conn, attr, buf, len, offset, &ess_val_pressure_hpa, sizeof(ess_val_pressure_hpa));
+}
+
+void ess_pressure_update(int16_t pressure)
+{
+	ess_val_pressure_hpa = pressure;
+
+    if (!ess_pressure_notifications_active || ess_val_pressure_hpa == 0xFF) {
+        return;
+    }
+
+    bt_gatt_notify(NULL, &ess_svc.attrs[2], &ess_val_pressure_hpa, sizeof(ess_val_pressure_hpa));
+}
+
+static void ess_temperature_ccc_cfg_changed(const struct bt_gatt_attr *attr, uint16_t value)
+{
+    ess_temperature_notifications_active = (value == BT_GATT_CCC_NOTIFY);
+}
+
+static ssize_t ess_temperature_read(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf, uint16_t len, uint16_t offset)
+{
+    if (ess_val_temperature_c == 0xFF)
+	{
+		return BT_GATT_ERR(BT_ATT_ERR_UNLIKELY);
+	}
+	return bt_gatt_attr_read(conn, attr, buf, len, offset, &ess_val_temperature_c, sizeof(ess_val_temperature_c));
+}
+
+void ess_temperature_update(int8_t temperature)
+{
+	ess_val_temperature_c = temperature;
+
+    if (!ess_temperature_notifications_active || ess_val_temperature_c == 0xFF) {
+        return;
+    }
+
+    bt_gatt_notify(NULL, &ess_svc.attrs[5], &ess_val_temperature_c, sizeof(ess_val_temperature_c));
+}
+// ESS END
 
 static const struct bt_data advertising_data[] = {
 	// Flags
@@ -139,6 +180,8 @@ void ble_sensor_data_handler_cb(const struct zbus_channel *chan)
 	LOG_DBG("Updating BLE services with sensor data");
 
 	bt_bas_set_battery_level(battery_level_percent(msg->voltage_mv));
+	ess_pressure_update(msg->pressure_hpa);
+	ess_temperature_update(msg->temperature_c);
 }
 
 static void connected(struct bt_conn *conn, uint8_t err)
@@ -155,6 +198,9 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 {
 	LOG_INF("Bluetooth Disconnected (reason %#02x)", reason);
 	k_work_schedule(&free_res_mgr_bt_use_work, K_MSEC(BT_RECONNECT_WINDOW_MS));
+
+	ess_pressure_notifications_active = false;
+	ess_temperature_notifications_active = false;
 
 	LOG_INF("Restarting BLE advertising");
 	k_work_submit(&advertise_work);
