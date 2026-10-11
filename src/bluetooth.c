@@ -6,6 +6,7 @@
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
+#include <zephyr/bluetooth/services/bas.h>
 
 #include <zephyr/mgmt/mcumgr/transport/smp_bt.h>
 
@@ -14,6 +15,7 @@
 #include "bluetooth.h"
 #include "settings.h"
 #include "zbus_com.h"
+#include "sensor.h"
 #include "resource_manager.h"
 
 
@@ -130,6 +132,14 @@ void ble_config_update_notification_handler_cb(const struct zbus_channel *chan)
 	LOG_INF("Updating BLE configuration");
 }
 
+void ble_sensor_data_handler_cb(const struct zbus_channel *chan)
+{
+	const struct sensor_readings_t *msg = zbus_chan_const_msg(chan);
+
+	LOG_DBG("Updating BLE services with sensor data");
+
+	bt_bas_set_battery_level(battery_level_percent(msg->voltage_mv));
+}
 
 static void connected(struct bt_conn *conn, uint8_t err)
 {

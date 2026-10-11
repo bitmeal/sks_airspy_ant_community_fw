@@ -21,6 +21,7 @@
 
 void init_bluetooth(void);
 
+void ble_sensor_data_handler_cb(const struct zbus_channel *chan);
 void ble_config_update_notification_handler_cb(const struct zbus_channel *chan);
 
 #endif // INCLUDE_BLUETOOTH_H__

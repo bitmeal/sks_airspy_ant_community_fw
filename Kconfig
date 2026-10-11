@@ -198,6 +198,7 @@ config AIRSPY_BT
     select BT_DIS_FW_REV
     # select BT_DIS_HW_REV
     select BT_DIS_SW_REV
+    select BT_BAS
 
 if AIRSPY_BT
 

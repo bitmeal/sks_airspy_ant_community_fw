@@ -44,11 +44,12 @@ SPDX-License-Identifier: MPL-2.0
 - resource management implementation: subsystems can register uses and control device and subsystem lifetime
 - AIRSPY TL (and/or just newer revision) compatibility; with a fraction of the power consummption
 - mcumgr managment groups: enum, os, settings
-- Bluetooth DIS
+- Bluetooth device information service (DIS)
 - RTC support (currently not setting time; supports future periodic tasks/uses like trackers)
 - all settings configurable by any spm/mcumgr client with settings support
 - SPI polarity (new/old/TL boards) configurable through SMP
 - send ANT page 16 on configuration change from BT
+- Bluetooth battery service (BAS)
 
 ### Fixed
 - ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble

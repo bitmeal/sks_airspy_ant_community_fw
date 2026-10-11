@@ -22,7 +22,7 @@
   - [x] add SMP enum group
   - [x] adapt settings
 - [ ] BT ESS Environmental Sensing Service for Tire pressure
-- [ ] BT BAS Battery Service
+- [x] BT BAS Battery Service
 - [x] CI
   - [x] ANT SDK is open: remove login and secret
   - [x] inject SB config for signing with  `mcuboot.pem` in CI;

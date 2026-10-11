@@ -25,7 +25,8 @@ ZBUS_CHAN_DEFINE(sensor_data_chan,
 		NULL, // no validator
 		NULL, // no user data
 		ZBUS_OBSERVERS( \
-			IF_ENABLED(CONFIG_AIRSPY_ANT, (ant_sensor_data_handler)) \
+			IF_ENABLED(CONFIG_AIRSPY_ANT, (ant_sensor_data_handler,)) \
+			ble_sensor_data_handler \
 		),
 		ZBUS_MSG_INIT( .pressure_hpa = 0, .temperature_c = 0, .voltage_mv = 0, .flags = 0, .checksum = 0)
 );
@@ -37,6 +38,7 @@ ZBUS_LISTENER_DEFINE(ant_config_update_notification_handler, ant_config_update_n
 #endif 
 
 #include "bluetooth.h"
+ZBUS_LISTENER_DEFINE(ble_sensor_data_handler, ble_sensor_data_handler_cb);
 ZBUS_LISTENER_DEFINE(ble_config_update_notification_handler, ble_config_update_notification_handler_cb);
 
 #include "spi.h"
