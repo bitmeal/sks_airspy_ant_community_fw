@@ -31,7 +31,7 @@ LOG_MODULE_REGISTER(spim, LOG_LEVEL_INF);
 
 const struct device *spim_dev;
 static const struct gpio_dt_spec int_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, cs_gpios);
-static const struct gpio_dt_spec clk_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, clk_gpios);
+// static const struct gpio_dt_spec clk_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, clk_gpios);
 static const struct gpio_dt_spec miso_gpio = GPIO_DT_SPEC_GET(SPI_MASTER_NODE, miso_gpios);
 
 static const struct spi_config spim_cfg = {

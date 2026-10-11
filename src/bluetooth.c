@@ -60,8 +60,7 @@ static ssize_t cfg_srv_devid_chrx_on_write_cb(struct bt_conn *conn,
     	LOG_INF("seting new device ID: %d", device_id);
 		
 		app_config.device.id = device_id;
-		// commit_settings(CONFIG_UPDATE_SOURCE_BLE);
-		settings_commit();
+		settings_commit_notify(CONFIG_UPDATE_SOURCE_BLE);
 	}
 
 	// we processed the whole message; signal to stack
@@ -126,7 +125,7 @@ static void advertise(struct k_work *work)
 
 void ble_config_update_notification_handler_cb(const struct zbus_channel *chan)
 {
-	const config_update_source_t *msg_source = zbus_chan_const_msg(chan);
+	// const config_update_source_t *msg_source = zbus_chan_const_msg(chan);
 
 	LOG_INF("Updating BLE configuration");
 }

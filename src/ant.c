@@ -32,6 +32,8 @@ static void ant_tpms_evt_handler(ant_tpms_profile_t * p_profile, ant_tpms_evt_t 
 static void ant_tpms_config_handler(ant_tpms_profile_t *p_profile, ant_tpms_page16_data_t *p_page16);
 static void ant_profile_stop_work_wrapper(struct k_work *work);
 K_WORK_DEFINE(restart_ant_work, ant_profile_stop_work_wrapper);
+static void ant_schedule_page16_transmission(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(ant_schedule_page16_transmission_work, ant_schedule_page16_transmission);
 
 TPMS_SENS_PROFILE_CONFIG_DEF(tpms, ant_tpms_config_handler, ant_tpms_evt_handler);
 TPMS_SENS_CHANNEL_CONFIG_DEF(tpms, 0, 5, 0, 0);
@@ -73,8 +75,6 @@ static void ant_evt_handler(ant_evt_t *p_ant_evt)
     }
   }
 }
-
-//TODO: send page 16 if configuration change trigger source is not ANT stack, but BT
 
 static void ant_tpms_config_page_updater()
 {
@@ -138,9 +138,17 @@ static void ant_tpms_config_handler(ant_tpms_profile_t *p_profile, ant_tpms_page
   }
 
   ant_tpms_config_page_updater();
-  // commit_settings(CONFIG_UPDATE_SOURCE_ANT);
-  settings_commit();
+  settings_commit_notify(CONFIG_UPDATE_SOURCE_ANT);
 }
+
+static void ant_schedule_page16_transmission(struct k_work *work)
+{
+  if (!ant_tpms_schedule_next_data_page(16))
+  {
+    k_work_schedule(&ant_schedule_page16_transmission_work, K_MSEC(SCHEDULE_PAGE16_BACKOFF_MS));
+  }
+}
+
 
 void ant_config_update_notification_handler_cb(const struct zbus_channel *chan)
 {
@@ -156,6 +164,12 @@ void ant_config_update_notification_handler_cb(const struct zbus_channel *chan)
     {
       k_work_submit(&restart_ant_work);
     }
+
+    if (*msg_source != CONFIG_UPDATE_SOURCE_ANT)
+    {
+      LOG_INF("Scheduling page 16 to update configuration on display");
+      k_work_schedule(&ant_schedule_page16_transmission_work, K_MSEC(SCHEDULE_PAGE16_BACKOFF_MS));
+    }
   }
 }
 
@@ -163,7 +177,7 @@ void ant_sensor_data_handler_cb(const struct zbus_channel *chan)
 {
 	const struct sensor_readings_t *msg = zbus_chan_const_msg(chan);
 
-	LOG_INF("Updating ANT+ pages with sensor data");
+	LOG_DBG("Updating ANT+ pages with sensor data");
 
   // only data depending on sensor readings or time will be updated here
 
@@ -287,7 +301,6 @@ static void ant_profile_stop_work_wrapper(struct k_work *work)
 {
 	ant_profile_stop();
 }
-
 
 static int ant_stack_setup(void)
 {

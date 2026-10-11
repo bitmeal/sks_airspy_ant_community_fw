@@ -48,6 +48,7 @@ SPDX-License-Identifier: MPL-2.0
 - RTC support (currently not setting time; supports future periodic tasks/uses like trackers)
 - all settings configurable by any spm/mcumgr client with settings support
 - SPI polarity (new/old/TL boards) configurable through SMP
+- send ANT page 16 on configuration change from BT
 
 ### Fixed
 - ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble

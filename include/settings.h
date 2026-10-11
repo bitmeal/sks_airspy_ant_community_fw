@@ -60,15 +60,10 @@ typedef struct {
     device_config_t device;
 } app_config_t;
 
-// TODO: read mutex
-// TODO: write mutex
-
 extern app_config_t app_config;
 
 int start_settings_subsys();
-
-// int commit_settings(config_update_source_t source);
-
+int settings_commit_notify(config_update_source_t source);
 void log_settings();
 
 #endif // INCLUDE_SETTINGS_H__

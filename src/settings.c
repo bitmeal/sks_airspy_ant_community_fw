@@ -51,6 +51,8 @@ int dev_handle_export(int (*cb)(const char *name, const void *value, size_t val_
 int dev_handle_get(const char *name, char *val, int val_len_max);
 void dev_log_settings();
 
+int common_handle_commit(void);
+
 SETTINGS_STATIC_HANDLER_DEFINE(tpms, "tpms", \
 	tpms_handle_get, \
 	tpms_handle_set, \
@@ -62,6 +64,12 @@ SETTINGS_STATIC_HANDLER_DEFINE(dev, "dev", \
 	dev_handle_set, \
 	dev_handle_commit, \
 	dev_handle_export);
+
+SETTINGS_STATIC_HANDLER_DEFINE(commmon, "", \
+	NULL, \
+	NULL, \
+	common_handle_commit, \
+	NULL);
 
 
 int tpms_handle_set(const char *name, size_t len, settings_read_cb read_cb, void *cb_arg)
@@ -122,10 +130,7 @@ int tpms_handle_commit(void)
 	LOG_INF("loading all settings under <tpms> handler is done");
 	tpms_log_settings();
 
-	config_update_source_t source = CONFIG_UPDATE_SOURCE_SETTINGS;
-	int res = zbus_chan_pub(&config_update_notification_chan, &source, K_MSEC(10));
-	
-	return res ? EXIT_FAILURE : EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 int tpms_handle_export(int (*cb)(const char *name, const void *value, size_t val_len))
@@ -236,11 +241,8 @@ int dev_handle_commit(void)
 {
 	LOG_INF("loading all settings under <dev> handler is done");
 	dev_log_settings();
-
-	config_update_source_t source = CONFIG_UPDATE_SOURCE_SETTINGS;
-	int res = zbus_chan_pub(&config_update_notification_chan, &source, K_MSEC(10));
 	
-	return res ? EXIT_FAILURE : EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
 int dev_handle_export(int (*cb)(const char *name, const void *value, size_t val_len))
@@ -287,10 +289,29 @@ void dev_log_settings()
 	LOG_INF("<dev/spi_polarity>: %#x", app_config.device.spi_polarity);
 }
 
+int common_handle_commit(void)
+{
+	LOG_INF("notifying settings change");
+	config_update_source_t source = CONFIG_UPDATE_SOURCE_SETTINGS;
+	int res = zbus_chan_pub(&config_update_notification_chan, &source, K_MSEC(10));
+	
+	return res ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
 void log_settings()
 {
 	dev_log_settings();
 	tpms_log_settings();
+}
+
+int settings_commit_notify(config_update_source_t source)
+{
+	dev_handle_commit();
+	tpms_handle_commit();
+
+	int res = zbus_chan_pub(&config_update_notification_chan, &source, K_MSEC(10));	
+
+	return res ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
 int start_settings_subsys()

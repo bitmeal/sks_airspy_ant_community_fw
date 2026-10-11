@@ -17,8 +17,6 @@ if(
     # testing NOT SB_CONFIG_MERGED_HEX_FILES to guard against new zephyr versions that automate the process
     NOT SB_CONFIG_MERGED_HEX_FILES
     )
-    # # TODO: handle unsigned images
-    # sysbuild_get(${DEFAULT_IMAGE}_MCUBOOT_GENERATE_UNSIGNED_IMAGE IMAGE ${DEFAULT_IMAGE} VAR CONFIG_MCUBOOT_GENERATE_UNSIGNED_IMAGE KCONFIG)
 
     add_custom_command(
     OUTPUT

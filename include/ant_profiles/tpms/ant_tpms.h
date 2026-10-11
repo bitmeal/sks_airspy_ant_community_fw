@@ -275,6 +275,17 @@ int ant_tpms_sens_open(ant_tpms_profile_t * p_profile);
 void ant_tpms_sens_evt_handler(ant_evt_t * p_ant_evt, void * p_context);
 
 
+/** @brief Function to manually schedule send of a data page using the request controller
+ *
+ * @details This function schedules send (as BROADCAST) of a selcted data page using the request controller
+ *
+ * @param[in]   page_number     ANT profile page to request.
+ * 
+ * @retval      true if page scheduled successfully; false if request controller busy
+ */
+bool ant_tpms_schedule_next_data_page(uint8_t page_number);
+
+
 /** @brief Function for requesting a data page
  *
  * @details This function sends a data page request, using common page 70 and requesting an ACK

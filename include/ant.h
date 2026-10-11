@@ -9,6 +9,8 @@
 #include <zephyr/zbus/zbus.h>
 
 
+#define SCHEDULE_PAGE16_BACKOFF_MS 250
+
 int init_ant(void);
 
 void ant_sensor_data_handler_cb(const struct zbus_channel *chan);

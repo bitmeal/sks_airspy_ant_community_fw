@@ -337,6 +337,20 @@ void ant_tpms_sens_evt_handler(ant_evt_t * p_ant_event, void * p_context)
     }
 }
 
+bool ant_tpms_schedule_next_data_page(uint8_t page_number)
+{
+    if (request_controller.state == ANT_REQUEST_CONTROLLER_IDLE)
+    {
+        request_controller.page_70 = ANT_COMMON_PAGE_DATA_REQUEST(page_number);
+        request_controller.state = ANT_REQUEST_CONTROLLER_BROADCAST_REQUESTED;
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 bool ant_tpms_request_data_page(uint8_t page_number, void * p_context)
 {
     ant_common_page70_data_t page_70 = ANT_COMMON_PAGE_DATA_REQUEST(page_number);
