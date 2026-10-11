@@ -16,11 +16,13 @@
 - [x] Update retention system to DT based backend
   - https://github.com/zephyrproject-rtos/zephyr/tree/main/samples/boards/nordic/system_off
   - https://docs.zephyrproject.org/latest/services/storage/retention/index.html
-- [ ] BLE Settings configuration
-  - [ ] add SMP settings mangement group
-  - [ ] add SMP OS group
-- [ ] BLE Sensor data view: custom SMP group or BLE characteristics?
-- [ ] 
+- [x] BLE Settings configuration
+  - [x] add SMP settings mangement group
+  - [x] add SMP OS group
+  - [x] add SMP enum group
+  - [x] adapt settings
+- [ ] BT ESS Environmental Sensing Service for Tire pressure
+- [ ] BT BAS Battery Service
 - [x] CI
   - [x] ANT SDK is open: remove login and secret
   - [x] inject SB config for signing with  `mcuboot.pem` in CI;
@@ -34,9 +36,12 @@
 - [ ] CMSIS DAP flasher web application using Web USB
 
 ### Notes/Links
+- https://github.com/zephyrproject-rtos/zephyr/blob/main/samples/bluetooth/peripheral_esp/src/main.c
 - https://github.com/FreeOCD/freeocd-web
 - https://github.com/boogie/mcumgr-web
 - https://github.com/qarnet/web-bluetooth-dfu
+- https://github.com/intercreate/smpmgr
+- https://github.com/Finomnis/mcumgr-toolkit
 - https://github.com/makerdiary/web-device-cli
 - https://github.com/KevinJohnMulligan/neutral-nus-terminal
 - https://melt-ui.com/

@@ -138,20 +138,24 @@ static void ant_tpms_config_handler(ant_tpms_profile_t *p_profile, ant_tpms_page
   }
 
   ant_tpms_config_page_updater();
-  commit_settings(CONFIG_UPDATE_SOURCE_ANT);
+  // commit_settings(CONFIG_UPDATE_SOURCE_ANT);
+  settings_commit();
 }
 
 void ant_config_update_notification_handler_cb(const struct zbus_channel *chan)
 {
-	const config_update_source_t *msg_source = zbus_chan_const_msg(chan);
-
-	LOG_INF("Updating ANT+ configuration");
-
-  ant_tpms_config_page_updater();
-
-  if (tpms_channel_tpms_sens_config.device_number != app_config.device.id)
+  if (ant_running)
   {
-    k_work_submit(&restart_ant_work);
+    const config_update_source_t *msg_source = zbus_chan_const_msg(chan);
+
+    LOG_INF("Updating ANT+ configuration");
+
+    ant_tpms_config_page_updater();
+
+    if (tpms_channel_tpms_sens_config.device_number != app_config.device.id)
+    {
+      k_work_submit(&restart_ant_work);
+    }
   }
 }
 

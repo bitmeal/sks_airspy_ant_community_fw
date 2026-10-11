@@ -13,7 +13,8 @@ ZBUS_CHAN_DEFINE(config_update_notification_chan,
 		NULL, // no user data
 		ZBUS_OBSERVERS( \
 			IF_ENABLED(CONFIG_AIRSPY_ANT, (ant_config_update_notification_handler,)) \
-			ble_config_update_notification_handler \
+			ble_config_update_notification_handler, \
+			spi_config_update_notification_handler \
 		),
 		ZBUS_MSG_INIT( CONFIG_UPDATE_SOURCE_EMPTY )
 );
@@ -37,3 +38,6 @@ ZBUS_LISTENER_DEFINE(ant_config_update_notification_handler, ant_config_update_n
 
 #include "bluetooth.h"
 ZBUS_LISTENER_DEFINE(ble_config_update_notification_handler, ble_config_update_notification_handler_cb);
+
+#include "spi.h"
+ZBUS_LISTENER_DEFINE(spi_config_update_notification_handler, spi_config_update_notification_handler_cb);

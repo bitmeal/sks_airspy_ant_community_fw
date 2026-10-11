@@ -41,7 +41,87 @@ static const struct spi_config spim_cfg = {
 };
 
 // start with polarity: falling edge trigger
-gpio_flags_t polarity = GPIO_INT_EDGE_FALLING;
+gpio_flags_t gpio_flag_from_config_polarity(device_spi_polarity_t polarity)
+{
+	switch(polarity)
+	{
+    	case DEVICE_SPI_POLARITY_RISING:
+			return GPIO_INT_EDGE_RISING;
+			break;
+    	case DEVICE_SPI_POLARITY_FALLING:
+			return GPIO_INT_EDGE_FALLING;
+			break;
+		case DEVICE_SPI_POLARITY_UNCONFIGURED:
+		default:
+			return gpio_flag_from_config_polarity(DEVICE_SPI_POLARITY_STARTUP);
+	}
+}
+
+void log_device_spi_polarity(device_spi_polarity_t polarity)
+{
+	switch(polarity)
+	{
+		case DEVICE_SPI_POLARITY_RISING:
+			LOG_INF("SPIM interrupt configured as INT; TL, new");
+			break;
+		case DEVICE_SPI_POLARITY_FALLING:
+			LOG_INF("SPIM interrupt configured as /INT; classic");
+			break;
+		case DEVICE_SPI_POLARITY_UNCONFIGURED:
+		default:
+			LOG_INF("SPIM interrupt unconfigured; learning");
+	}
+}
+
+uint8_t spi_polarity_learn_success_count = 0;
+device_spi_polarity_t spi_polarity_learn_polarity = DEVICE_SPI_POLARITY_STARTUP;
+void handle_device_spi_polarity_learn(bool read_success)
+{
+	if (app_config.device.spi_polarity == DEVICE_SPI_POLARITY_UNCONFIGURED)
+	{
+		if (read_success)
+		{
+			spi_polarity_learn_success_count++;
+			LOG_INF("SPI polarity learning: %d successful samples", spi_polarity_learn_success_count);
+		}
+		else
+		{
+			spi_polarity_learn_success_count = 0;
+
+			LOG_WRN("SPI polarity learning: reconfiguring polarity");
+			spi_polarity_learn_polarity = (spi_polarity_learn_polarity != DEVICE_SPI_POLARITY_RISING ? DEVICE_SPI_POLARITY_RISING : DEVICE_SPI_POLARITY_FALLING);
+			// delay polarity change to not trigger on interrupt signal level change on transmission end
+			k_sleep(K_MSEC(1));
+			if ( gpio_pin_interrupt_configure_dt(&int_gpio, gpio_flag_from_config_polarity(spi_polarity_learn_polarity)) )
+			{
+				LOG_ERR("Error: failed to reconfigure SPI interrupt polarity");
+			}
+			log_device_spi_polarity(spi_polarity_learn_polarity);
+		}
+
+		if (DEVICE_SPI_POLARITY_SUCCESS_COUNT <= spi_polarity_learn_success_count)
+		{
+			LOG_INF("SPI polarity learning: complete");
+			log_device_spi_polarity(spi_polarity_learn_polarity);
+			app_config.device.spi_polarity = spi_polarity_learn_polarity;
+			settings_save();
+		}
+	}
+}
+
+void spi_config_update_notification_handler_cb(const struct zbus_channel *chan)
+{
+    LOG_INF("Updating SPI configuration");
+
+	if (app_config.device.spi_polarity != DEVICE_SPI_POLARITY_UNCONFIGURED)
+	{
+		if ( gpio_pin_interrupt_configure_dt(&int_gpio, gpio_flag_from_config_polarity(app_config.device.spi_polarity)) )
+		{
+			LOG_ERR("Error: failed to reconfigure SPI interrupt polarity");
+		}
+		log_device_spi_polarity(app_config.device.spi_polarity);
+	}
+}
 
 static void spim_receive(struct k_work *work);
 K_WORK_DELAYABLE_DEFINE(spim_receive_work, spim_receive);
@@ -76,22 +156,6 @@ static void spim_receive(struct k_work *work)
 	// extend deadline to free use
 	k_work_reschedule(&end_spim_lifetime_work, K_MSEC(SPI_MASTER_LAST_TRANSMISION_KEEPALIVE_MS));
 
-	
-	switch(polarity)
-	{
-		// case GPIO_INT_EDGE_TO_INACTIVE:
-		case GPIO_INT_EDGE_FALLING:
-			LOG_INF("SPIM interrupt configured as /INT; classic");
-			break;
-
-		// case GPIO_INT_EDGE_TO_ACTIVE:
-		case GPIO_INT_EDGE_RISING:
-			LOG_INF("SPIM interrupt configured as INT; TL, new");
-			break;
-
-		default: break;
-	}
-
 	//// enable pins
 	if (
 		// gpio_pin_configure_dt(&clk_gpio, GPIO_OUTPUT_INACTIVE) ||
@@ -117,21 +181,17 @@ static void spim_receive(struct k_work *work)
 		// ALL ZERO? test first byte by value; test remainder all 
 		if ( (rx_buffer[0] == 0) && (memcmp(rx_buffer, rx_buffer + 1, sizeof(rx_buffer) - 1) == 0) )
 		{
-			LOG_WRN("SPI buffer empty (all 0x00); reconfiguring polarity");
-			polarity = (polarity == GPIO_INT_EDGE_FALLING ? GPIO_INT_EDGE_RISING : GPIO_INT_EDGE_FALLING);
-			// delay polarity change to not trigger on interrupt signal level change on transmission end
-			k_sleep(K_MSEC(1));
-			if ( gpio_pin_interrupt_configure_dt(&int_gpio, polarity) )
-			{
-				LOG_ERR("Error: failed to reconfigure SPI interrupt polarity");
-			}
+			LOG_WRN("SPI buffer empty (all 0x00)");
+			handle_device_spi_polarity_learn(false);
 		}
 		else if (decode_sensor_buffer(rx_buffer, &sensor_data) == SENSOR_ERROR_CHK)
 		{
 			LOG_WRN("SPI sensor data checksum error! buff: %x; decoder: %x", rx_buffer[5], sensor_data.checksum);
+			handle_device_spi_polarity_learn(false);
 		}
 		else
 		{
+			handle_device_spi_polarity_learn(true);
 			LOG_HEXDUMP_DBG(rx_buffer, sizeof(rx_buffer), "SPI rx:");
 			LOG_INF("P[hPa]: %u; T[C]: %d; V[mV]: %u", sensor_data.pressure_hpa, sensor_data.temperature_c, sensor_data.voltage_mv);
 
@@ -179,9 +239,10 @@ int init_spim()
 		return EXIT_FAILURE;
 	}
 
+	log_device_spi_polarity(app_config.device.spi_polarity);
 	gpio_init_callback(&int_cb_data, int_cb_handler, BIT(int_gpio.pin));
 	if (
-		gpio_pin_interrupt_configure_dt(&int_gpio, polarity) ||
+		gpio_pin_interrupt_configure_dt(&int_gpio, gpio_flag_from_config_polarity(app_config.device.spi_polarity)) ||
 		gpio_add_callback(int_gpio.port, &int_cb_data)
 	)
 	{

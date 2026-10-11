@@ -43,12 +43,18 @@ SPDX-License-Identifier: MPL-2.0
 - a blackmagic probe west runner with debugserver support in `extra\zephyr\scripts\west_commands\runners\blackmagicprobe.py`
 - resource management implementation: subsystems can register uses and control device and subsystem lifetime
 - AIRSPY TL (and/or just newer revision) compatibility; with a fraction of the power consummption
+- mcumgr managment groups: enum, os, settings
+- Bluetooth DIS
+- RTC support (currently not setting time; supports future periodic tasks/uses like trackers)
+- all settings configurable by any spm/mcumgr client with settings support
+- SPI polarity (new/old/TL boards) configurable through SMP
 
 ### Fixed
 - ANT+ TPMS Alarms moved to Page 1, Byte 1, high Nibble
 - Fix duplicate logging outputs on RTT
 - ignore all zero reads from SPI
 - invalidate sensor readings (0xFF/0xFFFF) when no data from FXTH, but e.g. BT connected
+- CI: running on ubuntu-latest again; fixed regression with 15m job timeout on SDK setup when running on ubuntu-slim
 
 ### Removed
 - custom (development) board definition for the nRF52840 MDK USB Dongle

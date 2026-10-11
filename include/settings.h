@@ -8,6 +8,7 @@
 
 
 #include <stdbool.h>
+#include <zephyr/settings/settings.h>
 #include <ant_profiles/tpms/ant_tpms_common_types.h>
 
 
@@ -23,10 +24,18 @@
 
 typedef enum
 {
-    CONFIG_UPDATE_SOURCE_EMPTY  = 0x00,
-    CONFIG_UPDATE_SOURCE_ANT    = 0x01,
-    CONFIG_UPDATE_SOURCE_BLE    = 0x02,
+    CONFIG_UPDATE_SOURCE_EMPTY      = 0x00,
+    CONFIG_UPDATE_SOURCE_SETTINGS   = 0x01,
+    CONFIG_UPDATE_SOURCE_ANT        = 0x02,
+    CONFIG_UPDATE_SOURCE_BLE        = 0x04,
 } config_update_source_t;
+
+typedef enum
+{
+    DEVICE_SPI_POLARITY_UNCONFIGURED    = 0x00,
+    DEVICE_SPI_POLARITY_RISING          = 0x01,
+    DEVICE_SPI_POLARITY_FALLING         = 0x02,
+} device_spi_polarity_t;
 
 
 typedef struct {
@@ -34,15 +43,16 @@ typedef struct {
     uint16_t ambient_compensation;              // /tpms/ambcomp
     uint16_t ambient_compensation_dynamic;      // NOT PERSISTENT
     bool     ambient_compensation_is_dynamic;   // NOT PERSISTENT
-    uint16_t alarm_low;                         // /tpms/alm/low
-    uint16_t alarm_high;                        // /tpms/alm/high
+    uint16_t alarm_low;                         // /tpms/alarm/low
+    uint16_t alarm_high;                        // /tpms/alarm/high
     uint8_t  type;                              // /tpms/type
     uint8_t  padding;                           // /tpms/padding
 } tpms_config_t;
 
 typedef struct {
     uint16_t id;                    // /dev/id
-    uint64_t bt_timeout_ms;         // /dev/bttmo
+    uint64_t bt_timeout_ms;         // /dev/bt_timeout
+    uint8_t spi_polarity;         // /dev/spi_polarity (device_spi_polarity_t)
 } device_config_t;
 
 typedef struct {
@@ -57,7 +67,7 @@ extern app_config_t app_config;
 
 int start_settings_subsys();
 
-int commit_settings(config_update_source_t source);
+// int commit_settings(config_update_source_t source);
 
 void log_settings();
 
